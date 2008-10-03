@@ -1,10 +1,10 @@
 /*
- * opencog/server/CallBackInterface.h
+ * opencog/server/HelpRequest.h
  *
- * Copyright (C) 2002-2007 Novamente LLC
+ * Copyright (C) 2008 by Singularity Institute for Artificial Intelligence
  * All Rights Reserved
  *
- * Written by Andre Senna <senna@vettalabs.com>
+ * Written by Gustavo Gama <gama@vettalabs.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -22,23 +22,37 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_CALLBACK_INTERFACE_H
-#define _OPENCOG_CALLBACK_INTERFACE_H
+#ifndef _OPENCOG_HELP_REQUEST_H
+#define _OPENCOG_HELP_REQUEST_H
 
+#include <vector>
 #include <string>
+
+#include <opencog/atomspace/types.h>
+#include <opencog/server/Request.h>
 
 namespace opencog
 {
 
-class CallBackInterface
+class HelpRequest : public Request
 {
 
 public:
 
-    virtual ~CallBackInterface() {}
-    virtual void callBack(const std::string &message) = 0;
+    static inline const RequestClassInfo& info() {
+        static const RequestClassInfo _cci(
+            "help",
+            "list the available commands or print the help for a specific command",
+            "help [<command>]"
+        );
+        return _cci;
+    }
 
-}; // class
-}  // namespace
+    HelpRequest();
+    virtual ~HelpRequest();
+    virtual bool execute(void);
+};
 
-#endif // _OPENCOG_CALLBACK_INTERFACE_H
+} // namespace 
+
+#endif // _OPENCOG_HELP_REQUEST_H

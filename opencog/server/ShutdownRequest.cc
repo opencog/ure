@@ -1,10 +1,10 @@
 /*
- * opencog/server/MindAgent.h
+ * opencog/server/ShutdownRequest.cc
  *
- * Copyright (C) 2002-2007 Novamente LLC
+ * Copyright (C) 2008 by Singularity Institute for Artificial Intelligence
  * All Rights Reserved
  *
- * Written by Andre Senna <senna@vettalabs.com>
+ * Written by Gustavo Gama <gama@vettalabs.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -22,23 +22,32 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_MIND_AGENT_H
-#define _OPENCOG_MIND_AGENT_H
+#include "ShutdownRequest.h"
 
-namespace opencog
+#include <sstream>
+
+#include <opencog/server/CogServer.h>
+
+using namespace opencog;
+
+ShutdownRequest::ShutdownRequest()
 {
+}
 
-class CogServer;
-
-class MindAgent
+ShutdownRequest::~ShutdownRequest()
 {
-public:
+}
 
-    virtual ~MindAgent() {}
+bool ShutdownRequest::execute()
+{
+    std::ostringstream oss;
+    if (_mimeType == "text/plain")
+        oss << "Shuting down cogserver" << std::endl;
+    send(oss.str());
 
-    virtual void run(CogServer *server) = 0;
+    CogServer& cogserver = static_cast<CogServer&>(server());
+    cogserver.stop();
+    _sock->SetCloseAndDelete();
 
-}; // class
-}  // namespace
-
-#endif // _OPENCOG_MIND_AGENT_H
+    return true;
+}

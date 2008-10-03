@@ -1,10 +1,37 @@
-#include <string>
-#include <queue>
+/*
+ * src/modules/dotty.cc
+ *
+ * Copyright (C) 2008 by Trent Waddington <trent.waddington@gmail.com>
+ * All Rights Reserved
+ *
+ * Written by Trent Waddington <trent.waddington@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
 
-#include <opencog/util/platform.h>
-#include <opencog/atomspace/Node.h>
+#include <queue>
+#include <sstream>
+#include <string>
+
+#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atomspace/Link.h>
+#include <opencog/atomspace/Node.h>
+#include <opencog/atomspace/TLB.h>
 #include <opencog/server/CogServer.h>
+#include <opencog/util/platform.h>
 
 using namespace opencog;
 
@@ -26,12 +53,11 @@ public:
         if (!space->isNode(a->getType()))
             ost << "shape=\"diamond\" ";
         ost << "label=\"[" << ClassServer::getTypeName(a->getType()) << "]";
-
-        const Node *n = dynamic_cast<const Node *>(a);
-        if (n) {
+        if (space->isNode(a->getType())) {
+            Node *n = (Node*)a;
             ost << " " << n->getName();
         } else {
-            const Link *l = dynamic_cast<const Link *>(a);
+            Link *l = (Link*)a;
             l = l; // TODO: anything to output for links?
         }
         ost << "\"];\n";

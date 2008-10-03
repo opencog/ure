@@ -1,5 +1,5 @@
 /*
- * opencog/server/CommandRequest.h
+ * opencog/server/ServerSocket.h
  *
  * Copyright (C) 2002-2007 Novamente LLC
  * All Rights Reserved
@@ -22,44 +22,48 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_COMMAND_REQUEST_H
-#define _OPENCOG_COMMAND_REQUEST_H
+#ifndef _OPENCOG_SERVER_SOCKET_H
+#define _OPENCOG_SERVER_SOCKET_H
 
 #include <string>
-#include <queue>
+#include <sstream>
+#include <tr1/memory>
 
-#include <opencog/server/ServerSocket.h>
-#include <opencog/server/RequestProcessor.h>
-#include <opencog/server/CallBackInterface.h>
+#include <Sockets/TcpSocket.h>
+#include <Sockets/ISocketHandler.h>
+
+#include <opencog/server/IHasMimeType.h>
+#include <opencog/server/IRPCSocket.h>
 
 namespace opencog
 {
 
-class CommandRequest : public CogServerRequest
-{
-private:
+class Request;
 
-    std::string answer;
-    CallBackInterface *callBackRequestor;
-    static RequestProcessor *requestProcessor;
+class ConsoleSocket : public TcpSocket,
+                      public IHasMimeType,
+                      public IRPCSocket
+{
+
+protected:
+
+    Request* _request;
+    std::stringstream _buffer;
 
 public:
+    static const int RESPONSE_TRIGGER = 0;
 
-    std::string command;
-    std::queue<std::string> args;
+    ~ConsoleSocket();
+    ConsoleSocket(ISocketHandler &handler);
 
-    ~CommandRequest();
-    CommandRequest(CallBackInterface *callback,
-                   std::string &command,
-                   std::queue<std::string> &args);
-    void callBack();
-    RequestProcessor * getRequestProcessor();
-
-    void setAnswer(std::string &cmdOutput);
-    std::string getCommand();
-    std::queue<std::string> getArgs();
+    void OnAccept          (void);
+    void OnDetached        (void);
+    void OnLine            (const std::string& line);
+    void OnRawData         (const char * buf, size_t len);
+    void OnRequestComplete ();
 
 }; // class
+
 }  // namespace
 
-#endif // _OPENCOG_COMMAND_REQUEST_H
+#endif // _OPENCOG_SERVER_SOCKET_H
