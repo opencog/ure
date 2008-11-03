@@ -1,5 +1,5 @@
 /*
- * src/server/AttentionModule.cc
+ * examples/modules/CustomAtomTypesModule.cc
  *
  * Copyright (C) 2008 by Singularity Institute for Artificial Intelligence
  * All Rights Reserved
@@ -22,54 +22,51 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "AttentionModule.h"
+#include "CustomAtomTypesModule.h"
+
+#include <time.h>
 
 #include <opencog/server/CogServer.h>
+#include <opencog/util/Logger.h>
 
+#include "CustomAtomTypesTester.h"
 #include "atom_types.definitions"
 
 using namespace opencog;
 
 // load/unload functions for the Module interface
-extern "C" const char* opencog_module_id()                   { return AttentionModule::id(); }
-extern "C" Module*     opencog_module_load()                 { return new AttentionModule(); }
-extern "C" void        opencog_module_unload(Module* module) { delete module; }
+extern "C" const char* opencog_module_id() { return CustomAtomTypesModule::id(); }
+extern "C" Module* opencog_module_load()   { return new CustomAtomTypesModule(); }
+extern "C" void opencog_module_unload(Module* m) { delete m; }
 
-AttentionModule::AttentionModule()
-{
-    CogServer& cogserver = static_cast<CogServer&>(server());
-    cogserver.registerAgent(ForgettingAgent::info().id,          &forgettingFactory);
-    cogserver.registerAgent(HebbianLearningAgent::info().id,     &hebbianFactory);
-    cogserver.registerAgent(ImportanceSpreadingAgent::info().id, &spreadingFactory);
-    cogserver.registerAgent(ImportanceUpdatingAgent::info().id,  &updatingFactory);
-    cogserver.registerAgent(STIDecayingAgent::info().id,         &stidecayingFactory);
-}
-
-AttentionModule::~AttentionModule()
-{
-    CogServer& cogserver = static_cast<CogServer&>(server());
-    cogserver.unregisterAgent(ForgettingAgent::info().id);
-    cogserver.unregisterAgent(HebbianLearningAgent::info().id);
-    cogserver.unregisterAgent(ImportanceSpreadingAgent::info().id);
-    cogserver.unregisterAgent(ImportanceUpdatingAgent::info().id);
-    cogserver.unregisterAgent(STIDecayingAgent::info().id);
-}
-
-void AttentionModule::init()
+CustomAtomTypesModule::CustomAtomTypesModule()
 {
 }
 
-// dynamic library initialization
+CustomAtomTypesModule::~CustomAtomTypesModule()
+{
+}
+
+void CustomAtomTypesModule::init()
+{
+    logger().info("-------------------------------------------------------");
+    CustomAtomTypesTester::createAtoms();
+    logger().info("-------------------------------------------------------");
+    CustomAtomTypesTester::dumpAtoms();
+}
+
+// library initialization
 #if defined(WIN32) && defined(_DLL)
 namespace win {
 #include <windows.h>
 }
+
 win::BOOL APIENTRY DllMain(win::HINSTANCE hinstDLL,  // handle to DLL module
                            win::DWORD fdwReason,     // reason for calling function
                            win::LPVOID lpvReserved)  // reserved
 {
     System::setModuleHandle(hinstDLL);
-    switch(fdwReason) {
+    switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
             #include "atom_types.inheritance"
             break;
@@ -87,7 +84,9 @@ static __attribute__ ((constructor)) void _init(void)
 {
     #include "atom_types.inheritance"
 }
+
 static __attribute__ ((constructor)) void _fini(void)
 {
 }
+
 #endif
