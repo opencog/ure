@@ -4,6 +4,9 @@
 ; Demonstration of globbing.
 ;
 
+(use-modules (opencog))
+(use-modules (opencog query))
+
 ;;; Populate the atomspace with some "sentences".
 (ListLink
 	(ConceptNode "I")
