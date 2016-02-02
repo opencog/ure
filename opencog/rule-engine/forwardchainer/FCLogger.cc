@@ -1,10 +1,9 @@
 /*
- * opencog/truthvalue/AttentionValue.cc
+ * FCLogger.cc
  *
- * Copyright (C) 2002-2007 Novamente LLC
- * All Rights Reserved
+ * Copyright (C) 2016 OpenCog Foundation
  *
- * Written by Tony Lofthouse <tony_lofthouse@btinternet.com>
+ * Author: Nil Geisweiller
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -22,18 +21,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "AttentionValue.h"
+#include "FCLogger.h"
 
 using namespace opencog;
 
-const AttentionValue::sti_t AttentionValue::DEFAULTATOMSTI = 0;
-const AttentionValue::lti_t AttentionValue::DEFAULTATOMLTI = 0;
-const AttentionValue::vlti_t AttentionValue::DEFAULTATOMVLTI = 0;
-
-std::string AttentionValue::toString() const
+// Create and return the single instance
+Logger& opencog::fc_logger()
 {
-    char buffer[256];
-    sprintf(buffer, "[%d, %d, %s]", (int)m_STI, (int)m_LTI,
-            m_VLTI ? "SAVABLE" : "DISPOSABLE");
-    return buffer;
+	auto fc_logger_instantiate = []() {
+		Logger tmp(logger());
+		tmp.setComponent("ForwardChainer");
+		tmp.setLevel(Logger::FINE);
+		return tmp;
+	};
+	static Logger fc_instance(fc_logger_instantiate());
+    return fc_instance;
 }
