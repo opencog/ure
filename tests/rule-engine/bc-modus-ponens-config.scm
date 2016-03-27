@@ -5,22 +5,17 @@
 ; To be loaded first
 
 ; Load the rules (use load for relative path w.r.t. to that file)
-(load "bc-modus-ponens.scm")
-(load "bc-deduction.scm")
+(load "rules/bc-modus-ponens-rule.scm")
 
 ; Associate the rules to the rule base (with weights, their semantics
 ; is currently undefined, we might settled with probabilities but it's
 ; not sure)
-(MemberLink
-   pln-rule-modus-ponens-name
-   (ConceptNode "URE")
-)
 (MemberLink (stv 1 1)
-   pln-rule-deduction-name
+   bc-modus-ponens-rule-name
    (ConceptNode "URE")
 )
 
-; termination criteria parameters
+; Termination criteria parameters
 (ExecutionLink
    (SchemaNode "URE:maximum-iterations")
    (ConceptNode "URE")

@@ -1,9 +1,9 @@
 /*
- * FCStat.cc
+ * BCLogger.cc
  *
- * Copyright (C) 2015 OpenCog Foundation
+ * Copyright (C) 2016 OpenCog Foundation
  *
- * Author: Misgana Bayetta <misgana.bayetta@gmail.com>
+ * Author: Nil Geisweiller
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -21,28 +21,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "../ChainerUtils.h"
-#include "FCStat.h"
+#include "BCLogger.h"
 
 using namespace opencog;
 
-void FCStat::add_inference_record(Handle source, const Rule* rule,
-                                  const UnorderedHandleSet& product)
+// Create and return the single instance
+Logger& opencog::bc_logger()
 {
-	_inf_rec.emplace_back(source, rule, product);
-
-	_as.add_link(EXECUTION_LINK,
-	             rule->get_alias(),
-	             source,
-	             _as.add_link(SET_LINK,
-	                          HandleSeq(product.begin(), product.end())));
-}
-
-UnorderedHandleSet FCStat::get_all_products()
-{
-	UnorderedHandleSet all;
-	for(const auto& ir : _inf_rec)
-		all.insert(ir.product.begin(),ir.product.end());
-
-	return all;
+	auto bc_logger_instantiate = []() {
+		Logger tmp(logger());
+		tmp.set_component("BackwardChainer");
+		// tmp.set_level(Logger::FINE);
+		return tmp;
+	};
+	static Logger bc_instance(bc_logger_instantiate());
+    return bc_instance;
 }
