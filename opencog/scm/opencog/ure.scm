@@ -1,7 +1,7 @@
 ;
-; OpenCog Old Rule Engine module for backward compatibility
+; OpenCog Unified Rule Engine module
 ;
-(define-module (opencog rule-engine))
+(define-module (opencog ure))
 
 ; We need this to set the LTDL_LIBRARY_PATH
 (use-modules (opencog))
@@ -10,5 +10,3 @@
 
 (load-from-path "opencog/ure/ure-utils.scm")
 (export-ure-utils)
-
-(display "Deprecated module for backward compatibility only, use 'ure' instead\n")
