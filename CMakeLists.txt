@@ -374,6 +374,7 @@ IF(HAVE_ATOMSPACE AND HAVE_COGUTIL)
 ENDIF(HAVE_ATOMSPACE AND HAVE_COGUTIL)
 
 ADD_SUBDIRECTORY(opencog)
+ADD_SUBDIRECTORY(lib)
 
 IF (CXXTEST_FOUND)
 	ADD_CUSTOM_TARGET(tests)
@@ -503,10 +504,10 @@ INCLUDE(CPack)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
+SUMMARY_ADD("URE" "Unified Rule Engine" HAVE_URE)
+SUMMARY_ADD("Unify" "Syntactic unifer" HAVE_UNIFY)
 SUMMARY_ADD("Python bindings" "Python (cython) bindings" HAVE_CYTHON)
 SUMMARY_ADD("Python tests" "Python bindings nose tests" HAVE_NOSETESTS)
 SUMMARY_ADD("Scheme bindings" "Scheme bindings and shell" HAVE_GUILE)
-SUMMARY_ADD("URE" "Unified Rule Engine" HAVE_URE)
-SUMMARY_ADD("Unify" "Syntactic unifer" HAVE_UNIFY)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
 SUMMARY_SHOW()

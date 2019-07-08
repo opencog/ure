@@ -29,7 +29,7 @@ IF (HAVE_GUILE)
 ENDIF (HAVE_GUILE)
 
 INSTALL (TARGETS ure 
-    EXPORT AtomSpaceTargets 
+    EXPORT URETargets
     DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
 
 INSTALL (FILES

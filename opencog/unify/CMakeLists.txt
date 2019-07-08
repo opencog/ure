@@ -8,7 +8,7 @@ TARGET_LINK_LIBRARIES(unify
 )
 
 INSTALL (TARGETS unify
-    EXPORT AtomSpaceTargets 
+    EXPORT URETargets
     DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
 
 INSTALL (FILES
