@@ -2,16 +2,12 @@ ADD_LIBRARY (unify
 	Unify
 )
 
-ADD_DEPENDENCIES(unify opencog_atom_types)
-
 TARGET_LINK_LIBRARIES(unify
-	lambda
-	atomcore
-	atombase
+	${ATOMSPACE_LIBRARIES}
 	${COGUTIL_LIBRARY}
 )
 
-INSTALL (TARGETS unify 
+INSTALL (TARGETS unify
     EXPORT AtomSpaceTargets 
     DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
 

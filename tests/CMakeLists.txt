@@ -21,32 +21,12 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 # its is tested first.
 IF (CXXTEST_FOUND)
 
-	ADD_SUBDIRECTORY (atomspace)
-	ADD_SUBDIRECTORY (atoms)
 	ADD_SUBDIRECTORY (unify)
-	ADD_SUBDIRECTORY (atomspaceutils)
-
-	# Persistence is for saving/restoring atomspace to disk.
-	ADD_SUBDIRECTORY (persist)
-
-	# guile provides scheme bindings for the atomspace.
-	ADD_SUBDIRECTORY (scm)
-	ADD_SUBDIRECTORY (matrix)
-
-	# Many of the query tests require a working guile, so run
-	# these only after guile has been tested.
-	ADD_SUBDIRECTORY (query)
-
-	# Reasoning depends on query, above.
 	ADD_SUBDIRECTORY (ure)
 
 	IF (HAVE_CYTHON AND HAVE_NOSETESTS)
 		MESSAGE(STATUS "found cython and nosetest, enabling python unit tests")
 		ADD_SUBDIRECTORY (cython)
 	ENDIF (HAVE_CYTHON AND HAVE_NOSETESTS)
-
-	IF (HAVE_STACK)
-		ADD_SUBDIRECTORY (haskell)
-	ENDIF (HAVE_STACK)
 
 ENDIF (CXXTEST_FOUND)

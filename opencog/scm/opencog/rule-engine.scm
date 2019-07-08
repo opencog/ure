@@ -4,7 +4,7 @@
 (define-module (opencog rule-engine))
 
 (use-modules (opencog))
-(use-modules (opencog as-config))
+(use-modules (opencog ure-config))
 (load-extension (string-append opencog-ext-path-exec "libure") "opencog_ure_init")
 
 (load-from-path "opencog/ure/ure-utils.scm")

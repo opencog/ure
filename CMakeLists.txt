@@ -22,7 +22,7 @@ IF (CMAKE_VERSION VERSION_GREATER 3.9.0)
 	CMAKE_POLICY(SET CMP0068 NEW)
 ENDIF (CMAKE_VERSION VERSION_GREATER 3.9.0)
 
-PROJECT(atomspace)
+PROJECT(ure)
 
 # ----------------------------------------------------------
 # User-modifiable options. Feel free to change these!
@@ -111,6 +111,16 @@ ELSE (COGUTIL_FOUND)
 	MESSAGE(FATAL_ERROR "CogUtil missing: it is needed!")
 ENDIF (COGUTIL_FOUND)
 
+# AtomSpace
+FIND_PACKAGE(AtomSpace 5.0.3 CONFIG REQUIRED)
+IF (ATOMSPACE_FOUND)
+	MESSAGE(STATUS "AtomSpace found.")
+	ADD_DEFINITIONS(-DHAVE_ATOMSPACE)
+	SET(HAVE_ATOMSPACE 1)
+ELSE (ATOMSPACE_FOUND)
+	MESSAGE(FATAL_ERROR "AtomSpace missing: it is needed!")
+ENDIF (ATOMSPACE_FOUND)
+
 # add the 'cmake' directory from cogutil to search path
 list(APPEND CMAKE_MODULE_PATH  ${COGUTIL_DATA_DIR}/cmake)
 include(OpenCogGccOptions)
@@ -131,12 +141,6 @@ ELSE(Boost_FOUND)
 	MESSAGE(FATAL_ERROR "Boost ${MIN_BOOST} or newer is needed to build OpenCog!")
 ENDIF(Boost_FOUND)
 
-# Atomspace won't compile with Boost 1.51, some kind of conflict with
-# hash functions, see github bugs 1 and 36
-IF(105100 EQUAL ${Boost_VERSION})
-	MESSAGE(FATAL_ERROR "Boost version 1.51 will not work with AtomSpace.  Please use a different version.")
-ENDIF(105100 EQUAL ${Boost_VERSION})
-
 MESSAGE(STATUS "Boost version ${Boost_VERSION} found.")
 
 # Arghhh. Except cmake is treating above as required, not optional. #$%**&
@@ -153,20 +157,6 @@ IF (CXXTEST_FOUND)
 ELSE (CXXTEST_FOUND)
 	MESSAGE(STATUS "CxxTest missing: needed for unit tests.")
 ENDIF (CXXTEST_FOUND)
-
-# ----------------------------------------------------------
-# Optional, unused distributed processing framework.
-
-FIND_PACKAGE(LibGearman)
-ADD_DEFINITIONS(-DHAVE_GEARMAN)
-IF(GEARMAN_FOUND)
-	SET(HAVE_GEARMAN 1)
-	SET(GEARMAN_DIR_MESSAGE "Gearman found.")
-ELSE (GEARMAN_FOUND)
-	SET(HAVE_GEARMAN 0)
-	SET(GEARMAN_DIR_MESSAGE "Gearman not found.")
-ENDIF(GEARMAN_FOUND)
-MESSAGE(STATUS "${GEARMAN_DIR_MESSAGE}")
 
 # ----------------------------------------------------------
 # This is required for Guile
@@ -193,39 +183,6 @@ IF (HAVE_SECURE_GETENV)
 	ADD_DEFINITIONS(-DHAVE_SECURE_GETENV)
 ENDIF (HAVE_SECURE_GETENV)
 
-
-# ----------------------------------------------------------
-# Google Protobuf library
-# The protocol buffer compiler is needed for ZMQ-based persistence.
-FIND_PACKAGE(Protobuf)
-IF (PROTOBUF_FOUND
-		AND PROTOBUF_LIBRARY
-		AND PROTOBUF_INCLUDE_DIR
-		AND PROTOBUF_PROTOC_EXECUTABLE)
-
-	ADD_DEFINITIONS(-DHAVE_PROTOBUF)
-	SET(HAVE_PROTOBUF 1)
-	SET(PROTOBUF_DIR_MESSAGE "Protobuf was found.")
-
-ELSE (PROTOBUF_FOUND
-		AND PROTOBUF_LIBRARY
-		AND PROTOBUF_INCLUDE_DIR
-		AND PROTOBUF_PROTOC_EXECUTABLE)
-
-	# If we are here, then we are missing either the libraries, or the
-	# compiler. React appropriately.
-	IF (PROTOBUF_PROTOC_EXECUTABLE)
-		SET(PROTOBUF_DIR_MESSAGE "Protobuf libraries were not found; these are needed to link the ZMQ-based persistence backend.\n	To over-ride, make sure PROTOBUF_LIBRARIES and PROTOBUF_INCLUDE_DIRS are set.")
-	ELSE (PROTOBUF_PROTOC_EXECUTABLE)
-		SET(PROTOBUF_DIR_MESSAGE "Protobuf compiler was not found; the ZMQ-based persistence backend can't be built without it.\n	To over-ride, make sure PROTOBUF_PROTOC_EXECUTABLE is set.")
-	ENDIF (PROTOBUF_PROTOC_EXECUTABLE)
-
-ENDIF (PROTOBUF_FOUND
-		AND PROTOBUF_LIBRARY
-		AND PROTOBUF_INCLUDE_DIR
-		AND PROTOBUF_PROTOC_EXECUTABLE)
-
-MESSAGE(STATUS "${PROTOBUF_DIR_MESSAGE}")
 
 # ----------------------------------------------------------
 # Python and Cython
@@ -316,50 +273,6 @@ IF(HAVE_PY_INTERP)
 ENDIF(HAVE_PY_INTERP)
 
 # ----------------------------------------------------------
-# Glasgow Haskell compiler
-
-FIND_PACKAGE(Stack)
-IF (STACK_FOUND)
-	ADD_DEFINITIONS(-DHAVE_STACK)
-	SET(HAVE_STACK 1)
-ENDIF (STACK_FOUND)
-
-# ----------------------------------------------------------
-# Optional/deprecated ODBC.
-
-FIND_PACKAGE(UnixODBC QUIET)
-IF (UnixODBC_FOUND)
-	ADD_DEFINITIONS(-DHAVE_SQL_STORAGE)
-	SET(HAVE_SQL_STORAGE 1)
-	ADD_DEFINITIONS(-DHAVE_ODBC_STORAGE)
-	SET(ODBC_FOUND 1)
-	SET(ODBC_INCLUDE_DIRS ${UnixODBC_INCLUDE_DIRS})
-	SET(ODBC_LIBRARIES ${UnixODBC_LIBRARIES})
-	SET(ODBC_DIR_MESSAGE "UnixODBC was found.")
-ELSE (UnixODBC_FOUND)
-	SET(ODBC_FOUND 0)
-	SET(ODBC_DIR_MESSAGE "UnixODBC was not found; ODBC persistence subsystem will not be built.\nTo over-ride, make sure UnixODBC_LIBRARIES and UnixODBC_INCLUDE_DIRS are set.")
-ENDIF (UnixODBC_FOUND)
-MESSAGE(STATUS "${ODBC_DIR_MESSAGE}")
-
-# ----------------------------------------------------------
-# Mandatory Postgres
-
-FIND_PACKAGE(PGSQL 9.5 REQUIRED)
-IF (PGSQL_FOUND)
-	ADD_DEFINITIONS(-DHAVE_SQL_STORAGE)
-	SET(HAVE_SQL_STORAGE 1)
-	ADD_DEFINITIONS(-DHAVE_PGSQL_STORAGE)
-	SET(HAVE_PGSQL_STORAGE 1)
-	SET(PGSQL_FOUND 1)
-	SET(PGSQL_DIR_MESSAGE "PostgresSQL ${PGSQL_VERSION_STRING} was found.")
-ELSE (PGSQL_FOUND)
-	SET(PGSQL_FOUND 0)
-	SET(PGSQL_DIR_MESSAGE "PostgresSQL was not found; PGSQL persistence subsystem will not be built.\nTo over-ride, make sure PGSQL_LIBRARIES and PGSQL_INCLUDE_DIRS are set.")
-ENDIF (PGSQL_FOUND)
-MESSAGE(STATUS "${PGSQL_DIR_MESSAGE}")
-
-# ----------------------------------------------------------
 # Optional, currently needed only to hush up DRD in util/Logger.cc
 FIND_PACKAGE(VALGRIND)
 IF (VALGRIND_FOUND)
@@ -374,35 +287,6 @@ ELSE (VALGRIND_FOUND)
 	MESSAGE(STATUS "VALGRIND missing: needed for thread debugging.")
 ENDIF (VALGRIND_FOUND)
 
-# ----------------------------------------------------------
-# Optional and almost obsolete...
-# Remove after the REST interfaces get fixed.
-# ZeroMQ
-FIND_PACKAGE(ZMQ 3.2.4)
-IF (ZMQPP_FOUND AND ZMQ_LIBRARY)
-	ADD_DEFINITIONS(-DHAVE_ZMQ)
-	SET(HAVE_ZMQLIB 1)
-	SET(ZMQ_DIR_MESSAGE "ZeroMQ was found.")
-ELSE (ZMQPP_FOUND AND ZMQ_LIBRARY)
-	SET(ZMQ_DIR_MESSAGE "ZeroMQ library or its C++ header file was not found; \nTo over-ride, make sure that the environment variable ZMQ_LIBRARY is set.\nInstallation instructions: http://zeromq.org/intro:get-the-software")
-ENDIF (ZMQPP_FOUND AND ZMQ_LIBRARY)
-MESSAGE(STATUS "${ZMQ_DIR_MESSAGE}")
-
-# ===============================================================
-# Get atomspace version
-
-# NOTE: This is the official semantic-version, as it is derived from
-# a version-control independent means of declaring versioning.
-#
-# TODO: Once CMAKE_MINIMUM_REQUIRED >= 3.0.2 check use of policy
-# CMP0048.
-#
-FILE(READ "${CMAKE_SOURCE_DIR}/opencog/atomspace/version.h" _ATOMSPACE_H_CONTENTS)
-STRING(REGEX MATCH
-	"#define ATOMSPACE_VERSION_STRING \"([0-9]+[.0-9]+[.0-9]+)\""
-        _ "${_ATOMSPACE_H_CONTENTS}")
-SET(SEMANTIC_VERSION ${CMAKE_MATCH_1})
-
 # ===================================================================
 # Global includes
 
@@ -410,13 +294,13 @@ SET(SEMANTIC_VERSION ${CMAKE_MATCH_1})
 # Include configuration.
 
 # Set default include paths.
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${CMAKE_BINARY_DIR}
-	${Boost_INCLUDE_DIRS} ${COGUTIL_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${Boost_INCLUDE_DIRS}
+	${COGUTIL_INCLUDE_DIR} ${ATOMSPACE_INCLUDE_DIR})
 
 # Macros that define how atom types get declared.
-INCLUDE("${CMAKE_SOURCE_DIR}/cmake/OpenCogMacros.cmake")
-INCLUDE("${CMAKE_SOURCE_DIR}/cmake/OpenCogGuile.cmake")
-INCLUDE("${CMAKE_SOURCE_DIR}/cmake/OpenCogCython.cmake")
+INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogMacros.cmake")
+INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogGuile.cmake")
+INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogCython.cmake")
 
 # -------------------------------------------------
 # Library configuration
@@ -469,18 +353,12 @@ SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
 # ==========================================================
 # Decide what to build, based on the packages found.
 
-IF(HAVE_COGUTIL)
-	SET(HAVE_ATOMSPACE 1)
-ENDIF(HAVE_COGUTIL)
+IF(HAVE_ATOMSPACE AND HAVE_COGUTIL)
+	SET(HAVE_URE 1)
+	SET(HAVE_UNIFY 1)
+ENDIF(HAVE_ATOMSPACE AND HAVE_COGUTIL)
 
-# Both protobuf and also zmq are needed to build ZMQ API.
-IF(HAVE_PROTOBUF AND HAVE_ZMQLIB)
-	SET(HAVE_ZMQ 1)
-ENDIF(HAVE_PROTOBUF AND HAVE_ZMQLIB)
-
-ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(opencog)
-ADD_SUBDIRECTORY(lib)
 
 IF (CXXTEST_FOUND)
 	ADD_CUSTOM_TARGET(tests)
@@ -533,8 +411,6 @@ IF (CXXTEST_FOUND)
 		COMMENT "Running pattern matcher tests..."
 	)
 ENDIF (CXXTEST_FOUND)
-
-ADD_SUBDIRECTORY(examples EXCLUDE_FROM_ALL)
 
 IF (NOT WIN32)
 	ADD_CUSTOM_TARGET (examples
@@ -599,9 +475,8 @@ SET(DEPENDENCY_LIST
 	"libboost-system-dev (>= ${MIN_BOOST})"
 	"libboost-random-dev (>= ${MIN_BOOST})"
 	"libstdc++6 (>= 4.7)"
-	"libgearman-dev (>=1.0.6)"
-	"libpq-dev (>=9.3.24)"
 	"libcogutil-dev (>= 2.0.2)"
+	"atomspace-dev (>= 5.0.3)"
 )
 
 STRING(REPLACE ";" ", " MAIN_DEPENDENCIES "${DEPENDENCY_LIST}")
@@ -611,22 +486,12 @@ SET(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://opencog.org")
 INCLUDE(CPack)
 
 # ===================================================================
-# Documentation.
-FIND_PACKAGE(Doxygen)
-ADD_SUBDIRECTORY(doc EXCLUDE_FROM_ALL)
-
-# ===================================================================
 # Show a summary of what we found, what we will do.
 
-SUMMARY_ADD("AtomSpace" "A weighted and typed graph database" HAVE_ATOMSPACE)
-SUMMARY_ADD("Doxygen" "Code documentation" DOXYGEN_FOUND)
-SUMMARY_ADD("Gearman" "Distributed processing capability" HAVE_GEARMAN)
-SUMMARY_ADD("Haskell bindings" "Haskell bindings" HAVE_STACK)
 SUMMARY_ADD("Python bindings" "Python (cython) bindings" HAVE_CYTHON)
 SUMMARY_ADD("Python tests" "Python bindings nose tests" HAVE_NOSETESTS)
 SUMMARY_ADD("Scheme bindings" "Scheme bindings and shell" HAVE_GUILE)
-SUMMARY_ADD("SQL ODBC bindings" "Save/Restore of AtomSpace to database via ODBC" ODBC_FOUND)
-SUMMARY_ADD("SQL Postgres bindings" "Save/Restore of AtomSpace to Postgres database" PGSQL_FOUND)
-SUMMARY_ADD("ZeroMQ persistence" "Save/Restore of AtomSpace to ZeroMQ server" HAVE_ZMQ)
+SUMMARY_ADD("URE" "Unified Rule Engine" HAVE_URE)
+SUMMARY_ADD("Unify" "Syntactic unifer" HAVE_UNIFY)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
 SUMMARY_SHOW()
