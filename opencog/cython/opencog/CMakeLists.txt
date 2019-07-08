@@ -13,190 +13,24 @@ SET(CMAKE_SHARED_LINKER_FLAGS
 SET(CMAKE_SHARED_LIBRARY_SUFFIX .so)
 
 INCLUDE_DIRECTORIES(
+	${ATOMSPACE_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-SET(CYTHON_FLAGS "-2" "-f")
+SET(CYTHON_FLAGS "-2" "-f" "-I" "${ATOMSPACE_INCLUDE_DIR}/opencog/cython")
 
 # Use this as a guide:
 # https://github.com/OpenKinect/libfreenect/blob/master/wrappers/python/CMakeLists.txt
-
-###################### logger ##########################################
-CYTHON_ADD_MODULE_PYX(logger)
-
-ADD_LIBRARY(logger_cython
-	logger.cpp
-)
-
-TARGET_LINK_LIBRARIES(logger_cython
-	${COGUTIL_LIBRARY}
-	${PYTHON_LIBRARIES}
-)
-
-SET_TARGET_PROPERTIES(logger_cython PROPERTIES
-	PREFIX ""
-	OUTPUT_NAME logger)
-
-###################### atomspace ####################################
-
-CYTHON_ADD_MODULE_PYX(atomspace
-	"atom.pyx" "nameserver.pyx" "truth_value.pyx"
-	"atomspace_details.pyx" "value.pyx" "float_value.pyx" "string_value.pyx"
-	"link_value.pyx" opencog_atom_types
-	"../../atoms/truthvalue/TruthValue.h" "../../atoms/truthvalue/SimpleTruthValue.h"
-	"../../atoms/atom_types/NameServer.h" "../../atoms/base/Handle.h"
-	"../../atomspace/AtomSpace.h"
-)
-
-list(APPEND ADDITIONAL_MAKE_CLEAN_FILES "atomspace_api.h")
-
-# opencog.atomspace Python bindings
-ADD_LIBRARY(atomspace_cython
-	atomspace.cpp
-)
-
-# The atomspace_api.h must be generated before PythonEval is compiled, thus
-# this phony-target is created. Why not add_dependencies between PythonEval
-# and atomspace_cython? -> Because that results in a cyclic dependency.
-ADD_CUSTOM_TARGET(py_atomspace_header
-	DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/atomspace.cpp)
-
-# XXX FIXME Cython should not static link the atom-types, but
-# but should instead dynamic-load them, as needed.
-ADD_DEPENDENCIES(atomspace_cython opencog_atom_types)
-
-TARGET_LINK_LIBRARIES(atomspace_cython
-	${NO_AS_NEEDED}
-	atomspace
-	${PYTHON_LIBRARIES}
-)
-
-SET_TARGET_PROPERTIES(atomspace_cython PROPERTIES
-	PREFIX ""
-	OUTPUT_NAME atomspace)
-
-# The cogserver needs the atomspace pxd file to get the Handle, Atom and
-# AtomSpace defintions during compilation. So this must be installed.
-INSTALL (FILES
-	__init__.py
-	atomspace.pxd
-	DESTINATION "include/opencog/cython/opencog"
-)
-
-############################## type constructors #####################
-
-CYTHON_ADD_MODULE_PYX(type_constructors
-	"atomspace.pxd" opencog_atom_types
-)
-
-ADD_LIBRARY(type_constructors
-	type_constructors.cpp
-)
-
-TARGET_LINK_LIBRARIES(type_constructors
-	${NO_AS_NEEDED}
-	atomspace
-	${PYTHON_LIBRARIES}
-)
-
-SET_TARGET_PROPERTIES(type_constructors PROPERTIES
-	PREFIX ""
-	OUTPUT_NAME type_constructors)
-
-
-############################## utilities #####################
-
-CYTHON_ADD_MODULE_PYX(utilities
-	"atomspace.pxd" opencog_atom_types
-)
-
-ADD_LIBRARY(utilities_cython
-	Utilities.cc
-	utilities.cpp
-)
-
-TARGET_LINK_LIBRARIES(utilities_cython
-	PythonEval
-	atomspace
-	type_constructors
-	${PYTHON_LIBRARIES}
-)
-
-SET_TARGET_PROPERTIES(utilities_cython PROPERTIES
-	PREFIX ""
-	OUTPUT_NAME utilities)
-
-############################## bindlink #####################
-
-CYTHON_ADD_MODULE_PYX(bindlink
-	"atomspace.pxd"
-	opencog_atom_types
-)
-
-ADD_LIBRARY(bindlink_cython
-	BindlinkStub.cc
-	bindlink.cpp
-)
-
-TARGET_LINK_LIBRARIES(bindlink_cython
-	atomspace_cython
-	atomspace
-	${PYTHON_LIBRARIES}
-)
-
-SET_TARGET_PROPERTIES(bindlink_cython PROPERTIES
-	PREFIX ""
-	OUTPUT_NAME bindlink)
-
-INSTALL (TARGETS
-	atomspace_cython
-	bindlink_cython
-	logger_cython
-	type_constructors
-	utilities_cython
-	DESTINATION "${PYTHON_DEST}")
-
-IF (HAVE_GUILE)
-	############################## scheme wrapper #####################
-
-	CYTHON_ADD_MODULE_PYX(scheme_wrapper
-		"load-file.h"
-		"PyScheme.h"
-		"atomspace.pxd"
-		opencog_atom_types
-	)
-
-	ADD_LIBRARY(scheme_wrapper
-		load-file
-		PyScheme
-		scheme_wrapper.cpp
-	)
-
-	TARGET_LINK_LIBRARIES(scheme_wrapper
-		atomspace_cython
-		atomspace
-		smob
-		${PYTHON_LIBRARIES}
-	)
-
-	SET_TARGET_PROPERTIES(scheme_wrapper PROPERTIES
-		PREFIX ""
-		OUTPUT_NAME scheme_wrapper)
-
-	INSTALL (TARGETS
-		scheme_wrapper
-		DESTINATION "${PYTHON_DEST}")
-ENDIF (HAVE_GUILE)
 
 ##################### URE #####################
 
 CYTHON_ADD_MODULE_PYX(ure
 	"ure.pyx" "forwardchainer.pyx" "backwardchainer.pyx"
-	opencog_atom_types
 	"../../ure/forwardchainer/ForwardChainer.h"
 	"../../ure/backwardchainer/BackwardChainer.h"
+	ure
 )
 
 # opencog.ure Python bindings
@@ -205,9 +39,8 @@ ADD_LIBRARY(ure_cython
 )
 
 TARGET_LINK_LIBRARIES(ure_cython
-	atomspace_cython
-	type_constructors
 	ure
+	${ATOMSPACE_LIBRARIES}
 	${PYTHON_LIBRARIES}
 )
 

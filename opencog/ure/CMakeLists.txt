@@ -20,20 +20,11 @@ ADD_LIBRARY(ure
 	ThompsonSampling
 )
 
-ADD_DEPENDENCIES(ure
-	opencog_atom_types
-)
-
 TARGET_LINK_LIBRARIES(ure
-	lambda
-	query-engine
-	execution
-	atomspace
-	atomspaceutils
 	unify
 )
 IF (HAVE_GUILE)
-	TARGET_LINK_LIBRARIES(ure smob)
+	TARGET_LINK_LIBRARIES(ure ${GUILE_LIBRARIES})
 	ADD_GUILE_EXTENSION(SCM_CONFIG ure "opencog-ext-path-ure")
 ENDIF (HAVE_GUILE)
 
