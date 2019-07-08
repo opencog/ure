@@ -1,0 +1,16 @@
+@PACKAGE_INIT@
+
+include("@CMAKE_INSTALL_PREFIX@/lib/cmake/URE/URETargets.cmake")
+
+set(URE_LIBRARY ure)
+set(UNIFY_LIBRARY unify)
+
+set(URE_LIBRARIES
+	ure
+	unify
+)
+
+set(URE_DATA_DIR "@CMAKE_INSTALL_PREFIX@/share/opencog")
+set(URE_INCLUDE_DIR "@CMAKE_INSTALL_PREFIX@/include/")
+set(URE_VERSION "@SEMANTIC_VERSION@")
+set(URE_FOUND 1)
