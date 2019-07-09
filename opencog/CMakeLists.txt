@@ -24,10 +24,6 @@ IF (HAVE_CYTHON)
 	ADD_SUBDIRECTORY (cython)
 ENDIF (HAVE_CYTHON)
 
-# TODO: do we really need that?
 WRITE_GUILE_CONFIG(${GUILE_BIN_DIR}/opencog/ure-config.scm SCM_CONFIG TRUE)
-# XXX FIXME Once tests are consistently using the build directory, delete this line
-WRITE_GUILE_CONFIG(${CMAKE_SOURCE_DIR}/opencog/scm/opencog/ure-config.scm SCM_CONFIG TRUE)
-
 WRITE_GUILE_CONFIG(${GUILE_BIN_DIR}/opencog/ure-config-installable.scm SCM_CONFIG FALSE)
 INSTALL(FILES ${GUILE_BIN_DIR}/opencog/ure-config-installable.scm DESTINATION ${GUILE_SITE_DIR}/opencog RENAME ure-config.scm)
