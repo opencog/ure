@@ -1,18 +1,13 @@
 version: 2.0
 
 jobs:
-  atomspace:
+  ure:
     docker:
       - image: opencog/opencog-deps
         user: root
         environment:
-          PGHOST: opencog-postgres
-          PGUSER: opencog_test
-          PGPASSWORD: cheese
           CCACHE_DIR: /ws/ccache
-      - image: opencog/postgres
-        name: opencog-postgres
-    working_directory: /ws/atomspace
+    working_directory: /ws/ure
     steps:
       - attach_workspace:
           at: /ws
@@ -30,15 +25,17 @@ jobs:
             mkdir -p /ws/cogutil/build
             cd /ws/cogutil/build && cmake .. && make -j2 && make -j2 install
             ldconfig
+      - run:
+          name: Install atomspace
+          command: |
+            git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/atomspace /ws/atomspace
+            mkdir -p /ws/atomspace/build
+            cd /ws/atomspace/build && cmake .. && make -j2 && make -j2 install
+            ldconfig
       - checkout
-      - restore_cache:
-          name: Restore GCH Cache
-          keys:
-            - ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
-      - restore_cache:
-          name: Restore Haskell Deps Cache
-          keys:
-            - haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
+      - run:
+          name: Checkout URE
+          command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/ure /ws/ure
       - run:
           name: CMake Configure
           command: mkdir build && cd build && cmake ..
@@ -52,7 +49,7 @@ jobs:
           name: Run tests
           command: cd build && make -j2 test ARGS=-j2
       - run:
-          name: Install AtomSpace
+          name: Install URE
           command: cd build && make -j2 install && ldconfig
       - run:
           name: Build examples
@@ -61,21 +58,12 @@ jobs:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
           when: always
-      - save_cache:
-          name: Save GHC Cache
-          key: ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
-          paths:
-            - /root/.stack
-      - save_cache:
-          name: Save Haskell Deps Cache
-          key: haskelldeps-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{checksum "/ws/atomspace/opencog/haskell/opencog-atomspace.cabal"}}-{{ arch }}
-          paths:
-            - /ws/atomspace/opencog/haskell/.stack-work
       - persist_to_workspace:
           root: /ws/
           paths:
             - cogutil
             - atomspace
+            - ure
             - ccache
 
   opencog:
@@ -102,6 +90,9 @@ jobs:
       - run:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j2 install && ldconfig
+      - run:
+          name: Install URE
+          command: cd /ws/ure/build && make -j2 install && ldconfig
       - run:
           name: Clone OpenCog
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
@@ -149,10 +140,10 @@ workflows:
   version: 2
   build-test-package:
     jobs:
-      - atomspace
+      - ure
       - opencog:
           requires:
-            - atomspace
+            - ure
       - package:
           requires:
             - opencog
