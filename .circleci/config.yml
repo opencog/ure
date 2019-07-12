@@ -32,7 +32,6 @@ jobs:
             mkdir -p /ws/atomspace/build
             cd /ws/atomspace/build && cmake .. && make -j2 && make -j2 install
             ldconfig
-      - checkout
       - run:
           name: Checkout URE
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/ure /ws/ure
@@ -91,7 +90,7 @@ jobs:
           name: Install URE
           command: cd /ws/ure/build && make -j2 install && ldconfig
       - run:
-          name: Clone OpenCog
+          name: Checkout OpenCog
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
       - run:
           name: CMake Configure
