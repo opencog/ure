@@ -76,6 +76,7 @@ public:
 
 	// Test forward chainer
 	void test_deduction();
+	void test_deduction_neg_max_iter();
 	void test_animals();
 	void test_unsatisfied_premise();
 	void test_negation_conflict();
@@ -141,6 +142,45 @@ void ForwardChainerUTest::test_deduction()
 	Handle rbs = an(CONCEPT_NODE, "fc-deduction-rule-base");
 	ForwardChainer fc(_as, rbs, AB);
 	fc.get_config().set_jobs(4);
+	// Run forward chainer
+	fc.do_chain();
+
+	// Collect the results
+	HandleSet results = fc.get_chaining_result();
+
+	// Check that AC is in the results
+	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
+	TS_ASSERT_DIFFERS(results.find(AC), results.end());
+}
+
+// Like test_deduction but set a negative number of iteration which
+// means infinite number of iterations, or until saturation.
+void ForwardChainerUTest::test_deduction_neg_max_iter()
+{
+	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+	// Test simple deduction
+	//
+	//   InheritanceLink A B
+	//   InheritanceLink B C
+	//   |-
+	//   InheritanceLink A C
+	//
+	Handle A = _eval.eval_h("(ConceptNode \"A\" (stv 1 1))"),
+	       B = _eval.eval_h("(ConceptNode \"B\")"),
+	       C = _eval.eval_h("(ConceptNode \"C\")"),
+	       AB = _eval.eval_h("(InheritanceLink (stv 1 1)"
+	                         "   (ConceptNode \"A\")"
+	                         "   (ConceptNode \"B\"))"),
+	       BC = _eval.eval_h("(InheritanceLink (stv 1 1)"
+	                         "   (ConceptNode \"B\")"
+	                         "   (ConceptNode \"C\"))");
+
+	// Get the ConceptNode corresponding to the rule-based system to test
+	Handle rbs = an(CONCEPT_NODE, "fc-deduction-rule-base");
+	ForwardChainer fc(_as, rbs, AB);
+	fc.get_config().set_jobs(4);
+	fc.get_config().set_maximum_iterations(-1);
 	// Run forward chainer
 	fc.do_chain();
 

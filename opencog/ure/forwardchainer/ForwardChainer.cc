@@ -204,7 +204,8 @@ bool ForwardChainer::termination()
 		terminate = true;
 	}
 	// Terminate if max iterations has been reached
-	else if (_config.get_maximum_iterations() <= _iteration) {
+	else if (0 <= _config.get_maximum_iterations() and
+	         _config.get_maximum_iterations() <= _iteration) {
 		msg = "reach maximum number of iterations";
 		terminate = true;
 	}
