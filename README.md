@@ -25,7 +25,7 @@ To build the URE you need to build and install the
 [Building-and-installing-the-AtomSpace](https://github.com/opencog/atomspace#building-and-installing)
 for more information.
 
-### Building AtomSpace
+### Building URE
 
 Be sure to install the pre-requisites first!
 Perform the following steps at the shell prompt:
