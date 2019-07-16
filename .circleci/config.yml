@@ -140,7 +140,7 @@ jobs:
     docker:
       - image: opencog/opencog-deps
         user: root
-    working_directory: /ws/atomspace
+    working_directory: /ws/ure
     steps:
       - attach_workspace:
           at: /ws/
