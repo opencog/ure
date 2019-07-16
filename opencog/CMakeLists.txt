@@ -1,7 +1,3 @@
-
-# The atom_types.h file is written to the build directory
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
-
 DECLARE_GUILE_CONFIG_TARGET(SCM_CONFIG "opencog ure-config" "URE_TEST")
 
 # The build order used here is loosely in terms of 
