@@ -131,6 +131,7 @@ jobs:
       - persist_to_workspace:
           root: /ws/
           paths:
+            - miner
             - ccache
 
   opencog:
