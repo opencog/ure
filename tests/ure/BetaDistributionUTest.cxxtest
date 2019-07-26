@@ -7,6 +7,7 @@
 
 #include <opencog/util/Logger.h>
 #include <opencog/ure/BetaDistribution.h>
+#include <opencog/ure/URELogger.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 
 #include <cxxtest/TestSuite.h>
@@ -28,12 +29,15 @@ public:
 	void tearDown();
 
 	void test_cdf();
+	void test_mk_stv();
 };
 
 BetaDistributionUTest::BetaDistributionUTest()
 {
 	logger().set_level(Logger::DEBUG);
 	logger().set_print_to_stdout_flag(true);
+	ure_logger().set_level(Logger::FINE);
+	ure_logger().set_print_to_stdout_flag(true);
 }
 
 void BetaDistributionUTest::setUp()
@@ -101,6 +105,24 @@ void BetaDistributionUTest::test_cdf()
 	TS_ASSERT_DELTA(cdfs[5][0], 0, espilon);
 	TS_ASSERT_DELTA(cdfs[5][1], 0, espilon);
 	TS_ASSERT_DELTA(cdfs[5][2], 1, espilon);
+
+	logger().debug("END TEST: %s", __FUNCTION__);
+}
+
+void BetaDistributionUTest::test_mk_stv()
+{
+	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+	// These values correspond to alpha = 1 and 1 < beta which was not
+	// covered so far.
+	double mean = 0.011002444987775062,
+		variance = 0.00011841900934533786;
+	TruthValuePtr tv = mk_stv(mean, variance);
+
+	logger().debug() << "tv = " << oc_to_string(tv);
+
+	TS_ASSERT_DELTA(tv->get_mean(), 0, 1e-3);
+	TS_ASSERT_DELTA(tv->get_confidence(), 0.1, 1e-2);
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
