@@ -26,9 +26,9 @@ cdef class ForwardChainer:
         for atom in focus_set:
             if isinstance(atom, Atom):
                 handle_vector.push_back(deref((<Atom>(atom)).handle))
-
+        cdef AtomSpace rbs_as = rbs.atomspace
         self.chainer = new cForwardChainer(deref(_as.atomspace),
-                                        deref(rbs.atomspace.atomspace),
+                                        deref(rbs_as.atomspace),
                                         deref(rbs.handle),
                                         deref(source.handle),
                                         c_vardecl,
@@ -44,7 +44,7 @@ cdef class ForwardChainer:
         cdef set[cHandle].iterator it = res_handle_set.begin()
         while it != res_handle_set.end():
             handle = deref(it)
-            list.append(Atom.createAtom(handle, self._as))
+            list.append(Atom.createAtom(handle))
             inc(it)
 
         result_set = self._as.add_link(types.SetLink, list)
