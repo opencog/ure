@@ -106,10 +106,10 @@ TruthValuePtr mk_stv(double mean, double variance,
 	if (1 < alpha and 1 < beta)
 		mode = boost::math::mode(beta_distribution<double>(alpha, beta));
 
-	if (alpha < 1 and 1 <= beta)
+	if (alpha <= 1 and 1 < beta)
 		mode = 0;
 
-	if (beta < 1 and 1 <= alpha)
+	if (alpha < 1 and beta <= 1)
 		mode = 1;
 
 	// This is mathematically wrong, but for now we don't try to have
