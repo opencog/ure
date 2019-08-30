@@ -83,6 +83,20 @@ public:
 	std::vector<double> cdf(int bins) const;
 
 	/**
+	 * Generate a vector of the pdf of regularly spaced right-end
+	 * points, specifically
+	 *
+	 * [beta_distribution_pdf(1/bins),
+	 *  beta_distribution_pdf(2/bins),
+	 *  ...
+	 *  beta_distribution_pdf(1)]
+	 *
+	 * The pdf at the origin is ignored because it is always 0. The
+	 * last one is always 0 but is included for completeness.
+	 */
+	std::vector<double> pdf(int bins) const;
+
+	/**
 	 * Calculate the probability density at x
 	 */
 	double pd(double x) const;

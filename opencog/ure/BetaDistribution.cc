@@ -69,6 +69,17 @@ std::vector<double> BetaDistribution::cdf(int bins) const
 	return cdf;
 }
 
+std::vector<double> BetaDistribution::pdf(int bins) const
+{
+	std::vector<double> pdf;
+	for (int x_idx = 0; x_idx < bins; x_idx++) {
+		double x = (x_idx + 1.0) / bins,
+			r = boost::math::pdf(_beta_distribution, std::min(1.0, x));
+		pdf.push_back(r);
+	}
+	return pdf;
+}
+
 double BetaDistribution::pd(double x) const
 {
 	return boost::math::pdf(_beta_distribution, x);
