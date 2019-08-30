@@ -85,6 +85,32 @@ double BetaDistribution::pd(double x) const
 	return boost::math::pdf(_beta_distribution, x);
 }
 
+std::string BetaDistribution::cdf_csv(int bins) const
+{
+	std::stringstream ss;
+	ss << 0.0 << "," << 0.0;
+	int x_idx = 0;
+	for (double v : cdf(bins)) {
+		x_idx++;
+		double x = (double)x_idx / bins;
+		ss << std::endl << x << "," << v;
+	}
+	return ss.str();
+}
+
+std::string BetaDistribution::pdf_csv(int bins) const
+{
+	std::stringstream ss;
+	ss << 0.0 << "," << 0.0;
+	int x_idx = 0;
+	for (double v : pdf(bins)) {
+		x_idx++;
+		double x = (double)x_idx / bins;
+		ss << std::endl << x << "," << v;
+	}
+	return ss.str();
+}
+
 std::string BetaDistribution::to_string(const std::string& indent) const
 {
 	std::stringstream ss;

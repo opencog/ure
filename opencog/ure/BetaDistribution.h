@@ -101,6 +101,20 @@ public:
 	 */
 	double pd(double x) const;
 
+	/**
+	 * Print the CSV content of its cdf or pdf. To plot it you can
+	 * paste it in some file 'plot.csv' and use gnuplot with the
+	 * following commands:
+	 *
+	 * set datafile separator comma
+	 * plot 'plot.csv' using 1:2
+	 */
+	std::string cdf_csv(int bins) const;
+	std::string pdf_csv(int bins) const;
+
+	/**
+	 * Print the parameters of the beta distribution.
+	 */
 	std::string to_string(const std::string& indent) const;
 
 private:
