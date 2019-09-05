@@ -26,11 +26,12 @@
         (ExecutionOutputLink
             (GroundedSchemaNode "scm: crisp-modus-ponens-formula")
             (ListLink
+                (VariableNode "$B")
                 (ImplicationLink
                     (VariableNode "$A")
                     (VariableNode "$B"))
                 (VariableNode "$A")
-                (VariableNode "$B")))))
+                ))))
 
 ; -----------------------------------------------------------------------------
 ; Crisp Modus Ponens Formula
@@ -39,7 +40,7 @@
 ; the TV of B to (stv 1 1)
 ; -----------------------------------------------------------------------------
 
-(define (crisp-modus-ponens-formula AB A B)
+(define (crisp-modus-ponens-formula B AB A)
     (let
         ((sA (cog-mean A))
          (cA (cog-confidence A))

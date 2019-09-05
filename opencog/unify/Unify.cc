@@ -232,11 +232,12 @@ Unify::CHandle Unify::find_least_abstract(const TypedBlock& block,
                                           const Handle& pre) const
 {
 	// Get the least abstract element of the block
-	static Handle top(Handle(createNode(VARIABLE_NODE, "__dummy_top__")));
-	CHandle least_abstract(top);
-	for (const CHandle& ch : block.first)
-		if (inherit(ch, least_abstract))
-			least_abstract = ch;
+	auto blk_it = block.first.begin();
+	CHandle least_abstract = *blk_it;
+	++blk_it;
+	for (; blk_it != block.first.end(); ++blk_it)
+		if (inherit(*blk_it, least_abstract))
+			least_abstract = *blk_it;
 
 	// In case of ties pick up the one in pre (pre stands for
 	// precedence)
@@ -246,10 +247,6 @@ Unify::CHandle Unify::find_least_abstract(const TypedBlock& block,
 		    (not ch.is_free_variable()
 		     or is_unquoted_unscoped_in_tree(pre, ch.handle)))
 			least_abstract = ch;
-
-	OC_ASSERT(least_abstract.handle != top,
-	          "Finding the least abstract atom in the block has failed. "
-	          "It is probably a bug.");
 
 	return least_abstract;
 }
@@ -327,7 +324,7 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 		vardecl = substitute_vardecl(old_vardecl, var2val);
 	}
 
-	const Variables variables = bl->get_variables();
+	const Variables& variables = bl->get_variables();
 
 	// Turn the map into a vector of new variable names/values
 	HandleSeq values = variables.make_sequence(var2val);
@@ -484,9 +481,9 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 
 	// If one is a node
 	if (lh->is_node() or rh->is_node()) {
-		// If one is a free variable and they are different, then
-		// unifies.
-		if (lch.is_free_variable() or rch.is_free_variable()) {
+		// If one is a free variable that is declared in _variables, and
+		// they are different, then unifies.
+		if (is_free_declared_variable(lch) or is_free_declared_variable(rch)) {
 			if (lch == rch) {
 				// Do not construct a solution like {X}->X to not
 				// overload the solution set.
@@ -500,7 +497,7 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 				return mkvarsol(lch, rch);
 			}
 		} else if (!lq and !rq)
-			return SolutionSet(lch.is_node_satisfiable(rch));
+			return SolutionSet(is_node_satisfiable(lch, rch));
 	}
 
 	////////////////////////
@@ -990,17 +987,15 @@ bool Unify::inherit(const Handle& lh, const Handle& rh,
 	if (lh == rh)
 		return true;
 
-	// If both are free variables then look at their types (only
-	// simple types are considered for now).
-	if (lc.is_free_variable(lh) and rc.is_free_variable(rh))
+	// If both are free variables and declared then look at their types
+	// (only simple types are considered for now).
+	if (is_free_declared_variable(lc, lh) and is_free_declared_variable(rc, rh))
 		return inherit(get_union_type(lh), get_union_type(rh));
 
-	// If only rh is a free variable, if its in _variable then check
-	// whether lh type inherits from it (using Variables::is_type),
-	// otherwise assume rh is the top type and thus anything inherits
-	// from it.
-	if (rc.is_free_variable(rh))
-        return not _variables.is_in_varset(rh) or _variables.is_type(rh, lh);
+	// If only rh is a free and declared variable then check whether lh
+	// type inherits from it (using Variables::is_type).
+	if (is_free_declared_variable(rc, rh))
+		return _variables.is_type(rh, lh);
 
 	return false;
 }
@@ -1024,6 +1019,36 @@ bool Unify::inherit(const TypeSet& lhs, const TypeSet& rhs) const
 		if (not inherit(ty, rhs))
 			return false;
 	return true;
+}
+
+bool Unify::is_declared_variable(const Handle& h) const
+{
+	return _variables.is_in_varset(h);
+}
+
+bool Unify::is_declared_variable(const CHandle& ch) const
+{
+	return is_declared_variable(ch.handle);
+}
+
+bool Unify::is_free_declared_variable(const CHandle& ch) const
+{
+	return ch.is_free_variable() and is_declared_variable(ch);
+}
+
+bool Unify::is_free_declared_variable(const Context& c, const Handle& h) const
+{
+	return c.is_free_variable(h) and is_declared_variable(h);
+}
+
+bool Unify::is_node_satisfiable(const CHandle& lch, const CHandle& rch) const
+{
+	// First take care of free undeclared variables treated as
+	// constants
+	if (lch.is_free_variable() and not is_declared_variable(lch) and
+	    rch.is_free_variable() and not is_declared_variable(rch))
+		return content_eq(lch.handle, rch.handle);
+	return lch.is_node_satisfiable(rch);
 }
 
 Variables merge_variables(const Variables& lhs, const Variables& rhs)
