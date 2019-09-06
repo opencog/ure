@@ -125,6 +125,8 @@ public:
 	void test_unify_basic_8();
 
 	// Variable declaration
+	void test_unify_undeclared_var_1();
+	void test_unify_undeclared_var_2();
 	void test_unify_vardecl_1();
 	void test_unify_vardecl_2();
 	void test_unify_vardecl_3();
@@ -152,7 +154,7 @@ public:
 	void test_unify_alpha_equivalence();
 
 	void test_substitute();
-	
+
 	// Various complex unify queries
 	void test_unify_complex_1();
 	void test_unify_complex_2();
@@ -480,6 +482,40 @@ void UnifyUTest::test_unify_basic_8()
 	Unify unify(XY, AZ);
 	Unify::SolutionSet result = unify(),
 		expected = Unify::SolutionSet({{{{X, A}, A}, {{Y, Z}, Y}}});
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyUTest::test_unify_undeclared_var_1()
+{
+	// The variable declaration provided, Y, is not present in the left
+	// term, X, thus unification is not possible, since X viewed as
+	// constant is different than A.
+	Unify unify(X, A, Y);
+	Unify::SolutionSet result = unify(),
+		expected(false);
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+
+	// On top of that make sure that the solution is empty as it is
+	// how failing is represented
+	TS_ASSERT(result.empty());
+}
+
+void UnifyUTest::test_unify_undeclared_var_2()
+{
+	// The variable declaration provided, Y, is not present in the left
+	// term, X, however unification is possible by unifying Z and X
+	// viewed as constant.
+	Unify unify(X, Z, Y);
+	Unify::SolutionSet result = unify(),
+		expected = Unify::SolutionSet({{{{Z, X}, X}}});
 
 	std::cout << "result = " << oc_to_string(result) << std::endl;
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;

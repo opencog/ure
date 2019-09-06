@@ -69,9 +69,46 @@ std::vector<double> BetaDistribution::cdf(int bins) const
 	return cdf;
 }
 
+std::vector<double> BetaDistribution::pdf(int bins) const
+{
+	std::vector<double> pdf;
+	for (int x_idx = 0; x_idx < bins; x_idx++) {
+		double x = (x_idx + 1.0) / bins,
+			r = boost::math::pdf(_beta_distribution, std::min(1.0, x));
+		pdf.push_back(r);
+	}
+	return pdf;
+}
+
 double BetaDistribution::pd(double x) const
 {
 	return boost::math::pdf(_beta_distribution, x);
+}
+
+std::string BetaDistribution::cdf_csv(int bins) const
+{
+	std::stringstream ss;
+	ss << 0.0 << "," << 0.0;
+	int x_idx = 0;
+	for (double v : cdf(bins)) {
+		x_idx++;
+		double x = (double)x_idx / bins;
+		ss << std::endl << x << "," << v;
+	}
+	return ss.str();
+}
+
+std::string BetaDistribution::pdf_csv(int bins) const
+{
+	std::stringstream ss;
+	ss << 0.0 << "," << 0.0;
+	int x_idx = 0;
+	for (double v : pdf(bins)) {
+		x_idx++;
+		double x = (double)x_idx / bins;
+		ss << std::endl << x << "," << v;
+	}
+	return ss.str();
 }
 
 std::string BetaDistribution::to_string(const std::string& indent) const
@@ -106,10 +143,10 @@ TruthValuePtr mk_stv(double mean, double variance,
 	if (1 < alpha and 1 < beta)
 		mode = boost::math::mode(beta_distribution<double>(alpha, beta));
 
-	if (alpha < 1 and 1 <= beta)
+	if (alpha <= 1 and 1 < beta)
 		mode = 0;
 
-	if (beta < 1 and 1 <= alpha)
+	if (alpha < 1 and beta <= 1)
 		mode = 1;
 
 	// This is mathematically wrong, but for now we don't try to have
