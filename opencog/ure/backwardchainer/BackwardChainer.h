@@ -185,7 +185,15 @@ private:
 
 	// Fulfill an FCS (i.e and-BIT). That is run its forward chaining
 	// strategy.
-	void fulfill_fcs(const Handle& fcs);
+	void fulfill_fcs(const AndBIT* fcs);
+
+	//Hellper functions to properly execute META-FCS and the FCS it creates.
+	//As well as properly recording it all as traces.
+	//
+	//Fulfill normal FCS
+	HandleSeq fulfill_fcs(const AndBIT * fcs, AtomSpace & tmp_as);
+	//Fulfill META-FCS
+	HandleSeq fulfill_mfcs(const AndBIT * mfcs, AtomSpace & tmp_as);
 
 	// Reduce the BIT. Remove some and-BITs.
 	void reduce_bit();

@@ -3,6 +3,34 @@
 (define fcs-1
 (BindLink
   (AndLink
+    (Present
+      (LambdaLink
+          (TypedVariableLink
+            (VariableNode "$X")
+            (TypeNode "ConceptNode")
+          )
+          (EvaluationLink
+            (PredicateNode "take")
+            (ListLink
+              (VariableNode "$X")
+              (ConceptNode "treatment-1")
+            )
+          )
+        )
+        (LambdaLink
+          (TypedVariableLink
+            (VariableNode "$X")
+            (TypeNode "ConceptNode")
+          )
+          (EvaluationLink
+            (PredicateNode "contain")
+            (ListLink
+              (ConceptNode "treatment-1")
+              (ConceptNode "compound-A")
+            )
+          )
+        )
+    )
     (NotLink
       (IdenticalLink
         (LambdaLink
@@ -314,6 +342,26 @@
 (define fcs-2
 (BindLink
   (AndLink
+    (Present
+		(LambdaLink
+          (TypedVariableLink
+            (VariableNode "$X")
+            (TypeNode "ConceptNode"))
+          (EvaluationLink
+            (PredicateNode "take")
+            (ListLink
+              (VariableNode "$X")
+              (ConceptNode "treatment-1"))))
+        (LambdaLink
+          (TypedVariableLink
+            (VariableNode "$X")
+            (TypeNode "ConceptNode")
+          )
+          (EvaluationLink
+            (PredicateNode "contain")
+            (ListLink
+              (ConceptNode "treatment-1")
+              (ConceptNode "compound-A")))))
     (NotLink
       (IdenticalLink
         (LambdaLink
@@ -556,26 +604,28 @@
     )
   )
   (AndLink
-    (ImplicationLink
-      (VariableNode "$B-531e6c5d")
-      (VariableNode "$B-edaffcb")
-    )
-    (ImplicationLink
-      (LambdaLink
-        (TypedVariableLink
-          (VariableNode "$X")
-          (TypeNode "ConceptNode")
-        )
-        (EvaluationLink
-          (PredicateNode "take")
-          (ListLink
-            (VariableNode "$X")
-            (ConceptNode "treatment-1")
-          )
-        )
-      )
-      (VariableNode "$B-531e6c5d")
-    )
+    (Present
+		(ImplicationLink
+		  (VariableNode "$B-531e6c5d")
+		  (VariableNode "$B-edaffcb")
+		)
+		(ImplicationLink
+		  (LambdaLink
+			(TypedVariableLink
+			  (VariableNode "$X")
+			  (TypeNode "ConceptNode")
+			)
+			(EvaluationLink
+			  (PredicateNode "take")
+			  (ListLink
+				(VariableNode "$X")
+				(ConceptNode "treatment-1")
+			  )
+			)
+		  )
+		  (VariableNode "$B-531e6c5d")
+		)
+	)
     (NotLink
       (IdenticalLink
         (LambdaLink

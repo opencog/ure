@@ -70,7 +70,8 @@ public:
 	void setUp();
 	void tearDown();
 
-	void test_gradient();
+	//XXX Rewrite this in Scheme
+	void xtest_gradient();
 };
 
 GradientUTest::GradientUTest()

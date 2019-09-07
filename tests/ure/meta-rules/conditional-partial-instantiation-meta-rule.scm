@@ -67,14 +67,14 @@
                               (GroundedPredicate "scm: gt-zero-confidence")
                               implication))
          ;; Meta rule pattern
-         (meta-pattern (And implication meta-precondition))
+         (meta-pattern (And (Present implication) meta-precondition))
          ;; Produced rule variable declaration. V2 and V3 are to be
          ;; substituted.
          (produced-vardecl (VariableSet
-                             (TypedVariable V2 V2Type)
-                             (TypedVariable V3 V3Type)))
+                             (Unquote (TypedVariable V2 V2Type))
+                             (Unquote (TypedVariable V3 V3Type))))
          ;; Produced rule pattern. Just look for groundings of V2 and V3
-         (produced-pattern (And V2 V3))
+         (produced-pattern (And (Present V2 V3)))
          ;; Produced rule rewrite. Apply formula to calculate the TV
          ;; over the partially substituted ImplicationScope.
          (produced-rewrite (ExecutionOutput
@@ -92,7 +92,7 @@
                                 implication))))
          ;; Meta rule rewrite
          (meta-rewrite (Quote (Bind
-                          (Unquote produced-vardecl)
+                          produced-vardecl
                           (Unquote produced-pattern)
                           produced-rewrite ; the Unquote appears
                                            ; inside it, to avoid

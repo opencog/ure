@@ -29,6 +29,7 @@ using namespace opencog;
 const std::string TraceRecorder::target_predicate_name = "URE:BC:target";
 const std::string TraceRecorder::andbit_predicate_name = "URE:BC:and-BIT";
 const std::string TraceRecorder::expand_andbit_schema_name = "URE:BC:expand-and-BIT";
+const std::string TraceRecorder::reduce_meta_fcs_schema_name = "URE:BC:reduce-meta-fcs";
 const std::string TraceRecorder::proof_predicate_name = "URE:BC:proof-of";
 
 TraceRecorder::TraceRecorder(AtomSpace* tr_as) : _trace_as(tr_as) {
@@ -39,6 +40,8 @@ TraceRecorder::TraceRecorder(AtomSpace* tr_as) : _trace_as(tr_as) {
 			_trace_as->add_node(PREDICATE_NODE, std::move(std::string(andbit_predicate_name)));
 		_expand_andbit_schema =
 			_trace_as->add_node(SCHEMA_NODE, std::move(std::string(expand_andbit_schema_name)));
+		_reduce_meta_fcs_schema =
+			_trace_as->add_node(SCHEMA_NODE, std::move(std::string(reduce_meta_fcs_schema_name)));
 		_proof_predicate =
 			_trace_as->add_node(PREDICATE_NODE, std::move(std::string(proof_predicate_name)));
 	}
@@ -55,17 +58,24 @@ HandleSeqSet TraceRecorder::traces()
 HandleSeqSet TraceRecorder::traces(const Handle& fcs)
 {
 	HandleSet expansion_sources(get_expansion_sources(fcs));
+	HandleSet reduction_sources(get_reduction_sources(fcs));
 
 	// Unwrap DontExecLink around the fcs
 	Handle exec_fcs = fcs->getOutgoingAtom(0);
 
 	// Base case
-	if (expansion_sources.empty())
+	if (expansion_sources.empty() && reduction_sources.empty())
 		return HandleSeqSet{{exec_fcs}};
 
 	// Recursive case
 	HandleSeqSet trs;
 	for (const Handle& h : expansion_sources) {
+		for (HandleSeq hs : traces(h)) {
+			hs.push_back(exec_fcs);
+			trs.insert(hs);
+		}
+	}
+	for (const Handle& h : reduction_sources) {
 		for (HandleSeq hs : traces(h)) {
 			hs.push_back(exec_fcs);
 			trs.insert(hs);
@@ -93,6 +103,14 @@ void TraceRecorder::expansion(const Handle& andbit_fcs, const Handle& bitleaf_bo
 	              dont_exec(andbit_fcs), bitleaf_body,
 	              dont_exec(rule.get_alias()),
 	              dont_exec(new_andbit.fcs), TruthValue::TRUE_TV());
+}
+
+void TraceRecorder::reduction(const Handle& andbit_mfcs, const AndBIT * andbit_fcs)
+{
+	add_execution(_reduce_meta_fcs_schema,
+	              dont_exec(andbit_mfcs),
+	              dont_exec(andbit_fcs->fcs),
+	              TruthValue::TRUE_TV());
 }
 
 void TraceRecorder::proof(const Handle& andbit_fcs, const Handle& target_result)
@@ -165,6 +183,16 @@ HandleSet TraceRecorder::get_expansion_sources(const Handle& fcs_target)
 	for (auto& exec_link : fcs_target->getIncomingSetByType(EXECUTION_LINK))
 		if (exec_link->getOutgoingAtom(0) == _expand_andbit_schema)
 			sources.insert(exec_link->getOutgoingAtom(1)->getOutgoingAtom(0));
+	return sources;
+}
+
+HandleSet TraceRecorder::get_reduction_sources(const Handle& fcs_target)
+{
+	HandleSet sources;
+	for (auto& exec_link : fcs_target->getIncomingSetByType(EXECUTION_LINK))
+		if (exec_link->getOutgoingAtom(0) == _reduce_meta_fcs_schema &&
+		    exec_link->getOutgoingAtom(2) == fcs_target)
+			sources.insert(exec_link->getOutgoingAtom(1));
 	return sources;
 }
 

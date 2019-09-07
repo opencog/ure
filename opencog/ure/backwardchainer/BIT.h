@@ -146,6 +146,11 @@ public:
 	 */
 	void reset_exhausted();
 
+	/*
+	 * Upack a Meta-FCS to get it's Sub-FCS
+	 */
+	Handle ExtractSubFCS(Handle fcs) const;
+
 	/**
 	 * Detect whether the expanded fcs rewrite term contains cycles. A
 	 * cycle is defined as having two nodes (intermediary or not
@@ -165,7 +170,8 @@ public:
 	 * present in the same branch path, so is [14389148767193402296][1].
 	 */
 	bool has_cycle() const;
-	bool has_cycle(const Handle& h, HandleSet ancestors = {}) const;
+	bool has_cycle(Handle h, HandleSet ancestors = {}) const;
+
 
 	/**
 	 * Comparison operators. For operator< compare fcs by complexity, or by
@@ -260,6 +266,14 @@ private:
 	 */
 	double expand_complexity(const Handle& leaf, double prob) const;
 
+
+	/**
+	 * Utility for modifiyng Meta-Rule Rewrites
+	 * Given a SubRule applies the given function to it's rewrite
+	 * XXX Should be move to a more approriate location
+	 */
+	Handle modify_meta(const Handle& subrule, AtomSpace * as,
+                       std::function<Handle(const Handle&, AtomSpace *)>) const;
 	/**
 	 * Given an FCS, a leaf of it to expand, and a rule, return a new
 	 * FCS where the leaf has been substituted by the rule premises
@@ -289,21 +303,18 @@ private:
 	insert_bitnode(Handle leaf, const BITNodeFitness& fitness);
 
 	/**
-	 * Return all the leaves (or blanket because these new target
-	 * leaves cover the previous intermediary targets), of an
-	 * FCS.
+	 * Merge 2 Vardecls without checking if they actually contain variables
+	 * Usefull for Sub-Rules that contain quoted VariableNodes
 	 */
-	HandleSet get_leaves() const;
-	HandleSet get_leaves(const Handle& h) const;
+	Handle force_merge_vardecl(const Handle&, const Handle&) const;
 
-	/**
-	 * Given a FCS, a leaf of it and a rule and its associated typed
-	 * substitution. Substitution the FCS according to the typed
-	 * substitution.
+	/*
+	 * Given the pattern of a Meta-Rule and a Meta-FCS rewrite term
+	 * calculate the new Meta-FCS pattern
 	 */
-	Handle substitute_unified_variables(const Handle& leaf,
-	                                    const Unify::TypedSubstitution& ts) const;
-
+	std::pair<Handle,Handle>
+	expand_mfcs_pattern(const Handle& rule_pattern,
+                        const Handle& mfcs_pattern) const;
 	/**
 	 * Given the pattern term of an FCS where all variables have been
 	 * substituted by the corresponding terms in the rule conclusion,
@@ -311,7 +322,9 @@ private:
 	 *
 	 * TODO: give examples.
 	 */
-	Handle expand_fcs_pattern(const Handle& fcs_pattern, const Rule& rule) const;
+	Handle expand_fcs_pattern(const Handle& fcs_pattern,
+	                          const Handle& conclusion,
+	                          const Handle& implicant) const;
 
 	/**
 	 * Given the rewrite term of an FCS where all variables have been
@@ -321,7 +334,8 @@ private:
 	 * TODO: give examples.
 	 */
 	Handle expand_fcs_rewrite(const Handle& fcs_rewrite,
-	                          const Rule& rule) const;
+	                          const Handle& conclusion,
+	                          const Handle& implicand) const;
 
 	/**
 	 * Return true if atom is an argument of an evaluation
@@ -504,6 +518,13 @@ BIT::AndBITs::iterator BIT::erase(It pos)
 	remove_hypergraph(bit_as, pos->fcs);
 	return andbits.erase(pos);
 }
+
+
+/**
+ * Check weather the Handle term is a meta rule
+ */
+bool is_meta(const Handle&);
+
 
 // Gdb debugging, see
 // http://wiki.opencog.org/w/Development_standards#Print_OpenCog_Objects

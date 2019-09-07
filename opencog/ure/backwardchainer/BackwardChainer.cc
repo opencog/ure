@@ -137,28 +137,8 @@ Handle BackwardChainer::get_results() const
 	return _kb_as.add_link(SET_LINK, std::move(results));
 }
 
-void BackwardChainer::expand_meta_rules()
-{
-	// This is kinda of hack before meta rules are fully supported by
-	// the Rule class.
-	size_t rules_size = _rules.size();
-	_rules.expand_meta_rules(_kb_as);
-
-	// If the rule set has changed we need to reset the exhausted
-	// flags.
-	if (rules_size != _rules.size()) {
-		_bit.reset_exhausted_flags();
-		ure_logger().debug() << "The rule set has gone from "
-		                     << rules_size << " rules to " << _rules.size()
-		                     << ". All exhausted flags have been reset.";
-	}
-}
-
 void BackwardChainer::expand_bit()
 {
-	// Expand meta rules, before they are fully supported
-	expand_meta_rules();
-
 	// Reset _last_expansion_fcs
 	_last_expansion_andbit = nullptr;
 
@@ -251,11 +231,11 @@ void BackwardChainer::fulfill_bit()
 	// Wrap in a try/catch in case the pattern matcher can't handle
 	// it.
 	try {
-		fulfill_fcs(andbit->fcs);
+		fulfill_fcs(andbit);
 	} catch (...) {}
 }
 
-void BackwardChainer::fulfill_fcs(const Handle& fcs)
+void BackwardChainer::fulfill_fcs(const AndBIT* andbit)
 {
 	// Temporary atomspace to not pollute _as with intermediary
 	// results
@@ -275,16 +255,68 @@ void BackwardChainer::fulfill_fcs(const Handle& fcs)
 	//
 	// TODO: Maybe we could take advantage of the new read-only
 	// capabilities of the AtomSpace.
-	Handle hresult = HandleCast(fcs->execute(&tmp_as));
-	HandleSeq results;
-	for (const Handle& result : hresult->getOutgoingSet())
-		results.push_back(_kb_as.add_atom(result));
-	LAZY_URE_LOG_DEBUG << "Results:" << std::endl << results;
-	_results.insert(results.begin(), results.end());
 
-	// Record the results in _trace_as
-	for (const Handle& result : results)
-		_trace_recorder.proof(fcs, result);
+	HandleSeq tmp_res;
+	if (is_meta(andbit->fcs))
+		tmp_res = fulfill_mfcs(andbit, tmp_as);
+	else
+		tmp_res = fulfill_fcs(andbit, tmp_as);
+
+	LAZY_URE_LOG_DEBUG << "Results: " << tmp_res;
+
+	_results.insert(tmp_res.begin(), tmp_res.end());
+}
+
+HandleSeq BackwardChainer::fulfill_fcs(const AndBIT * andbit,
+                                       AtomSpace & tmp_as)
+{
+	const Handle & fcs = andbit->fcs;
+	LAZY_URE_LOG_DEBUG << "Executing FCS\n";
+	Handle hresults = HandleCast(fcs->execute(&tmp_as));
+
+	HandleSeq results;
+	for (const Handle& result : hresults->getOutgoingSet())
+	{
+		const Handle & as_result = _kb_as.add_atom(result);
+		results.push_back(as_result);
+		_trace_recorder.proof(fcs, as_result);
+	}
+	return results;
+}
+
+HandleSeq BackwardChainer::fulfill_mfcs(const AndBIT * andbit,
+                                        AtomSpace & tmp_as)
+{
+	LAZY_URE_LOG_DEBUG << "Executing Meta-FCS\n";
+
+	const Handle mfcs = andbit->fcs;
+	Handle hresults = HandleCast(mfcs->execute(&tmp_as));
+
+	HandleSeq results;
+	for (const Handle& dontex_result : hresults->getOutgoingSet())
+	{
+		const Handle & result = dontex_result->getOutgoingAtom(0);
+		const Handle & as_result = _kb_as.add_atom(result);
+
+		//Add created SubRule as new AndBIT
+		AndBIT tmp(as_result);
+		AndBIT * new_andbit = _bit.insert(tmp);
+		if (new_andbit == nullptr)
+			continue;
+
+		//Log the reduction Meta Rule -> SubRule
+		LAZY_URE_LOG_DEBUG << "Added AndBIT:\n" << new_andbit->to_string();
+		_trace_recorder.reduction(mfcs, new_andbit);
+
+		//Run the SubRule
+		HandleSeq subresults;
+		if (is_meta(as_result))
+			subresults = fulfill_mfcs(new_andbit,tmp_as);
+		else
+			subresults = fulfill_fcs(new_andbit,tmp_as);
+		results.insert(results.end(),subresults.begin(),subresults.end());
+	}
+	return results;
 }
 
 std::vector<double> BackwardChainer::expansion_andbit_weights()

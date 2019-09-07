@@ -183,6 +183,16 @@ public:
 	bool has_cycle() const;     // is some premise equal to conclusion?
 
 	/**
+	 * Removes all Quote/UnquoteLinks from the given Handle
+	 */
+	Handle filter_quote(Handle) const;
+
+	/*
+	 * Given a rewrite term of a meta rule extract the subrule rewrite term
+	 */
+	Handle ExtractSubruleRewrite(Handle) const;
+
+	/**
 	 * Return clauses. Warning: it doesn't not necessarily return all
 	 * clauses, will avoid non virtual clauses in the case PresentLink
 	 * is, as the intend of this function is to be used by
@@ -314,6 +324,7 @@ private:
 	// Given a typed substitution obtained from typed_substitutions
 	// unify function, generate a new partially substituted rule.
 	Rule substituted(const Unify::TypedSubstitution& ts,
+	                 const Handle& vardecl,
 	                 const AtomSpace* queried_as=nullptr) const;
 };
 

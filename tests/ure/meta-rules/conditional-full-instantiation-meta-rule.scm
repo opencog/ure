@@ -47,7 +47,7 @@
                          (GroundedPredicate "scm: true-enough")
                          implication)))
   (And
-    implication
+    (Present implication)
     precondition)))
 
 ;; Here only the implicant is considered as premise. The variable(s)
@@ -65,7 +65,7 @@
     (Quote (Bind
       (Unquote TyVs)
       (And
-        (Unquote (LocalQuote (LocalQuote P)))
+        (Present (Unquote P))
         (Evaluation (GroundedPredicate "scm: true-enough") (Unquote P)))
       (ExecutionOutput
         (GroundedSchema "scm: conditional-full-instantiation-formula")

@@ -432,9 +432,17 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 	// Perform substitution over the rewrite terms
 	for (const Handle& himp: bl->get_implicand())
 	{
-		Handle rewrite = variables.substitute_nocheck(himp, values);
-		rewrite = RewriteLink::consume_quotations(vardecl, rewrite, false);
-		hs.push_back(rewrite);
+		//Handle rewrite = variables.substitute_nocheck(himp, values);
+		//Incase of Meta-FCS the rewrite contains Variables that are no longer in the
+		//vardecl or body of the BindLink
+		FreeVariables subvars;
+		subvars.find_variables(himp);
+		Handle rewrite = subvars.substitute_nocheck(himp, var2val);
+
+		//Only consume_quotations if something changed
+		if (rewrite != himp)
+			rewrite = RewriteLink::consume_quotations(vardecl, rewrite, false);
+			hs.push_back(rewrite);
 	}
 
 	// Filter vardecl
@@ -461,7 +469,9 @@ Handle Unify::substitute_vardecl(const Handle& vardecl,
 	if (t == VARIABLE_NODE) {
 		auto it = var2val.find(vardecl);
 		// Only substitute if the variable is substituted by another variable
-		if (it != var2val.end() and it->second->get_type() == VARIABLE_NODE)
+		if (it != var2val.end())
+			return vardecl;
+		if (it->second->get_type() == VARIABLE_NODE)
 			return it->second;
 		return Handle::UNDEFINED;
 	}

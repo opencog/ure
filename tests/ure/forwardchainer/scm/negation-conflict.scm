@@ -37,8 +37,8 @@
     (bool->tv (null? (cog-link "EvaluationLink" predicate (List A B))) )
 )
 
-;; If A keeps a pet x, B is different FROM A, 
-;; and there exists some other pet, Y, 
+;; If A keeps a pet x, B is different FROM A,
+;; and there exists some other pet, Y,
 ;; that is different from X, then B keeps Y
 (define keep-different-pet-rule
  (let* (
@@ -47,6 +47,12 @@
           (vB (Variable "$B"))
           (vX (Variable "$X"))
           (vY (Variable "$Y"))
+          (per (Concept "person"))
+          (pet (Concept "pet"))
+          (AisPer (Inheritance vA per))
+          (BisPer (Inheritance vB per))
+          (XisPet (Inheritance vX pet))
+          (YisPet (Inheritance vY pet))
           (akx (Evaluation kp (List vA vX)))
           (bky (Evaluation kp (List vB vY)))
        )
@@ -66,18 +72,20 @@
         (Type "ConceptNode"))
    )
    (And
-     (Inheritance
-        vA
-        (Concept "person"))
-     (Inheritance
-        vB
-        (Concept "person"))  
-     (Inheritance
-        vX
-        (Concept "pet"))
-     (Inheritance
-        vY
-        (Concept "pet"))
+     (Present
+         (Inheritance
+            vA
+            (Concept "person"))
+         (Inheritance
+            vB
+            (Concept "person"))
+         (Inheritance
+            vX
+            (Concept "pet"))
+         (Inheritance
+            vY
+            (Concept "pet"))
+     )
      (NotLink
         (EqualLink
            vA
@@ -90,8 +98,8 @@
         ))
      ;; test if the conclusion will conflict with the known truth:
      ;; it's fine if the conclusion doesn't exist in the knowledge base;
-     ;; but if it already exist and the truth value is not true, 
-     ;; then this conclusion conflict with the know truth, so that it 
+     ;; but if it already exist and the truth value is not true,
+     ;; then this conclusion conflict with the know truth, so that it
      ;; should not be selected.
      (Or
         (EvaluationLink
@@ -101,10 +109,8 @@
         (EvaluationLink
 	   (GroundedPredicateNode "scm: absolutely-true")
 	   (ListLink akx)
-        )       
- 
+        )
      )
-
      (Or
         (EvaluationLink
 	   (GroundedPredicateNode "scm: evaluation-absent")
@@ -113,24 +119,26 @@
         (EvaluationLink
 	   (GroundedPredicateNode "scm: absolutely-true")
 	   (ListLink bky)
-        )       
- 
+        )
      )
- 
-   )      
+   )
    (ExecutionOutputLink
      (GroundedSchemaNode "scm: keep-different-pet-formula")
-     (ListLink akx bky)
+     (ListLink (Set akx bky) AisPer BisPer XisPet YisPet)
    )
-   
   )
  )
 )
 
-(define (keep-different-pet-formula akx bky)
-
-    (cog-set-tv! akx (stv 1 1))
-    (cog-set-tv! bky (stv 1 1))
+(define (keep-different-pet-formula akxbky vA vB vX vY)
+  (let*
+    ((akx (cog-outgoing-atom akxbky 0))
+     (bky (cog-outgoing-atom akxbky 1))
+     (nakx (cog-set-tv! akx (stv 1 1)))
+     (nbky (cog-set-tv! bky (stv 1 1)))
+    )
+    (Set nakx nbky)
+  )
 )
 
 (define keep-different-pet-rule-name
@@ -143,7 +151,7 @@
 (define Einstein-rbs (ConceptNode "Einstein-rbs"))
 (Inheritance Einstein-rbs (ConceptNode "URE"))
 
-;; Associate the rules to the rule base 
+;; Associate the rules to the rule base
 (MemberLink (stv 1 1)
    keep-different-pet-rule-name
    Einstein-rbs
@@ -188,6 +196,3 @@
 ;      )
 ;   )
 ;)
-
-
-

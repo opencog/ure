@@ -45,9 +45,9 @@
          (precondition (Evaluation
                          (GroundedPredicate "scm: true-enough")
                          implication)))
-  (And
-    (Present implication)
-    precondition)))
+    (And
+      (Present implication)
+      precondition)))
 
 ;; Here only the implicant is considered as premise. The variable(s)
 ;; should as well so the backward chainer can consider them as

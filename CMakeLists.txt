@@ -155,7 +155,7 @@ IF (HAVE_SECURE_GETENV)
 	ADD_DEFINITIONS(-DHAVE_SECURE_GETENV)
 ENDIF (HAVE_SECURE_GETENV)
 
-include(OpenCogFindPython)
+#include(OpenCogFindPython)
 
 # ----------------------------------------------------------
 # Optional, currently needed only to hush up DRD in util/Logger.cc

@@ -21,8 +21,8 @@
          (precon1 (Evaluation (GroundedPredicate "scm: true-enough") A))
          (precon2 (Evaluation (GroundedPredicate "scm: true-enough") AB))
          (pattern (And
-                     ;; No need to include A as it is already in AB
-                     (Present AB)
+                     ;; We need A so the BackwarChainer knows to consider it
+                     (Present A AB)
                      precon1 precon2))
          (rewrite (ExecutionOutput
                      (GroundedSchema "scm: crisp-modus-ponens-formula")

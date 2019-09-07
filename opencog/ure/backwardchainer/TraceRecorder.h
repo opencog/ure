@@ -37,6 +37,7 @@ public:
 	static const std::string target_predicate_name;
 	static const std::string andbit_predicate_name;
 	static const std::string expand_andbit_schema_name;
+	static const std::string reduce_meta_fcs_schema_name;
 	static const std::string proof_predicate_name;
 
 	TraceRecorder(AtomSpace* tr_as);
@@ -79,6 +80,16 @@ public:
 	void expansion(const Handle& andbit_fcs, const Handle& bitleaf_body,
 	               const Rule& rule, const AndBIT& new_andbit);
 
+
+	// Record the Reduction of a Meta-FCS to a FCS
+	//
+	// ExecutionLink (stv 1 1)
+	//   SchemaNode "URE:BC:reduce-meta-fcs"
+	//   <andbit_meta_fcs>
+	//   <new_andbit>
+	//
+	void reduction(const Handle& andbit_mfcs, const AndBIT* andbit_fcs);
+
 	// Record whether a certain and-BIT is a proof of a certain target result
 	//
 	// EvaluationLink <TV>
@@ -100,7 +111,7 @@ private:
 	AtomSpace* _trace_as;
 
 	Handle _target_predicate, _andbit_predicate, _expand_andbit_schema,
-		_proof_predicate;
+		_reduce_meta_fcs_schema, _proof_predicate;
 
 	// Wrap a DontExecLink around h
 	//
@@ -156,6 +167,9 @@ private:
 
 	// Given a fcs, return all fcs that expands to this fcs target.
 	HandleSet get_expansion_sources(const Handle& fcs_target);
+
+	// Given a fcs, return all mfcs that produce this target fcs
+	HandleSet get_reduction_sources(const Handle& fcs_target);
 
 	// Return the set of fcs corresponding to proofs
 	HandleSet get_fcs_proofs();

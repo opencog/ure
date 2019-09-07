@@ -36,6 +36,7 @@
 
 #include <opencog/util/random.h>
 #include <opencog/util/algorithm.h>
+#include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/core/FindUtils.h>
 #include <opencog/atoms/core/TypeUtils.h>
 #include <opencog/atoms/execution/LibraryManager.h>
@@ -126,16 +127,16 @@ AndBIT AndBIT::expand(const Handle& leaf,
 	// Only consider expansions that actually expands
 	if (content_eq(fcs, new_fcs)) {
 		ure_logger().warn() << "The new FCS is equal to the old one. "
-		                    << "There is probably a bug. This expansion has "
-		                    << "been cancelled.";
+							<< "There is probably a bug. This expansion has "
+							<< "been cancelled.";
 		return AndBIT();
 	}
 
 	// Discard expansion with cycle
-	if (has_cycle(BindLinkCast(new_fcs)->get_implicand()[0])) {
+	if (has_cycle(new_fcs)) {
 		ure_logger().debug() << "The new FCS has some cycle (some conclusion "
-		                     << "has itself has premise, directly or "
-		                     << "indirectly). This expansion has been cancelled.";
+							 << "has itself has premise, directly or "
+							 << "indirectly). This expansion has been cancelled.";
 		return AndBIT();
 	}
 
@@ -173,11 +174,37 @@ void AndBIT::reset_exhausted()
 
 bool AndBIT::has_cycle() const
 {
-	return has_cycle(BindLinkCast(fcs)->get_implicand()[0]);
+	return has_cycle(fcs);
 }
 
-bool AndBIT::has_cycle(const Handle& h, HandleSet ancestors) const
+Handle AndBIT::ExtractSubFCS(Handle fcs) const
 {
+	Handle rewrite = BindLinkCast(fcs)->get_implicand();
+	Type rewrite_type = rewrite->get_type();
+
+	if (rewrite_type == EXECUTION_OUTPUT_LINK)
+	{
+		while (rewrite_type == EXECUTION_OUTPUT_LINK)
+		{
+			rewrite = rewrite->getOutgoingAtom(1)->getOutgoingAtom(0);
+			rewrite_type = rewrite->get_type();
+		}
+		rewrite = rewrite->getOutgoingAtom(0)->getOutgoingAtom(0);
+	}
+	else
+		rewrite = rewrite->getOutgoingAtom(0);
+
+	return rewrite;
+}
+
+bool AndBIT::has_cycle(Handle h, HandleSet ancestors) const
+{
+	while (is_meta(h))
+		h = ExtractSubFCS(h);
+
+	if (h->get_type() == BIND_LINK)
+		return has_cycle(BindLinkCast(h)->get_implicand());
+
 	if (h->get_type() == EXECUTION_OUTPUT_LINK) {
 		Handle arg = h->getOutgoingAtom(1);
 		if (arg->get_type() == LIST_LINK) {
@@ -192,8 +219,8 @@ bool AndBIT::has_cycle(const Handle& h, HandleSet ancestors) const
 					arg->getOutgoingAtom(1)->get_type() == SET_LINK;
 				if (unordered_premises) {
 					OC_ASSERT(arity == 2,
-					          "Mixture of ordered and unordered"
-					          " premises not implemented!");
+							  "Mixture of ordered and unordered"
+							  " premises not implemented!");
 					arg = arg->getOutgoingAtom(1);
 					for (const Handle& ph : arg->getOutgoingSet())
 						if (has_cycle(ph, ancestors))
@@ -230,7 +257,7 @@ bool AndBIT::operator<(const AndBIT& andbit) const
 	// want that.
 	return (complexity < andbit.complexity)
 		or (complexity == andbit.complexity
-		    and content_based_handle_less()(fcs, andbit.fcs));
+			and content_based_handle_less()(fcs, andbit.fcs));
 }
 
 std::string AndBIT::to_string(const std::string& indent) const
@@ -261,8 +288,8 @@ std::string AndBIT::fcs_rewrite_to_ascii_art(const Handle& h) const
 					arg->getOutgoingAtom(1)->get_type() == SET_LINK;
 				if (unordered_premises) {
 					OC_ASSERT(arity == 2,
-					          "Mixture of ordered and unordered"
-					          " premises not implemented!");
+							  "Mixture of ordered and unordered"
+							  " premises not implemented!");
 					arg = arg->getOutgoingAtom(1);
 					for (const Handle& ph : arg->getOutgoingSet())
 						premises_aas.push_back(fcs_rewrite_to_ascii_art(ph));
@@ -278,7 +305,7 @@ std::string AndBIT::fcs_rewrite_to_ascii_art(const Handle& h) const
 				// Put a line over the head of the conclusion, with
 				// the premises over that line.
 				std::string ul(line_separator(premises_merged_aa, conclusion_aa,
-				                              gsn, unordered_premises));
+											  gsn, unordered_premises));
 				unsigned ulls = leading_spaces(ul);
 				unsigned ullls = ul.size() + ulls;
 				unsigned conclusion_offset = ullls < conclusion_aa.size() ? 0 :
@@ -311,39 +338,289 @@ double AndBIT::expand_complexity(const Handle& leaf, double prob) const
 		+ 1 - log(prob);
 }
 
+Handle AndBIT::force_merge_vardecl(const Handle& lhs, const Handle& rhs) const
+{
+	if (not lhs)
+		return rhs;
+	if (not rhs)
+		return lhs;
+
+	HandleSeq vars;
+
+	if (lhs->get_type() == VARIABLE_LIST)
+		vars.insert(vars.end(),
+					lhs->getOutgoingSet().begin(),
+					lhs->getOutgoingSet().end());
+	else
+		vars.push_back(lhs);
+
+	if (rhs->get_type() == VARIABLE_LIST)
+		vars.insert(vars.end(),
+					rhs->getOutgoingSet().begin(),
+					rhs->getOutgoingSet().end());
+	else
+		vars.push_back(rhs);
+
+	return fcs->getAtomSpace()->add_link(VARIABLE_LIST, vars);
+}
+
+Handle AndBIT::modify_meta(const Handle& subrule, AtomSpace * as,
+						   std::function<Handle(const Handle&, AtomSpace *)> func) const
+{
+	Handle params = subrule->getOutgoingAtom(1);
+	Handle quote = params->getOutgoingAtom(0);
+
+	Handle h;
+	//Need to handle nested ExecutionOutputLinks
+	if (quote->get_type() == EXECUTION_OUTPUT_LINK)
+	{
+		h = modify_meta(quote, as, func);
+	}
+	else
+	{
+		Handle dontex = quote->getOutgoingAtom(0);
+		Handle bnd = dontex->getOutgoingAtom(0);
+
+		Handle new_bnd = func(bnd, as);
+
+		h = as->add_link(DONT_EXEC_LINK, new_bnd);
+		h = as->add_link(QUOTE_LINK, h);
+	}
+
+	Handle nparams = as->add_link(LIST_LINK, h,
+								  params->getOutgoingAtom(1),
+								  params->getOutgoingAtom(2),
+								  params->getOutgoingAtom(3),
+								  params->getOutgoingAtom(4));
+
+	return as->add_link(EXECUTION_OUTPUT_LINK,
+						subrule->getOutgoingAtom(0),
+						nparams);
+}
+
 Handle AndBIT::expand_fcs(const Handle& leaf,
                           const RuleTypedSubstitutionPair& rule) const
 {
+	Handle nfcs;
+	AtomSpace * as = fcs->getAtomSpace();
 	// Unify the rule conclusion with the leaf, and substitute any
 	// variables in it by the associated term.
-	Handle nfcs = substitute_unified_variables(leaf, rule.second);
+	BindLinkPtr fcs_bl(BindLinkCast(fcs));
+	nfcs = Unify::substitute(fcs_bl, rule.second, queried_as);
 
-	BindLinkPtr nfcs_bl(BindLinkCast(nfcs));
-	Handle nfcs_vardecl = nfcs_bl->get_vardecl();
-	Handle nfcs_pattern = nfcs_bl->get_body();
-	Handle nfcs_rewrite = nfcs_bl->get_implicand()[0]; // assume that there is only one
-	Handle rule_vardecl = rule.first.get_vardecl();
+	//We need to consider 4 different cases
+	//Expanding a Meta FCS with a Meta Rule
+	//Expanding a Meta FCS with a normal Rule
+	//Expanding a normal FCS with a Meta Rule
+	//Expanding a normal Fcs with a normal Rule
 
-	// Generate new pattern term
-	Handle npattern = expand_fcs_pattern(nfcs_pattern, rule.first);
+	if (is_meta(fcs))
+	{
+		BindLinkPtr nfcs_bl(BindLinkCast(nfcs));
+		Handle nfcs_mvardecl = nfcs_bl->get_vardecl();
+		Handle nfcs_mpattern = nfcs_bl->get_body();
+		Handle nfcs_mrewrite = nfcs_bl->get_implicand();
 
-	// Generate new rewrite term
-	Handle nrewrite = expand_fcs_rewrite(nfcs_rewrite, rule.first);
+		if (rule.first.is_meta())
+		{
+			LAZY_URE_LOG_DEBUG << "Meta-FCS Expansion With Meta-Rule\n";
 
-	// Generate new vardecl
-	// TODO: is this merging necessary?
-	Handle merged_vardecl = merge_vardecl(nfcs_vardecl, rule_vardecl);
-	Handle nvardecl = filter_vardecl(merged_vardecl, {npattern, nrewrite});
+			Handle nmvardecl = rule.first.get_vardecl();
+			Handle mpattern = rule.first.get_implicant();
+			Handle rule_rewrite = rule.first.get_implicand();
+			Handle conclusion = rule.first.get_conclusion();
 
-	// Remove constant clauses from npattern
-	npattern = Unify::remove_constant_clauses(nvardecl, npattern, queried_as);
+			auto hpair = expand_mfcs_pattern(mpattern,nfcs_mpattern);
+			Handle nmpattern = hpair.first;
+			nfcs_mpattern = hpair.second;
 
-	// Generate new atomese forward chaining s trategy
-	HandleSeq noutgoings({npattern, nrewrite});
-	if (nvardecl)
-		noutgoings.insert(noutgoings.begin(), nvardecl);
-	nfcs = fcs->getAtomSpace()->add_link(BIND_LINK, std::move(noutgoings));
+			std::function<Handle(const Handle&, AtomSpace *)> func;
+			func = [&nfcs_mvardecl, &nfcs_mpattern, &nfcs_mrewrite,
+					&conclusion, this]
+				(const Handle& bnd, AtomSpace * as) -> Handle
+				{
+					BindLinkPtr blp = BindLinkCast(bnd);
+					Handle vardecl = blp->get_vardecl();
+					Handle pattern = blp->get_body();
+					Handle rewrite = blp->get_implicand();
 
+					//Merge Sub-Rule with FCS
+					Handle npattern = expand_fcs_pattern(nfcs_mpattern, conclusion,
+														 pattern);
+
+					std::function<Handle(const Handle&, AtomSpace *)> func;
+					func = [&conclusion, &rewrite, &func, this]
+						(const Handle& bnd, AtomSpace * as) -> Handle
+						{
+							BindLinkPtr blp = BindLinkCast(bnd);
+							Handle nfcs_vardecl = blp->get_vardecl();
+							Handle nfcs_pattern = blp->get_body();
+							Handle nfcs_rewrite = blp->get_implicand();
+
+							Handle nrewrite;
+							if (is_meta(bnd))
+								nrewrite = modify_meta(nfcs_rewrite, as, func);
+							else
+								nrewrite = expand_fcs_rewrite(nfcs_rewrite,
+															  conclusion,
+															  rewrite);
+
+							if (nfcs_vardecl)
+								return as->add_link(BIND_LINK, nfcs_vardecl,
+													nfcs_pattern, nrewrite);
+							else
+								return as->add_link(BIND_LINK,nfcs_pattern,
+													nrewrite);
+
+						};
+
+					Handle nrewrite = modify_meta(nfcs_mrewrite, as, func);
+
+					//Force Merge to keep quoted vardels
+					Handle nvardecl = filter_vardecl(nfcs_mvardecl,
+													 {npattern, nrewrite});
+					nvardecl = force_merge_vardecl(nvardecl,vardecl);
+
+					return as->add_link(BIND_LINK,nvardecl,npattern,nrewrite);
+				};
+
+			Handle nmrewrite = modify_meta(rule_rewrite, as, func);
+
+			//Create new MFCS
+			if (nmvardecl)
+				nfcs = as->add_link(BIND_LINK, nmvardecl, nmpattern, nmrewrite);
+			else
+				nfcs = as->add_link(BIND_LINK, nmpattern, nmrewrite);
+
+		}
+		else
+		{
+			LAZY_URE_LOG_DEBUG << "Expanding Meta-FCS with normal Rule.\n";
+
+			Handle rule_vardecl = rule.first.get_vardecl();
+			Handle rule_pattern = rule.first.get_implicant();
+			Handle rule_rewrite = rule.first.get_implicand();
+			Handle rule_conclusion = rule.first.get_conclusion();
+
+			Handle nmpattern = expand_fcs_pattern(nfcs_mpattern, rule_conclusion,
+												  rule_pattern);
+
+			//Deconstruct Meta-FCS Rewrite to access Sub-FCS
+
+			std::function<Handle(const Handle&, AtomSpace *)> func;
+			func = [&rule_conclusion, &rule_rewrite, this]
+				(const Handle& bnd, AtomSpace * as) -> Handle
+				{
+					Handle vardecl = BindLinkCast(bnd)->get_vardecl();
+					Handle pattern = BindLinkCast(bnd)->get_body();
+					Handle rewrite = BindLinkCast(bnd)->get_implicand();
+
+					Handle nrewrite = expand_fcs_rewrite(rewrite,
+														 rule_conclusion,
+														 rule_rewrite);
+
+					//Rebuild Meta-FCS Rewrite with modified Sub-FCS
+					if (vardecl)
+						return as->add_link(BIND_LINK, vardecl, pattern, nrewrite);
+					else
+						return as->add_link(BIND_LINK, pattern, nrewrite);
+				 };
+
+			Handle nmrewrite = modify_meta(nfcs_mrewrite, as, func);
+
+			//Merge Vardecls
+			Handle nmvardecl = merge_vardecl(nfcs_mvardecl,rule_vardecl);
+			nmvardecl = filter_vardecl(nmvardecl,{nmpattern,nmrewrite});
+
+			//Create new MFCS
+			if (nmvardecl)
+				nfcs = as->add_link(BIND_LINK, nmvardecl, nmpattern, nmrewrite);
+			else
+				nfcs = as->add_link(BIND_LINK, nmpattern, nmrewrite);
+		}
+	}
+	else
+	{
+		BindLinkPtr nfcs_bl(BindLinkCast(nfcs));
+		Handle nfcs_vardecl = nfcs_bl->get_vardecl();
+		Handle nfcs_pattern = nfcs_bl->get_body();
+		Handle nfcs_rewrite = nfcs_bl->get_implicand()[0]; // assume that there is only one
+		Handle rule_vardecl = rule.first.get_vardecl();
+
+		Handle conclusion = rule.first.get_conclusion();
+
+		if (rule.first.is_meta())
+		{
+			LAZY_URE_LOG_DEBUG << "Expanding FCS to Meta-FCS\n";
+			Handle nmvardecl = rule.first.get_vardecl();
+			Handle nmpattern = rule.first.get_implicant();
+			Handle rule_rewrite = rule.first.get_implicand();
+
+			std::function<Handle(const Handle&, AtomSpace *)> func;
+			func = [&nfcs_vardecl, &nfcs_pattern, &nfcs_rewrite,
+						 &conclusion, this]
+				(const Handle& bnd, AtomSpace * as)
+				{
+					Handle vardecl = BindLinkCast(bnd)->get_vardecl();
+					Handle pattern = BindLinkCast(bnd)->get_body();
+					Handle rewrite = BindLinkCast(bnd)->get_implicand();
+
+					//Merge Sub-Rule with FCS
+					Handle npattern = expand_fcs_pattern(nfcs_pattern, conclusion,
+														 pattern);
+
+					Handle nrewrite = expand_fcs_rewrite(nfcs_rewrite, conclusion,
+														 rewrite);
+
+					//Do we need force merge here?
+					Handle nvardecl = filter_vardecl(nfcs_vardecl,
+													 {npattern, nrewrite});
+					nvardecl = force_merge_vardecl(nvardecl,vardecl);
+
+					//Rebuild Meta-Rule Rewrite with modified Sub-Rule
+					return as->add_link(BIND_LINK, nvardecl, npattern, nrewrite);
+				};
+
+			Handle nmrewrite = modify_meta(rule_rewrite, as, func);
+
+			//Create new MFCS
+			if (nmvardecl)
+				nfcs = as->add_link(BIND_LINK, nmvardecl, nmpattern, nmrewrite);
+			else
+				nfcs = as->add_link(BIND_LINK, nmpattern, nmrewrite);
+		}
+		else
+		{
+			LAZY_URE_LOG_DEBUG << "Expanding FCS normally\n";
+			Handle implicant = rule.first.get_implicant();
+			Handle implicand = rule.first.get_implicand();
+
+			// Generate new pattern term
+			Handle npattern = expand_fcs_pattern(nfcs_pattern, conclusion,
+												 implicant);
+
+			// Generate new rewrite term
+			Handle nrewrite = expand_fcs_rewrite(nfcs_rewrite, conclusion,
+												 implicand);
+
+			// Generate new vardecl
+			// TODO: is this merging necessary?
+			Handle merged_vardecl = merge_vardecl(nfcs_vardecl, rule_vardecl);
+			Handle nvardecl = filter_vardecl(merged_vardecl, {npattern, nrewrite});
+
+
+			// Remove constant clauses from npattern
+			npattern = Unify::remove_constant_clauses(nvardecl, npattern,
+													  queried_as);
+
+			// Generate new atomese forward chaining s trategy
+			HandleSeq noutgoings({npattern, nrewrite});
+			if (nvardecl)
+				noutgoings.insert(noutgoings.begin(), nvardecl);
+	nfcs = as->add_link(BIND_LINK, std::move(noutgoings));
+		}
+
+	}
 	// Log expansion
 	LAZY_URE_LOG_DEBUG << "Expanded forward chainer strategy:" << std::endl
 	                   << nfcs->to_string();
@@ -355,8 +632,10 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 
 void AndBIT::set_leaf2bitnode()
 {
-	// For each leaf of fcs, associate a corresponding BITNode
-	for (const Handle& leaf : get_leaves())
+	// For each present clause of a fcs, associate a corresponding BITNode
+	BindLinkPtr blp = BindLinkCast(fcs);
+	Handle body = blp->get_body();
+	for (const Handle& leaf : get_present_clauses(body))
 		insert_bitnode(leaf, BITNodeFitness());
 }
 
@@ -372,109 +651,99 @@ AndBIT::insert_bitnode(Handle leaf, const BITNodeFitness& fitness)
 	return it;
 }
 
-HandleSet AndBIT::get_leaves() const
+std::pair<Handle,Handle>
+AndBIT::expand_mfcs_pattern(const Handle& rule_pattern,
+                            const Handle& mfcs_pattern) const
 {
-	return get_leaves(fcs);
-}
 
-HandleSet AndBIT::get_leaves(const Handle& h) const
-{
-	Type t = h->get_type();
-	if (t == BIND_LINK) {
-		BindLinkPtr hsc = BindLinkCast(h);
-		// Assume there is only one rewrite.
-		Handle rewrite = hsc->get_implicand()[0];
-		return get_leaves(rewrite);
-	} else if (t == EXECUTION_OUTPUT_LINK) {
-		// All arguments except the first one are potential target leaves
-		Handle args = h->getOutgoingAtom(1);
-		HandleSet leaves;
-		if (args->get_type() == LIST_LINK) {
-			OC_ASSERT(args->get_arity() > 0);
-			for (Arity i = 1; i < args->get_arity(); i++) {
-				HandleSet aleaves = get_leaves(args->getOutgoingAtom(i));
-				leaves.insert(aleaves.begin(), aleaves.end());
+	//We need to combine cog-unify or cog-meta-unify calls
+	//into 1 big cog-meta-unify call
+	HandleSeq mfcs_prs_clauses = get_present_clauses(mfcs_pattern);
+	HandleSeq mfcs_virt_clauses = get_virtual_clauses(mfcs_pattern);
+	HandleSeq prs_clauses = get_present_clauses(rule_pattern);
+	HandleSeq virt_clauses = get_virtual_clauses(rule_pattern);
+
+	auto findf = [](const Handle& h){
+			if (h->get_type() == EVALUATION_LINK)
+			{
+				std::string name = NodeCast(h->getOutgoingAtom(0))->get_name();
+				if (name == "scm: cog-unify" || name == "scm: cog-meta-unify")
+					return true;
 			}
-		}
-		return leaves;
-	} else if (t == SET_LINK) {
-		// All atoms wrapped in a SetLink are potential target leaves
-		HandleSet leaves;
-		for (const Handle& el : h->getOutgoingSet()) {
-			HandleSet el_leaves = get_leaves(el);
-			leaves.insert(el_leaves.begin(), el_leaves.end());
-		}
-		return leaves;
-	} else if (contains_atomtype(h, EXECUTION_OUTPUT_LINK)) {
-		// If it contains an unquoted ExecutionOutputLink then it is
-		// not a leaf (maybe it could but it would over complicate the
-		// rest and bring no benefit since we can always expand a
-		// parent and-BIT that has no such ExecutionOutputLink).
-		return HandleSet{};
+			return false;};
+
+	//Find the calls to cog-unify or cog-meta-unfiy
+	auto it_mfcs = find_if(mfcs_virt_clauses.begin(),
+						   mfcs_virt_clauses.end(),findf);
+	auto it_rule = find_if(virt_clauses.begin(),virt_clauses.end(),findf);
+
+	HandleSeq rule_args = (*it_rule)->getOutgoingAtom(1)->getOutgoingSet();
+	//Might not be true if the Meta-FCS was created by a higer order Meta-FCS
+	//As it was already merged into some other cog-meta-unify and removed here
+	if (it_mfcs != mfcs_virt_clauses.end())
+	{
+		HandleSeq mfcs_args = (*it_mfcs)->getOutgoingAtom(1)->getOutgoingSet();
+		rule_args.insert(rule_args.end(),mfcs_args.begin(),mfcs_args.end());
+		mfcs_virt_clauses.erase(it_mfcs);
 	}
+	//Can't use ListLink because we want to pass it as a singele Argument
+	Handle narglist = createLink(rule_args,ORDERED_LINK);
+	Handle pred = createNode(GROUNDED_PREDICATE_NODE,"scm: cog-meta-unify");
+	*it_rule = createLink(EVALUATION_LINK,pred,narglist);
 
-	// Here it must be a leaf so return it
-	return HandleSet{h};
-}
-
-Handle AndBIT::substitute_unified_variables(const Handle& leaf,
-                                            const Unify::TypedSubstitution& ts) const
-{
-	BindLinkPtr fcs_bl(BindLinkCast(fcs));
-	return Handle(Unify::substitute(fcs_bl, ts, queried_as));
+	return std::make_pair(mk_pattern(prs_clauses,virt_clauses),
+						  mk_pattern(mfcs_prs_clauses,mfcs_virt_clauses));
 }
 
 Handle AndBIT::expand_fcs_pattern(const Handle& fcs_pattern,
-                                  const Rule& rule) const
+                                  const Handle& conclusion,
+                                  const Handle& implicant) const
 {
-	Handle conclusion = rule.get_conclusion();
-	HandleSeq prs_clauses = get_present_clauses(rule.get_implicant());
-	HandleSeq virt_clauses = get_virtual_clauses(rule.get_implicant());
+	HandleSeq prs_clauses = get_present_clauses(implicant);
+	HandleSeq virt_clauses = get_virtual_clauses(implicant);
 	HandleSeq prs_fcs_clauses = get_present_clauses(fcs_pattern);
 	HandleSeq virt_fcs_clauses = get_virtual_clauses(fcs_pattern);
 
 	// Remove any present fcs clauses that is equal to the conclusion
 	auto eq_to_conclusion = [&](const Handle& h) {
-		                        return content_eq(conclusion, h); };
+								return content_eq(conclusion, h); };
 	boost::remove_erase_if(prs_fcs_clauses, eq_to_conclusion);
 
 	// Remove any virtual fcs clause that:
 	// 1. is equal to the conclusion.
 	// 2. is a precondition that uses that conclusion as argument.
 	auto to_remove = [&](const Handle& h) {
-		                 return eq_to_conclusion(h)
-			                 or is_argument_of(h, conclusion); };
+						 return eq_to_conclusion(h)
+							 or is_argument_of(h, conclusion); };
 	boost::remove_erase_if(virt_fcs_clauses, to_remove);
 
 	// Add present rule clauses
 	prs_fcs_clauses.insert(prs_fcs_clauses.end(),
-	                       prs_clauses.begin(), prs_clauses.end());
+						   prs_clauses.begin(), prs_clauses.end());
 
 	// Add virtual rule clauses
 	virt_fcs_clauses.insert(virt_fcs_clauses.end(),
-	                        virt_clauses.begin(), virt_clauses.end());
+							virt_clauses.begin(), virt_clauses.end());
 
 	// Assemble the body
 	return mk_pattern(prs_fcs_clauses, virt_fcs_clauses);
 }
 
 Handle AndBIT::expand_fcs_rewrite(const Handle& fcs_rewrite,
-                                  const Rule& rule) const
+                                  const Handle& conclusion,
+                                  const Handle& implicand) const
 {
-	HandlePairSeq conclusions = rule.get_conclusions();
-	OC_ASSERT(conclusions.size() == 1);
-	Handle conclusion = conclusions[0].second;
-
 	// Base cases
 
 	// Replace the fcs rewrite atoms by the rule rewrite if equal to
 	// the rule conclusion
 	if (content_eq(fcs_rewrite, conclusion))
-		return rule.get_implicand();
+		return implicand;
+
+	AtomSpace& as = *fcs->getAtomSpace();
 
 	// Recursive cases
 
-	AtomSpace& as = *fcs->getAtomSpace();
 	Type t = fcs_rewrite->get_type();
 
 	if (t == EXECUTION_OUTPUT_LINK) {
@@ -482,19 +751,27 @@ Handle AndBIT::expand_fcs_rewrite(const Handle& fcs_rewrite,
 		// argument as it is a conclusion already.
 		Handle gsn = fcs_rewrite->getOutgoingAtom(0);
 		Handle arg = fcs_rewrite->getOutgoingAtom(1);
+		bool unquote = false;
+		if (arg->get_type() == UNQUOTE_LINK)
+		{
+			arg = arg->getOutgoingAtom(0);
+			unquote = true;
+		}
 		if (arg->get_type() == LIST_LINK) {
 			HandleSeq args = arg->getOutgoingSet();
 			for (size_t i = 1; i < args.size(); i++)
-				args[i] = expand_fcs_rewrite(args[i], rule);
+				args[i] = expand_fcs_rewrite(args[i], conclusion, implicand);
 			arg = as.add_link(LIST_LINK, std::move(args));
 		}
+		if (unquote)
+			arg = as.add_link(UNQUOTE_LINK,arg);
 		return as.add_link(EXECUTION_OUTPUT_LINK, {gsn, arg});
 	} else if (t == SET_LINK) {
 		// If a SetLink then treat its arguments as (unordered)
 		// premises.
 		HandleSeq args = fcs_rewrite->getOutgoingSet();
 		for (size_t i = 0; i < args.size(); i++)
-			args[i] = expand_fcs_rewrite(args[i], rule);
+			args[i] = expand_fcs_rewrite(args[i], conclusion, implicand);
 		return as.add_link(SET_LINK, std::move(args));
 	} else
 		// If none of the conditions apply just leave alone. Indeed,
@@ -508,7 +785,8 @@ Handle AndBIT::expand_fcs_rewrite(const Handle& fcs_rewrite,
 
 bool AndBIT::is_argument_of(const Handle& eval, const Handle& atom) const
 {
-	if (eval->get_type() == EVALUATION_LINK) {
+	Type evalt = eval->get_type();
+	if (evalt == EVALUATION_LINK) {
 		Handle args = eval->getOutgoingAtom(1);
 		if (content_eq(args, atom))
 			return true;
@@ -517,6 +795,16 @@ bool AndBIT::is_argument_of(const Handle& eval, const Handle& atom) const
 				if (content_eq(args->getOutgoingAtom(i), atom))
 					return true;
 	}
+	if (evalt == NOT_LINK)
+		return is_argument_of(eval->getOutgoingAtom(0),atom);
+	if (evalt == EQUAL_LINK || evalt == IDENTICAL_LINK)
+		for (auto arg : eval->getOutgoingSet())
+			if (content_eq(arg, atom))
+				return true;
+	if (atom->is_link())
+		for (auto elem : atom->getOutgoingSet())
+			if (is_argument_of(eval,elem))
+				return true;
 	return false;
 }
 
@@ -695,7 +983,7 @@ std::string AndBIT::line_separator(const std::string& up_aa,
 	// Calculate the leading space and line separator sizes. We assume
 	// that low_aa has no leading space.
 	size_t lead_sp_size = 0;                // Leading space size
-	size_t line_sep_size = low_aa.size(); 	// Line separator size
+	size_t line_sep_size = low_aa.size();	// Line separator size
 	if (not up_aa.empty()) {
 		std::string up_bl = bottom_line(up_aa);
 		size_t up_bls = up_bl.size();
@@ -751,10 +1039,10 @@ size_t BIT::size() const
 AndBIT* BIT::init()
 {
 	andbits.emplace_back(bit_as, _init_target,
-	                     _init_vardecl, _init_fitness, _as);
+						 _init_vardecl, _init_fitness, _as);
 
 	LAZY_URE_LOG_DEBUG << "Initialize BIT with:" << std::endl
-	                   << andbits.begin()->to_string();
+					   << andbits.begin()->to_string();
 
 	return &*andbits.begin();
 }
@@ -765,7 +1053,7 @@ AndBIT* BIT::expand(AndBIT& andbit, BITNode& bitleaf,
 	// Make sure that the rule is not already an or-child of bitleaf.
 	if (is_in(rule, bitleaf)) {
 		ure_logger().debug() << "An equivalent rule has already expanded "
-		                     << "that BIT-node, abort expansion";
+							 << "that BIT-node, abort expansion";
 		return nullptr;
 	}
 
@@ -783,7 +1071,7 @@ AndBIT* BIT::insert(AndBIT& andbit)
 	// Check that it isn't already in the BIT
 	if (boost::find(andbits, andbit) != andbits.end()) {
 		LAZY_URE_LOG_DEBUG << "The following and-BIT is already in the BIT: "
-		                   << andbit.fcs->id_to_string();
+						   << andbit.fcs->id_to_string();
 		return nullptr;
 	}
 	// Insert while keeping the order
@@ -824,9 +1112,32 @@ std::string oc_to_string(const AndBIT& andbit, const std::string& indent)
 	return andbit.to_string(indent);
 }
 
+bool is_meta(const Handle& h)
+{
+	BindLinkPtr h_bl(BindLinkCast(h));
+	if (not h_bl)
+		return false;
+	Handle implicand = h_bl->get_implicand();
+
+	if (not implicand)
+		return false;
+
+	Type itype = implicand->get_type();
+	if (Quotation::is_quotation_type(itype))
+		implicand = implicand->getOutgoingAtom(0);
+
+	if (implicand->get_type() == BIND_LINK)
+		return true;
+
+	auto schema = "scm: cog-substitute";
+	if (implicand->get_type() == EXECUTION_OUTPUT_LINK)
+		return NodeCast(implicand->getOutgoingAtom(0))->get_name() == schema;
+	return false;
+}
+
 // std::string oc_to_string(const BIT& bit)
 // {
-// 	return bit.to_string();
+//	return bit.to_string();
 // }
 
 } // ~namespace opencog

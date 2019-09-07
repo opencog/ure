@@ -36,6 +36,8 @@
 #include <opencog/atoms/core/Quotation.h>
 #include <opencog/atoms/core/TypeUtils.h>
 #include <opencog/atoms/pattern/BindLink.h>
+#include <opencog/atoms/atom_types/NameServer.h>
+#include <opencog/util/oc_assert.h>
 
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/unify/Unify.h>
@@ -45,23 +47,6 @@
 #include "Rule.h"
 
 namespace opencog {
-
-void RuleSet::expand_meta_rules(AtomSpace& as)
-{
-	for (const Rule& rule : *this) {
-		if (rule.is_meta()) {
-			Handle result = rule.apply(as);
-			for (const Handle& produced_h : result->getOutgoingSet()) {
-				Rule produced(rule.get_alias(), produced_h, rule.get_rbs());
-				auto ir = insert(produced);
-				if (ir.second) {
-					ure_logger().debug() << "New rule produced from meta rule:"
-					                     << std::endl << oc_to_string(produced);
-				}
-			}
-		}
-	}
-}
 
 HandleSet RuleSet::aliases() const
 {
@@ -301,8 +286,22 @@ bool Rule::is_meta() const
 		return false;
 
 	Type itype = implicand->get_type();
-	return (Quotation::is_quotation_type(itype) ?
-	        implicand->getOutgoingAtom(0)->get_type() : itype) == BIND_LINK;
+	//Subrule might be quoted
+	if (Quotation::is_quotation_type(itype))
+	{
+		implicand = implicand->getOutgoingAtom(0);
+		itype = implicand->get_type();
+	}
+	//Check if implicand is a subrule
+	if (itype == BIND_LINK)
+		return true;
+
+	//Check if implicand is a subrule that requires substitution
+	auto schema = "scm: cog-substitute";
+	if (itype == EXECUTION_OUTPUT_LINK)
+		return NodeCast(implicand->getOutgoingAtom(0))->get_name() == schema;
+
+	return false;
 }
 
 bool Rule::has_cycle() const
@@ -352,6 +351,25 @@ HandleSeq Rule::get_clauses() const
 	return hs;
 }
 
+
+Handle Rule::filter_quote(Handle h) const
+{
+	Type t = h->get_type();
+
+	if (t == UNQUOTE_LINK)
+		return h->getOutgoingAtom(0);
+
+	if (h->is_node())
+		return h;
+
+	HandleSeq res;
+	for (Handle oh : h->getOutgoingSet())
+	{
+		res.push_back(filter_quote(oh));
+	}
+	return createLink(res,t);
+}
+
 HandleSeq Rule::get_premises() const
 {
 	// If the rule's handle has not been set yet
@@ -359,10 +377,14 @@ HandleSeq Rule::get_premises() const
 		return HandleSeq();
 
 	Handle rewrite = _rule->get_implicand()[0];  // assume there is only one.
+
+	if (is_meta())
+		rewrite = ExtractSubruleRewrite(rewrite);
+
 	Type rewrite_type = rewrite->get_type();
 
 	// If not an ExecutionOutputLink then return the clauses
-	if (premises_as_clauses or rewrite_type != EXECUTION_OUTPUT_LINK)
+	if (premises_as_clauses || rewrite_type != EXECUTION_OUTPUT_LINK)
 		return get_clauses();
 
 	// Otherwise search the premises in the rewrite term's ExecutionOutputLink
@@ -388,6 +410,27 @@ HandleSeq Rule::get_premises() const
 	return premises;
 }
 
+Handle Rule::ExtractSubruleRewrite(Handle rewrite) const
+{
+	Type rewrite_type = rewrite->get_type();
+
+	if (rewrite_type == EXECUTION_OUTPUT_LINK)
+	{
+		while (rewrite_type == EXECUTION_OUTPUT_LINK)
+		{
+			rewrite = rewrite->getOutgoingAtom(1)->getOutgoingAtom(0);
+			rewrite_type = rewrite->get_type();
+		}
+		rewrite = rewrite->getOutgoingAtom(0)->getOutgoingAtom(0);
+	}
+	else
+		rewrite = rewrite->getOutgoingAtom(0);
+
+	rewrite = BindLinkCast(rewrite)->get_implicand();
+	rewrite = filter_quote(rewrite);
+	return rewrite;
+}
+
 Handle Rule::get_conclusion() const
 {
 	// If the rule's handle has not been set yet
@@ -395,6 +438,10 @@ Handle Rule::get_conclusion() const
 		return Handle::UNDEFINED;
 
 	Handle rewrite = _rule->get_implicand()[0];  // assume there is only one.
+	//Handle Meta Rule
+	if (is_meta())
+		rewrite = ExtractSubruleRewrite(rewrite);
+
 	Type rewrite_type = rewrite->get_type();
 
 	// If not an ExecutionOutputLink then return the rewrite term
@@ -442,6 +489,7 @@ RuleTypedSubstitutionMap Rule::unify_source(const Handle& source,
 
 	RuleTypedSubstitutionMap unified_rules;
 	Handle rule_vardecl = alpha_rule.get_vardecl();
+
 	for (const Handle& premise : alpha_rule.get_premises())
 	{
 		Unify unify(source, premise, vardecl, rule_vardecl);
@@ -452,11 +500,13 @@ RuleTypedSubstitutionMap Rule::unify_source(const Handle& source,
 			// For each typed substitution produce a new rule by
 			// substituting all variables by their associated
 			// values.
-			for (const auto& ts : tss)
-				unified_rules.insert({alpha_rule.substituted(ts, queried_as), ts});
+			for (const auto& ts : tss) {
+				Rule substituted = alpha_rule.substituted(ts, vardecl,
+														  queried_as);
+				unified_rules.insert({substituted, ts});
+			}
 		}
 	}
-
 	return unified_rules;
 }
 
@@ -487,7 +537,9 @@ RuleTypedSubstitutionMap Rule::unify_target(const Handle& target,
 			// substituting all variables by their associated
 			// values.
 			for (const auto& ts : tss) {
-				unified_rules.insert({alpha_rule.substituted(ts, queried_as), ts});
+				Rule substituted = alpha_rule.substituted(ts, vardecl,
+														  queried_as);
+				unified_rules.insert({substituted, ts});
 			}
 		}
 	}
@@ -541,6 +593,8 @@ HandleSeq Rule::get_conclusion_patterns() const
 {
 	HandleSeq results;
 	Handle implicand = get_implicand();
+	if (is_meta())
+		implicand = ExtractSubruleRewrite(implicand);
 	Type t = implicand->get_type();
 	if (LIST_LINK == t)
 		for (const Handle& h : implicand->getOutgoingSet())
@@ -572,10 +626,122 @@ Handle Rule::get_execution_output_first_argument(const Handle& h) const
 }
 
 Rule Rule::substituted(const Unify::TypedSubstitution& ts,
+                       const Handle& vardecl,
                        const AtomSpace* queried_as) const
 {
 	Rule new_rule(*this);
-	new_rule.set_rule(Unify::substitute(_rule, ts, queried_as));
+
+	Handle qvdecl;
+	Handle qrvdecl;
+	if (vardecl)
+		qvdecl = createLink(QUOTE_LINK, vardecl);
+	else
+		qvdecl = createLink(QUOTE_LINK, createLink(VARIABLE_LIST));
+
+	if (is_meta())
+	{
+		//Take Apart the Rule
+		Handle vardecl = get_vardecl();
+		Handle body = get_implicant();
+		Handle subrule = get_implicand();
+
+		//Take Apart the SubRule
+		bool quoted = false;
+		if (subrule->get_type() == QUOTE_LINK)
+		{
+			subrule = subrule->getOutgoingAtom(0);
+			quoted = true;
+		}
+		BindLinkPtr subrulebl = BindLinkCast(subrule);
+		Handle subvardecl = subrulebl->get_vardecl();
+		Handle subbody = subrulebl->get_body();
+		Handle subrewite = subrulebl->get_implicand();
+
+		//Get the SubRule VarDecl required for Unification
+		if (subvardecl)
+			qrvdecl = createLink(QUOTE_LINK, subvardecl);
+		else
+			qrvdecl = createLink(QUOTE_LINK, createLink(VARIABLE_LIST));
+
+		//Create the New Rule Body
+		HandleSeq out = body->getOutgoingSet();
+		HandleMap m = strip_context(ts.first);
+		for (auto elem : m)
+		{
+			Handle n = createNode(GROUNDED_PREDICATE_NODE, "scm: cog-unify");
+			Handle q = createLink(QUOTE_LINK, elem.second);
+			Handle l = createLink(LIST_LINK, elem.first, q, qrvdecl, qvdecl);
+			Handle h = createLink(EVALUATION_LINK, n, l);
+			out.push_back(h);
+		}
+		body = createLink(out,body->get_type());
+
+		//Create the new Rule Rewrite
+		//If we have a subrule with substitution
+		if (subrewite->get_type() == EXECUTION_OUTPUT_LINK)
+		{
+			Handle pred = subrewite->getOutgoingAtom(0);
+			Handle params = subrewite->getOutgoingAtom(1);
+			Type paramstype = params->get_type();
+			bool paramsquoted = false;
+			if (Quotation::is_quotation_type(paramstype))
+			{
+				params = params->getOutgoingAtom(0);
+				paramsquoted = true;
+			}
+			if (params->is_link())
+			{
+				HandleSeq oset = params->getOutgoingSet();
+				Variables vars;
+				vars.find_variables(oset[0]);
+				oset[0] = vars.substitute(oset[0],m);
+
+				if (oset[0]->get_type() == QUOTE_LINK)
+					oset[0] = filter_quote(oset[0]->getOutgoingAtom(0));
+
+				params = createLink(oset,params->get_type());
+			}
+			else
+			{
+				params = m.begin()->second;
+			}
+			if (paramsquoted)
+				params = createLink(paramstype,params);
+			subrewite = createLink(EXECUTION_OUTPUT_LINK,pred,params);
+		}
+		else
+		{
+			//Do we need to check this? A Meta Rule with a non substituing
+			//subrule seems weird
+			throw RuntimeException(TRACE_INFO,"Rule.cc:729 Not implemnted.");
+		}
+
+		subrule = createLink(BIND_LINK, subvardecl,subbody,subrewite);
+
+		if (quoted)
+		{
+			subrule = createLink(DONT_EXEC_LINK,subrule);
+			subrule = createLink(QUOTE_LINK,subrule);
+		}
+
+		//We need to substitute the Variable in the SubRule Pattern
+		//to restricts the source/target properly
+		for (auto elem : m)
+		{
+			if (elem.first == elem.second)
+				continue;
+			Handle q = createLink(QUOTE_LINK, elem.second);
+			Handle formula = createNode(GROUNDED_SCHEMA_NODE,
+										"scm: cog-substitute");
+			HandleSeq args = HandleSeq({subrule, elem.first, q, qrvdecl, qvdecl});
+			Handle params = createLink(args, LIST_LINK);
+			subrule = createLink(EXECUTION_OUTPUT_LINK, formula, params);
+		}
+
+		new_rule.set_rule(createLink(BIND_LINK, vardecl, body, subrule));
+	}
+	else
+		new_rule.set_rule(Unify::substitute(_rule, ts, queried_as));
 	return new_rule;
 }
 

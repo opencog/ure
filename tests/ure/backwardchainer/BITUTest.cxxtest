@@ -91,8 +91,10 @@ public:
 
 	void test_get_leaves();
 	void test_expand_1();
-	void test_expand_2();
-	void test_expand_3();
+	//Data is not in the proper format
+	//Should choose simpler test data
+	void xtest_expand_2();
+	void xtest_expand_3();
 	void test_has_cycle();
 };
 
@@ -138,8 +140,8 @@ void BITUTest::test_get_leaves()
 		             "  )"
 		             ")")};
 
-	std::cout << "result = " << oc_to_string(result);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "result = " << oc_to_string(result);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
 }
@@ -162,6 +164,8 @@ void BITUTest::test_expand_1()
 		closed_lambda_introduction_rule.unify_target(leaf);
 	RuleTypedSubstitutionPair rule = *rules.begin();
 
+    std::cout << "Rule: " << rule.first.to_string() << std::endl;
+
 	AndBIT result = andbit.expand(leaf, rule, 1);
 	AndBIT expected(
 		_eval.eval_h("(BindLink"
@@ -169,6 +173,19 @@ void BITUTest::test_expand_1()
 		             "  )"
 		             "  (AndLink"
 		             "    (PresentLink"
+		             "      (LambdaLink"
+		             "          (TypedVariableLink"
+		             "              (VariableNode \"$X\")"
+		             "              (TypeNode \"ConceptNode\")"
+		             "          )"
+		             "          (EvaluationLink"
+		             "			    (PredicateNode \"take\")"
+		             "			    (ListLink"
+		             "				    (VariableNode \"$X\")"
+		             "				    (ConceptNode \"treatment-1\")"
+		             "              )"
+		             "		    )"
+		             "      )"
 		             "      (TypedVariableLink"
 		             "        (VariableNode \"$X\")"
 		             "        (TypeNode \"ConceptNode\")"
@@ -227,36 +244,6 @@ void BITUTest::test_expand_1()
 		             "        (ListLink"
 		             "          (ConceptNode \"treatment-1\")"
 		             "          (ConceptNode \"compound-A\")"
-		             "        )"
-		             "      )"
-		             "    )"
-		             "    (NotLink"
-		             "      (EqualLink"
-		             "        (LambdaLink"
-		             "          (TypedVariableLink"
-		             "            (VariableNode \"$X\")"
-		             "            (TypeNode \"ConceptNode\")"
-		             "          )"
-		             "          (EvaluationLink"
-		             "            (PredicateNode \"take\")"
-		             "            (ListLink"
-		             "              (VariableNode \"$X\")"
-		             "              (ConceptNode \"treatment-1\")"
-		             "            )"
-		             "          )"
-		             "        )"
-		             "        (LambdaLink"
-		             "          (TypedVariableLink"
-		             "            (VariableNode \"$X\")"
-		             "            (TypeNode \"ConceptNode\")"
-		             "          )"
-		             "          (EvaluationLink (stv 1.000000 1.000000)"
-		             "            (PredicateNode \"contain\")"
-		             "            (ListLink"
-		             "              (ConceptNode \"treatment-1\")"
-		             "              (ConceptNode \"compound-A\")"
-		             "            )"
-		             "          )"
 		             "        )"
 		             "      )"
 		             "    )"
@@ -413,7 +400,7 @@ void BITUTest::test_expand_1()
 	TS_ASSERT_EQUALS(result, expected);
 }
 
-void BITUTest::test_expand_2()
+void BITUTest::xtest_expand_2()
 {
 	AndBIT andbit(_eval.eval_h("fcs-3"));
 
@@ -869,7 +856,7 @@ void BITUTest::test_expand_2()
 	TS_ASSERT_EQUALS(result, expected);
 }
 
-void BITUTest::test_expand_3()
+void BITUTest::xtest_expand_3()
 {
 	AndBIT andbit(_eval.eval_h("fcs-5"));
 

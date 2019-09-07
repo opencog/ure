@@ -55,8 +55,7 @@ public:
 	void test_no_exec_output();
 	// TODO: re-enable when GlobNode is supported
 	void xtest_green_balls();
-	// TODO: re-enable when meta rule is supported
-	void xtest_induction();
+	void test_induction();
 	// TODO: re-enable when focus set is supported (if ever)
 	void xtest_focus_set();
 };
@@ -90,6 +89,7 @@ BackwardChainerUTest::BackwardChainerUTest() : _eval(&_as)
 	}
 	_eval.eval("(use-modules (opencog))");
 	_eval.eval("(use-modules (opencog ure))");
+	_eval.eval("(use-modules (opencog unify))");
 	_eval.eval("(use-modules (opencog logger))");
 }
 
@@ -556,6 +556,8 @@ void BackwardChainerUTest::test_criminal()
 	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_mean());
 	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_confidence());
 
+    //XXX Fix this! For some reason certain Handles in traces() are invalid
+    //Leading to a segmentation fault
 	// Extract traces and return the backward chainer with these
 	// traces, which should greatly speed it up.
 	HandleSeqSet traces = bc._trace_recorder.traces();
@@ -597,7 +599,7 @@ void BackwardChainerUTest::test_criminal()
 	AndBITFitness trace_fitness(AndBITFitness::Trace, trace);
 	BackwardChainer tr_bc(_as, top_rbs, target, vardecl, nullptr, nullptr,
 	                      Handle::UNDEFINED, BITNodeFitness(), trace_fitness);
-	tr_bc.get_config().set_maximum_iterations(100);
+	tr_bc.get_config().set_maximum_iterations(50);
 	tr_bc.do_chain();
 
 	results = tr_bc.get_results();
@@ -672,7 +674,7 @@ void BackwardChainerUTest::xtest_green_balls()
 	TS_ASSERT_LESS_THAN(0.9, top_result->getTruthValue()->get_confidence());
 }
 
-void BackwardChainerUTest::xtest_induction()
+void BackwardChainerUTest::test_induction()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -690,7 +692,6 @@ void BackwardChainerUTest::xtest_induction()
 	Handle target = _eval.eval_h("bc-induction-target");
 
 	BackwardChainer bc(_as, top_rbs, target);
-	bc.get_config().set_maximum_iterations(100);
 	bc.do_chain();
 
 	// TODO: fixme, for that we need to support BIT expansion over meta rule

@@ -88,10 +88,6 @@ void ForwardChainer::init(const Handle& source,
 
 	// Set rules.
 	_rules = _config.get_rules();
-	// TODO: For now the FC follows the old standard. We may move to
-	// the new standard when all rules have been ported to the new one.
-	for (const Rule& rule : _rules)
-		rule.premises_as_clauses = true; // can be modify as mutable
 
 	// Reset the iteration count and max count
 	_iteration = 0;
@@ -158,10 +154,6 @@ void ForwardChainer::do_step()
 	int local_iteration = _iteration++;
 	ure_logger().debug() << "Iteration " << (local_iteration + 1)
 	                     << "/" << _config.get_maximum_iterations_str();
-
-	// Expand meta rules. This should probably be done on-the-fly in
-	// the select_rule method, but for now it's here
-	expand_meta_rules();
 
 	// Select source
 	Source* source = select_source();
@@ -301,10 +293,6 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 	// Generate all valid rules
 	RuleSet valid_rules;
 	for (const Rule& rule : _rules) {
-		// For now ignore meta rules as they are forwardly applied in
-		// expand_bit()
-		if (rule.is_meta())
-			continue;
 
 		const AtomSpace& ref_as(_search_focus_set ? _focus_set_as : _kb_as);
 		RuleTypedSubstitutionMap urm =
@@ -410,7 +398,6 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule, Source& source)
 HandleSet ForwardChainer::apply_rule(const Rule& rule)
 {
 	HandleSet results;
-
 	// Take the results from applying the rule, add them in the given
 	// AtomSpace and insert them in results
 	auto add_results = [&](AtomSpace& as, const HandleSeq& hs) {
@@ -428,13 +415,25 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 		}
 	};
 
+	//If we have a Meta Rule we need to properly add the new Rules
+	auto add_rule = [&](const HandleSeq& hs) {
+		for (const Handle& produced_h : hs)
+		{
+			Rule produced(rule.get_alias(), produced_h->getOutgoingAtom(0),
+						  rule.get_rbs());
+			auto ir = _rules.insert(produced);
+			if (ir.second)
+				ure_logger().debug() << "New rule produced from meta rule:"
+									 << std::endl << oc_to_string(produced);
+		}
+	};
+
 	// Wrap in try/catch in case the pattern matcher can't handle it
 	try
 	{
 		AtomSpace& ref_as(_search_focus_set ? _focus_set_as : _kb_as);
 		AtomSpace derived_rule_as(&ref_as);
 		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
-
 
 		// Make Sure that all constant clauses appear in the AtomSpace
 		// as unification might have created constant clauses which aren't
@@ -459,12 +458,19 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 			HandleSeq rslts;
 			for (const ValuePtr& v: fs_pmcb.get_result_set())
 				rslts.push_back(HandleCast(v));
-			add_results(_focus_set_as, rslts);
+
+			if (rule.is_meta())
+				add_rule(rslts);
+			else
+				add_results(_focus_set_as, rslts);
 		}
 		// Search the whole atomspace.
 		else {
 			Handle h = HandleCast(rhcpy->execute(&_kb_as));
-			add_results(_kb_as, h->getOutgoingSet());
+			if (rule.is_meta())
+				add_rule(h->getOutgoingSet());
+			else
+				add_results(_kb_as, h->getOutgoingSet());
 		}
 	}
 	catch (...) {}
@@ -478,18 +484,4 @@ void ForwardChainer::validate(const Handle& source)
 {
 	if (source == Handle::UNDEFINED)
 		throw RuntimeException(TRACE_INFO, "ForwardChainer - Invalid source.");
-}
-
-void ForwardChainer::expand_meta_rules()
-{
-	std::lock_guard<std::mutex> lock(_part_mutex);
-	// This is kinda of hack before meta rules are fully supported by
-	// the Rule class.
-	size_t rules_size = _rules.size();
-	_rules.expand_meta_rules(_kb_as);
-
-	if (rules_size != _rules.size()) {
-		ure_logger().debug() << "The rule set has gone from "
-		                     << rules_size << " rules to " << _rules.size();
-	}
 }

@@ -85,8 +85,31 @@
   (ExecutionOutput
      (GroundedSchema "scm: implication-scope-direct-evaluation-formula")
      (List
-        (Variable "$P")
-        (Variable "$Q"))))
+        (Quote (ImplicationScope
+          (TypedVariableLink
+            (Variable "$X")
+            (TypeNode "ConceptNode")
+          )
+          (Evaluation
+            (Unquote (Variable "$P"))
+            (Variable "$X")
+          )
+          (Evaluation
+            (Unquote (Variable "$Q"))
+            (Variable "$X")
+          )
+        ))
+        (Evaluation
+          (Variable "$P")
+          (Variable "$X")
+        )
+        (Evaluation
+          (Variable "$Q")
+          (Variable "$X")
+        )
+    )
+  )
+)
 
 (define implication-scope-direct-evaluation-rule
   (Bind
@@ -97,14 +120,16 @@
 ;; Return #t is the strength of the TV of A is above 0.5 and its
 ;; confidence is above zero.
 (define (true-enough? A)
-  (and (> (cog-mean A) 0.5) (> (cog-conf A) 0)))
+  (and (> (cog-mean A) 0.5) (> (cog-confidence A) 0)))
 
-(define (implication-scope-direct-evaluation-formula P Q)
+(define (implication-scope-direct-evaluation-formula IMP PX QX)
   (let* (
-         (K 800) ; parameter to convert from count to confidence
+         (P (cog-outgoing-atom PX 0))
+         (Q (cog-outgoing-atom QX 0))
+         (vardecl (cog-outgoing-atom IMP 0))
+         (K 5) ; parameter to convert from count to confidence (very low for test purposes)
          ;; Current hack to limit X as concepts
          (X (Variable "$X"))
-         (vardecl (TypedVariable X (Type "ConceptNode")))
          (term->instance (lambda (p x) (Evaluation p x)))
          (true-enough-term? (lambda (p x) (true-enough? (term->instance p x))))
          (fetch-true-enough-terms
@@ -123,18 +148,19 @@
                           (exact->inexact (/ P-inter-Q-length P-length))
                           0))
          (TV-confidence (exact->inexact (/ P-length K)))
-         (P-body (Evaluation P X))
-         (Q-body (Evaluation Q X)))
+        )
     ;; (cog-logger-debug "[PLN-Induction] P = ~a" P)
     ;; (cog-logger-debug "[PLN-Induction] Q = ~a" Q)
-    ;; (cog-logger-debug "[PLN-Induction] P-true-enough-terms = ~a" P-true-enough-terms) 
+    ;; (cog-logger-debug "[PLN-Induction] P-true-enough-terms = ~a" P-true-enough-terms)
     ;; (cog-logger-debug "[PLN-Induction] Q-true-enough-terms = ~a" Q-true-enough-terms)
     ;; (cog-logger-debug "[PLN-Induction] P-length = ~a" P-length)
     ;; (cog-logger-debug "[PLN-Induction] P-inter-Q-length = ~a" P-inter-Q-length)
     ;; (cog-logger-debug "[PLN-Induction] TV-strength = ~a" TV-strength)
     ;; (cog-logger-debug "[PLN-Induction] TV-confidence = ~a" TV-confidence)
-    (if (> TV-confidence 0)
-        (ImplicationScope (stv TV-strength TV-confidence) vardecl P-body Q-body))))
+    ;;(if (> TV-confidence 0) We always need to return something
+    (cog-set-tv! IMP (stv TV-strength TV-confidence))
+    ;;)
+	))
 
 ;; Name the rule
 (define implication-scope-direct-evaluation-rule-name

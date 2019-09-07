@@ -110,11 +110,6 @@ RuleTypedSubstitutionMap ControlPolicy::get_valid_rules(const AndBIT& andbit,
 	// Generate all valid rules
 	RuleTypedSubstitutionMap valid_rules;
 	for (const Rule& rule : rules) {
-		// For now ignore meta rules as they are forwardly applied in
-		// expand_bit()
-		if (rule.is_meta())
-			continue;
-
 		// Get the leaf vardecl from fcs. We don't want to filter it
 		// because otherwise the typed substitution obtained may miss some
 		// variables in the FCS declaration that needs to be substituted

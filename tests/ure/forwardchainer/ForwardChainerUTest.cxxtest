@@ -64,6 +64,7 @@ public:
 
 		_eval.eval("(use-modules (opencog))");
 		_eval.eval("(use-modules (opencog ure))");
+		_eval.eval("(use-modules (opencog unify))");
 		_eval.eval("(use-modules (opencog logger))");
 		CHKERR;
 	}

@@ -28,3 +28,5 @@
    (PredicateNode "URE:attention-allocation")
    (ConceptNode "URE")
 )
+
+;(ure-logger-set-level! "debug")

@@ -15,3 +15,13 @@ INSTALL (FILES
 	Unify.h
 	DESTINATION "include/opencog/unify"
 )
+
+IF (HAVE_GUILE)
+	ADD_LIBRARY (unifySCM UnifySCM.cc)
+	TARGET_LINK_LIBRARIES(unifySCM unify smob)
+	ADD_GUILE_EXTENSION(SCM_CONFIG unifySCM "opencog-ext-path-unify")
+
+	INSTALL (TARGETS unifySCM
+		EXPORT URETargets
+		DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
+ENDIF (HAVE_GUILE)
