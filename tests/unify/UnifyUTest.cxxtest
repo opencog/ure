@@ -127,6 +127,7 @@ public:
 	// Variable declaration
 	void test_unify_undeclared_var_1();
 	void test_unify_undeclared_var_2();
+	void test_unify_undeclared_var_3();
 	void test_unify_vardecl_1();
 	void test_unify_vardecl_2();
 	void test_unify_vardecl_3();
@@ -516,6 +517,20 @@ void UnifyUTest::test_unify_undeclared_var_2()
 	Unify unify(X, Z, Y);
 	Unify::SolutionSet result = unify(),
 		expected = Unify::SolutionSet({{{{Z, X}, X}}});
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyUTest::test_unify_undeclared_var_3()
+{
+	// Both X and Y as treated as constants
+	Handle empty_vardecl = al(VARIABLE_LIST);
+	Unify unify(X, Y, empty_vardecl, empty_vardecl);
+	Unify::SolutionSet result = unify(),
+		expected = Unify::SolutionSet(false);
 
 	std::cout << "result = " << oc_to_string(result) << std::endl;
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
