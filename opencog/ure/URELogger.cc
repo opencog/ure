@@ -34,5 +34,5 @@ Logger& opencog::ure_logger()
 		return tmp;
 	};
 	static Logger ure_instance(ure_logger_instantiate());
-    return ure_instance;
+	return ure_instance;
 }
