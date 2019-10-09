@@ -1,6 +1,5 @@
 ;;
-;; Configuration file for PLN unit test (used by
-;; BackwardChainerUTest.cxxtest)
+;; Configuration file for FC animals unit test.
 ;;
 ;; To be loaded first
 
