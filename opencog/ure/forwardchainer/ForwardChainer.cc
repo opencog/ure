@@ -414,15 +414,23 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 
 		HandleSeq clauses = rule.get_clauses();
 		Handle vdecl = rule.get_vardecl();
-		HandleSet varset;
+		HandleSet varset1;
+		HandleSet varset2;
 
-		if (VariableListCast(vdecl))
-			varset = VariableListCast(vdecl)->get_variables().varset;
-		else
-			varset.insert(vdecl);
+		if (vdecl != Handle::UNDEFINED)
+		{
+			if (VariableListCast(vdecl))
+				varset1 = VariableListCast(vdecl)->get_variables().varset;
+			else
+				varset1.insert(vdecl);
+
+			for (auto var : varset1)
+				if (var->get_type() == TYPED_VARIABLE_LINK)
+					varset2.insert(var->getOutgoingAtom(0));
+		}
 
 		for (Handle clause : clauses)
-			if (is_constant(varset,clause))
+			if (is_constant(varset2,clause))
 				if (ref_as.get_atom(clause) == Handle::UNDEFINED)
 					return HandleSet(results.begin(), results.end());
 

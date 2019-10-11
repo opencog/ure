@@ -308,7 +308,7 @@ void ForwardChainerUTest::test_tweety_not_green_alt()
 	Handle top_rbs = _as.get_node(CONCEPT_NODE, UREConfig::top_rbs_name);
 
 	Handle Tweety = an(CONCEPT_NODE, "Tweety"),
-		eats_flies = an(PREDICATE_NODE, "croaks"),
+		eats_flies = an(PREDICATE_NODE, "eats_flies"),
 		green = an(CONCEPT_NODE, "green"),
 		source = al(EVALUATION_LINK, eats_flies, Tweety),
 		vardecl = Handle::UNDEFINED;
