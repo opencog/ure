@@ -149,6 +149,7 @@ ENDIF (GUILE_FOUND AND GMP_LIBRARY AND GMP_INCLUDE_DIR)
 
 # ----------------------------------------------------------
 # secure_getenv
+INCLUDE(CheckSymbolExists)
 CHECK_SYMBOL_EXISTS(secure_getenv "stdlib.h" HAVE_SECURE_GETENV)
 IF (HAVE_SECURE_GETENV)
 	ADD_DEFINITIONS(-DHAVE_SECURE_GETENV)
