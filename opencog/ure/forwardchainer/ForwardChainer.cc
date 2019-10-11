@@ -27,6 +27,7 @@
 #include <opencog/atoms/core/VariableList.h>
 #include <opencog/atoms/core/FindUtils.h>
 #include <opencog/atoms/pattern/BindLink.h>
+#include <opencog/atoms/pattern/PatternUtils.h>
 #include <opencog/ure/Rule.h>
 
 #include "ForwardChainer.h"
@@ -410,6 +411,20 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 		AtomSpace& ref_as(_search_focus_set ? _focus_set_as : _kb_as);
 		AtomSpace derived_rule_as(&ref_as);
 		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
+
+		HandleSeq clauses = rule.get_clauses();
+		Handle vdecl = rule.get_vardecl();
+		HandleSet varset;
+
+		if (VariableListCast(vdecl))
+			varset = VariableListCast(vdecl)->get_variables().varset;
+		else
+			varset.insert(vdecl);
+
+		for (Handle clause : clauses)
+			if (is_constant(varset,clause))
+				if (ref_as.get_atom(clause) == Handle::UNDEFINED)
+					return HandleSet(results.begin(), results.end());
 
 		if (_search_focus_set) {
 			// rule.get_rule() may introduce a new atom that satisfies
