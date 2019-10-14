@@ -217,14 +217,6 @@ public:
 	TruthValuePtr get_tv() const;
 
 	/**
-	 * Create a new rule where all variables are uniquely renamed.
-	 *
-	 * @param as  pointer to the atomspace where the new BindLink will be added
-	 * @return    a new Rule object with its own new BindLink
-	 */
-	Rule gen_standardize_apart(AtomSpace*);
-
-	/**
 	 * Used by the forward chainer to select rules. Given a source,
 	 * generate all rule variations that may be applied over a given
 	 * source. The variables in the rules are renamed to almost
@@ -306,8 +298,6 @@ private:
 	// Return a copy of the rule with the variables alpha-converted
 	// into random variable names.
 	Rule rand_alpha_converted() const;
-
-	Handle standardize_helper(AtomSpace*, const Handle&, HandleMap&);
 
 	// Return the conclusion patterns of the rule. There are several
 	// of them because the conclusions can be wrapped in the
