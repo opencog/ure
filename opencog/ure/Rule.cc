@@ -258,6 +258,13 @@ Handle Rule::get_vardecl() const
 	return Handle::UNDEFINED;
 }
 
+Variables Rule::get_variables() const
+{
+	if (_rule)
+		return _rule->get_variables();
+	return Variables();
+}
+
 /**
  * Get the implicant (input) of the rule defined in a BindLink.
  *

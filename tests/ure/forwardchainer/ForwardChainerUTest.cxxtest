@@ -84,6 +84,7 @@ public:
 	void test_tweety_not_green_alt();
 	void test_unsatisfied_premise();
 	void test_negation_conflict();
+    void test_dummy();
 };
 
 void ForwardChainerUTest::setUp()
@@ -386,6 +387,32 @@ void ForwardChainerUTest::test_negation_conflict()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(results, expected);
+}
+
+void ForwardChainerUTest::test_dummy()
+{
+	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+	_eval.eval("(load-from-path \"fc-dummy-config.scm\")");
+
+	Handle top_rbs = _as.get_node(CONCEPT_NODE, UREConfig::top_rbs_name);
+
+    Handle source = al(MEMBER_LINK, an(CONCEPT_NODE, "terrier"),
+                                    an(CONCEPT_NODE, "dog"));
+    Handle vardecl = Handle::UNDEFINED;
+
+    ForwardChainer fc(_as, top_rbs, source, vardecl);
+    fc.get_config().set_maximum_iterations(10);
+    fc.do_chain();
+
+    HandleSet results = fc.get_chaining_result();
+
+	logger().debug() << "results = " << oc_to_string(results);
+
+    Handle target = al(MEMBER_LINK, an(CONCEPT_NODE, "terrier"),
+                                    an(CONCEPT_NODE, "animal"));
+
+    TS_ASSERT_DIFFERS(results.find(target), results.end());
 }
 
 #undef al

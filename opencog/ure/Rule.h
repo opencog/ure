@@ -30,6 +30,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/core/ScopeLink.h>
 #include <opencog/atoms/core/VariableList.h>
+#include <opencog/atoms/core/Variables.h>
 #include <opencog/atoms/pattern/BindLink.h>
 #include <opencog/unify/Unify.h>
 #include <opencog/util/empty_string.h>
@@ -172,6 +173,7 @@ public:
 	 * Return the variable declaration of the rule.
 	 */
 	Handle get_vardecl() const;
+	Variables get_variables() const;
 	Handle get_implicant() const;
 	Handle get_implicand() const;
 
