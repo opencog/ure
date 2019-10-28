@@ -314,7 +314,8 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 {
 	// Perform substitution over the existing variable declaration, if
 	// no new alternative is provided.
-	if (not vardecl) {
+	if (not vardecl || (vardecl->get_type() == VARIABLE_LIST &&
+	                    vardecl->getOutgoingSet().size() == 0)) {
 		// If the bind link has no variable declaration either then
 		// infer one
 		Handle old_vardecl = bl->get_vardecl() ? bl->get_vardecl()

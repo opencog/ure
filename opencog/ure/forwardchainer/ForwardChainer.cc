@@ -413,15 +413,10 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
 
 		HandleSeq clauses = rule.get_clauses();
-		HandleSet varset1 = rule.get_variables().varset;
-		HandleSet varset2;
-
-		for (auto var : varset1)
-			if (var->get_type() == TYPED_VARIABLE_LINK)
-				varset2.insert(var->getOutgoingAtom(0));
+		HandleSet varset = rule.get_variables().varset;
 
 		for (Handle clause : clauses)
-			if (is_constant(varset2,clause))
+			if (is_constant(varset,clause))
 				if (ref_as.get_atom(clause) == Handle::UNDEFINED)
 					return HandleSet(results.begin(), results.end());
 
