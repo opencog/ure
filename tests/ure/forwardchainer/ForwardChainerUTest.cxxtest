@@ -106,7 +106,7 @@ void ForwardChainerUTest::tearDown()
 
 void ForwardChainerUTest::test_select_rule(void)
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	Handle h = _eval.eval_h("(InheritanceLink"
 	                        "   (ConceptNode \"Cat\")"
@@ -123,7 +123,7 @@ void ForwardChainerUTest::test_select_rule(void)
 
 void ForwardChainerUTest::test_deduction()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Test simple deduction
 	//
@@ -161,7 +161,7 @@ void ForwardChainerUTest::test_deduction()
 // means infinite number of iterations, or until saturation.
 void ForwardChainerUTest::test_deduction_neg_max_iter()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Test simple deduction
 	//
@@ -198,7 +198,7 @@ void ForwardChainerUTest::test_deduction_neg_max_iter()
 
 void ForwardChainerUTest::test_fritz_green()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	std::string result =
 		_eval.eval("(load-from-path \"fc-animals-config.scm\")");
@@ -229,7 +229,7 @@ void ForwardChainerUTest::test_fritz_green()
 
 void ForwardChainerUTest::test_tweety_not_green()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Test that Tweety is not green
 	std::string result =
@@ -262,7 +262,7 @@ void ForwardChainerUTest::test_tweety_not_green()
 
 void ForwardChainerUTest::test_fritz_green_alt()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Like test_fritz_green() but using the alternate rule base with
 	// customs conditional instantiations.
@@ -295,7 +295,7 @@ void ForwardChainerUTest::test_fritz_green_alt()
 
 void ForwardChainerUTest::xtest_tweety_not_green_alt()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Like test_tweety_not_green_alt() but using the alternate rule
 	// base with customs conditional instantiations.
@@ -333,7 +333,7 @@ void ForwardChainerUTest::xtest_tweety_not_green_alt()
  */
 void ForwardChainerUTest::test_unsatisfied_premise(void)
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	_eval.eval("(load-from-path \"fc-unsatisfied-premise.scm\")");
 
@@ -356,7 +356,7 @@ void ForwardChainerUTest::test_unsatisfied_premise(void)
  */
 void ForwardChainerUTest::test_negation_conflict()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	_eval.eval("(load-from-path \"negation-conflict.scm\")");
 
