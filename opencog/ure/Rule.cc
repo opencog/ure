@@ -254,7 +254,7 @@ void Rule::add(AtomSpace& as)
 Handle Rule::get_vardecl() const
 {
 	if (_rule)
-		return _rule->get_vardecl();
+		return _rule->get_variables().get_vardecl();
 	return Handle::UNDEFINED;
 }
 
