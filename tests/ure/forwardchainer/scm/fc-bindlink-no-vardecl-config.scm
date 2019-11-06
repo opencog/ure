@@ -1,4 +1,18 @@
+(define XY
+  (Member
+    (Concept "terrier")
+    (Concept "dog")
+  )
+)
 
+(define YZ
+  (Member
+    (Concept "dog")
+    (Concept "animal")
+  )
+)
+
+;;Rule without Variable Declaration
 (define rule
   (BindLink
     (And
@@ -15,19 +29,6 @@
       (Variable "X")
       (Variable "Z")
     )
-  )
-)
-
-(define XY
-  (Member
-    (Concept "terrier")
-    (Concept "dog")
-  )
-)
-(define YZ
-  (Member
-    (Concept "dog")
-    (Concept "animal")
   )
 )
 

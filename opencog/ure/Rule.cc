@@ -253,6 +253,8 @@ void Rule::add(AtomSpace& as)
 
 Handle Rule::get_vardecl() const
 {
+	//Generate the VarDecl from Variables.
+	//This is needed in the case that a BindLink doesn't have a VarDecl
 	if (_rule)
 		return _rule->get_variables().get_vardecl();
 	return Handle::UNDEFINED;

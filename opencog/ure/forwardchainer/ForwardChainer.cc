@@ -412,13 +412,16 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 		AtomSpace derived_rule_as(&ref_as);
 		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
 
+
+		//Make Sure that all constant clauses appear in the AtomSpace
+		//as Unification might have created constant clauses which aren't
 		HandleSeq clauses = rule.get_clauses();
 		HandleSet varset = rule.get_variables().varset;
 
 		for (Handle clause : clauses)
 			if (is_constant(varset,clause))
 				if (ref_as.get_atom(clause) == Handle::UNDEFINED)
-					return HandleSet(results.begin(), results.end());
+					return results;
 
 		if (_search_focus_set) {
 			// rule.get_rule() may introduce a new atom that satisfies
@@ -446,7 +449,7 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 
 	LAZY_URE_LOG_DEBUG << "Results:" << std::endl << oc_to_string(results);
 
-	return HandleSet(results.begin(), results.end());
+	return results;
 }
 
 void ForwardChainer::validate(const Handle& source)

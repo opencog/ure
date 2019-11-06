@@ -84,7 +84,7 @@ public:
 	void test_tweety_not_green_alt();
 	void test_unsatisfied_premise();
 	void test_negation_conflict();
-    void test_dummy();
+    void test_bindlink_no_vardecl();
 };
 
 void ForwardChainerUTest::setUp()
@@ -389,11 +389,11 @@ void ForwardChainerUTest::test_negation_conflict()
 	TS_ASSERT_EQUALS(results, expected);
 }
 
-void ForwardChainerUTest::test_dummy()
+void ForwardChainerUTest::test_bindlink_no_vardecl()
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	_eval.eval("(load-from-path \"fc-dummy-config.scm\")");
+	_eval.eval("(load-from-path \"fc-bindlink-no-vardecl-config.scm\")");
 
 	Handle top_rbs = _as.get_node(CONCEPT_NODE, UREConfig::top_rbs_name);
 
