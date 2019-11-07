@@ -260,11 +260,12 @@ Handle Rule::get_vardecl() const
 	return Handle::UNDEFINED;
 }
 
-Variables Rule::get_variables() const
+const Variables& Rule::get_variables() const
 {
 	if (_rule)
 		return _rule->get_variables();
-	return Variables();
+	static Variables empty_variables;
+	return empty_variables;
 }
 
 /**

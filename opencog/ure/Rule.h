@@ -173,7 +173,7 @@ public:
 	 * Return the variable declaration of the rule.
 	 */
 	Handle get_vardecl() const;
-	Variables get_variables() const;
+	const Variables& get_variables() const;
 	Handle get_implicant() const;
 	Handle get_implicand() const;
 
