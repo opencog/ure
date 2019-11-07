@@ -128,7 +128,7 @@ void BackwardChainerUTest::reset_bc()
 // Test select rule with a target with no variable
 void BackwardChainerUTest::test_select_rule_1()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// TODO: move that in setUp
 	reset_bc();
@@ -148,7 +148,7 @@ void BackwardChainerUTest::test_select_rule_1()
 // Test select rule with a target with variables
 void BackwardChainerUTest::test_select_rule_2()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	reset_bc();
 
@@ -168,7 +168,7 @@ void BackwardChainerUTest::test_select_rule_2()
 // the variable in the rule.
 void BackwardChainerUTest::test_select_rule_3()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	reset_bc();
 
@@ -187,7 +187,7 @@ void BackwardChainerUTest::test_select_rule_3()
 
 void BackwardChainerUTest::test_deduction()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	load_from_path("bc-deduction-config.scm");
 	load_from_path("bc-transitive-closure.scm");
@@ -215,13 +215,11 @@ void BackwardChainerUTest::test_deduction()
 	logger().debug() << "expected = " << expected->to_string();
 
 	TS_ASSERT_EQUALS(results, expected);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::test_deduction_tv_query()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	load_from_path("bc-deduction-config.scm");
 	load_from_path("bc-transitive-closure.scm");
@@ -238,13 +236,11 @@ void BackwardChainerUTest::test_deduction_tv_query()
 
 	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 1, 1e-10);
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::test_modus_ponens_tv_query()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	load_from_path("bc-modus-ponens-config.scm");
 	load_from_path("modus-ponens-example.scm");
@@ -259,13 +255,11 @@ void BackwardChainerUTest::test_modus_ponens_tv_query()
 
 	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 1, 1e-10);
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::test_conjunction_fuzzy_evaluation_tv_query()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	string result = load_from_path("fuzzy-conjunction-introduction-config.scm");
 	logger().debug() << "result = " << result;
@@ -288,13 +282,11 @@ void BackwardChainerUTest::test_conjunction_fuzzy_evaluation_tv_query()
 
 	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 0.4, 1e-6);
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 0.2, 1e-6);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::test_conditional_instantiation_1()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	string result = load_from_path("conditional-instantiation-config.scm");
 
@@ -333,13 +325,11 @@ void BackwardChainerUTest::test_conditional_instantiation_1()
 	logger().debug() << "expected = " << expected->to_string();
 
 	TS_ASSERT_EQUALS(results, expected);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::test_conditional_instantiation_2()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	string result = load_from_path("conditional-instantiation-config.scm");
 	logger().debug() << "result = " << result;
@@ -366,13 +356,11 @@ void BackwardChainerUTest::test_conditional_instantiation_2()
 	logger().debug() << "expected = " << expected->to_string();
 
 	TS_ASSERT_EQUALS(results, expected);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::test_conditional_instantiation_tv_query()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	load_from_path("conditional-instantiation-config.scm");
 	load_from_path("animals.scm");
@@ -391,8 +379,6 @@ void BackwardChainerUTest::test_conditional_instantiation_tv_query()
 
 	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 1, .1);
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, .1);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 // This test is for rules that requires the pattern matcher to look
@@ -434,7 +420,7 @@ void BackwardChainerUTest::test_conditional_instantiation_tv_query()
 //         ...
 void BackwardChainerUTest::test_conditional_partial_instantiation()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	string result = load_from_path("conditional-partial-instantiation-config.scm");
 
@@ -481,13 +467,11 @@ void BackwardChainerUTest::test_conditional_partial_instantiation()
 
 	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 1, 1e-10);
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::test_impossible_criminal()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	load_from_path("bc-criminal-without-deduction-config.scm");
 	load_from_path("criminal.scm");
@@ -518,13 +502,11 @@ void BackwardChainerUTest::test_impossible_criminal()
 	logger().debug() << "expected = " << expected->to_string();
 
 	TS_ASSERT_EQUALS(results, expected);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::test_criminal()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	load_from_path("bc-criminal-config.scm");
 	load_from_path("criminal.scm");
@@ -619,14 +601,12 @@ void BackwardChainerUTest::test_criminal()
 	TS_ASSERT_EQUALS(results, expected);
 	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_mean());
 	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_confidence());
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 // Test showing we no longer need the ExecutionOutputLink
 void BackwardChainerUTest::test_no_exec_output()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	load_from_path("no-exec-output.scm");
 	randGen().seed(0);
@@ -651,13 +631,11 @@ void BackwardChainerUTest::test_no_exec_output()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(results, expected);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::xtest_green_balls()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	load_from_path("green-balls-kb.scm");
 	load_from_path("green-balls-rb.scm");
@@ -684,7 +662,7 @@ void BackwardChainerUTest::xtest_green_balls()
 
 void BackwardChainerUTest::xtest_induction()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	string load_bc_induction_config_result =
 		load_from_path("bc-induction-config.scm");
@@ -707,13 +685,11 @@ void BackwardChainerUTest::xtest_induction()
 	// TODO: determine the expected confidence, which depends on the
 	// number of instances the induction is based on
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 void BackwardChainerUTest::xtest_focus_set()
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	load_from_path("conditional-instantiation-config.scm");
 	load_from_path("animals.scm");
@@ -764,8 +740,6 @@ void BackwardChainerUTest::xtest_focus_set()
 
 	// Re-enable when focus set is supported
 	TS_ASSERT_EQUALS(results, expected);
-
-	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
 #undef al
