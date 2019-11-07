@@ -413,13 +413,12 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
 
 
-		//Make Sure that all constant clauses appear in the AtomSpace
-		//as Unification might have created constant clauses which aren't
+		// Make Sure that all constant clauses appear in the AtomSpace
+		// as unification might have created constant clauses which aren't
 		HandleSeq clauses = rule.get_clauses();
-		HandleSet varset = rule.get_variables().varset;
-
+		const HandleSet& varset = rule.get_variables().varset;
 		for (Handle clause : clauses)
-			if (is_constant(varset,clause))
+			if (is_constant(varset, clause))
 				if (ref_as.get_atom(clause) == Handle::UNDEFINED)
 					return results;
 
