@@ -221,8 +221,8 @@ void Unify::set_variables(const Handle& lhs, const Handle& rhs,
                           const Handle& lhs_vardecl, const Handle& rhs_vardecl)
 {
 	// Merge the 2 type declarations
-	Variables lv = gen_varlist(lhs, lhs_vardecl)->get_variables();
-	Variables rv = gen_varlist(rhs, rhs_vardecl)->get_variables();
+	Variables lv = gen_variables(lhs, lhs_vardecl);
+	Variables rv = gen_variables(rhs, rhs_vardecl);
 	_variables = merge_variables(lv, rv);
 }
 
