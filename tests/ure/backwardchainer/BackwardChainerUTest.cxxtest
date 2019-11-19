@@ -63,7 +63,7 @@ public:
 
 BackwardChainerUTest::BackwardChainerUTest() : _eval(&_as)
 {
-	logger().set_level(Logger::INFO);
+	logger().set_level(Logger::DEBUG);
 	logger().set_timestamp_flag(false);
 	// logger().set_sync_flag(true);
 	logger().set_print_to_stdout_flag(true);
@@ -312,7 +312,7 @@ void BackwardChainerUTest::test_conditional_instantiation_1()
 		                target_var, an(TYPE_NODE, "ConceptNode")));
 
 	BackwardChainer bc(_as, top_rbs, target, vardecl);
-	bc.get_config().set_maximum_iterations(80);
+	bc.get_config().set_maximum_iterations(500);
 	bc.do_chain();
 
 	Handle results = bc.get_results(),

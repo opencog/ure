@@ -98,7 +98,7 @@ public:
 		                al(TYPED_VARIABLE_LINK, Y, CT));
 
 		Handle X_varlist = al(VARIABLE_LIST, X_vardecl);
-		Variables X_CT_variables = VariableListCast(X_varlist)->get_variables();
+		Variables X_CT_variables(X_vardecl);
 		X_varstack.push_back(X_CT_variables);
 	}
 
@@ -271,8 +271,8 @@ void UnifyUTest::test_join_2()
 	Unify::Block pb3_expected{A1, Cimplicant_body};
 	Unify::SolutionSet expected =
 		Unify::SolutionSet({{{pb1_expected, implicant},
-					         {pb2_expected, Cimplicant_vardecl},
-					         {pb3_expected, Cimplicant_body}}});
+		                     {pb2_expected, Cimplicant_vardecl},
+		                     {pb3_expected, Cimplicant_body}}});
 
 	std::cout << "result = " << oc_to_string(result) << std::endl;
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;

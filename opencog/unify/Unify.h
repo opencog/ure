@@ -128,10 +128,14 @@ public:
 	// Pair of CHandles
 	typedef std::pair<CHandle, CHandle> CHandlePair;
 
-	// Partition block
+	// Partition block. A block is a set of CHandles that are
+	// hypothesized as being unifiable, that is there exists a
+	// substitution making them equal.
 	typedef std::set<CHandle> Block;
 
-	// Mapping from partition blocks to type
+	// Mapping from partition blocks to type. The type for now is the
+	// most specialized term of the block, till types are better
+	// supported.
 	typedef std::map<Block, CHandle> Partition;
 
 	// This is in fact a typed block but is merely named Block due to
