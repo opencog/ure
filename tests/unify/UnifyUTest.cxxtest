@@ -40,7 +40,8 @@ class UnifyUTest :  public CxxTest::TestSuite
 private:
 	AtomSpace _as;
 	SchemeEval _eval;
-	Handle X, Y, Z, W, V, A, B, AB, XB, AY, XY, AZ, AW, AV,
+	Handle X, Y, Z, W, V, A, B,
+		InhAB, InhXB, InhAY, InhXY, InhAZ, InhAW, InhAV,
 		AndAA, AndAB, AndAY, AndXB, AndXY,
 		AndAABB, AndXYAB, AndAAABBB, AndXXYYAB, AndAAAABBBB, AndXXXYYYAB,
 		AndAAAAABBBBB, AndXXXXYYYYAB,
@@ -63,13 +64,13 @@ public:
 		V = an(VARIABLE_NODE, "$V");
 		A = an(CONCEPT_NODE, "A");
 		B = an(CONCEPT_NODE, "B");
-		AB = al(INHERITANCE_LINK, A, B);
-		XB = al(INHERITANCE_LINK, X, B);
-		AY = al(INHERITANCE_LINK, A, Y);
-		XY = al(INHERITANCE_LINK, X, Y);
-		AZ = al(INHERITANCE_LINK, A, Z);
-		AW = al(INHERITANCE_LINK, A, W);
-		AV = al(INHERITANCE_LINK, A, V);
+		InhAB = al(INHERITANCE_LINK, A, B);
+		InhXB = al(INHERITANCE_LINK, X, B);
+		InhAY = al(INHERITANCE_LINK, A, Y);
+		InhXY = al(INHERITANCE_LINK, X, Y);
+		InhAZ = al(INHERITANCE_LINK, A, Z);
+		InhAW = al(INHERITANCE_LINK, A, W);
+		InhAV = al(INHERITANCE_LINK, A, V);
 		AndAA = al(AND_LINK, A, A);
 		AndAB = al(AND_LINK, A, B);
 		AndAY = al(AND_LINK, A, Y);
@@ -368,7 +369,7 @@ void UnifyUTest::test_join_3()
 
 void UnifyUTest::test_unify_without_var_1()
 {
-	Unify unify(AB, A);
+	Unify unify(InhAB, A);
 	Unify::SolutionSet result = unify(),
         expected(false);
 
@@ -384,7 +385,7 @@ void UnifyUTest::test_unify_without_var_1()
 
 void UnifyUTest::test_unify_without_var_2()
 {
-	Unify unify(AB, AB);
+	Unify unify(InhAB, InhAB);
 	Unify::SolutionSet result = unify(),
 		expected(true);
 
@@ -424,9 +425,9 @@ void UnifyUTest::test_unify_basic_2()
 
 void UnifyUTest::test_unify_basic_3()
 {
-	Unify unify(X, AB);
+	Unify unify(X, InhAB);
 	Unify::SolutionSet result = unify(),
-		expected = Unify::SolutionSet({{{{X, AB}, AB}}});
+		expected = Unify::SolutionSet({{{{X, InhAB}, InhAB}}});
 	
 	std::cout << "result = " << oc_to_string(result) << std::endl;
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
@@ -436,7 +437,7 @@ void UnifyUTest::test_unify_basic_3()
 
 void UnifyUTest::test_unify_basic_4()
 {
-	Unify unify(XB, AY);
+	Unify unify(InhXB, InhAY);
 	Unify::SolutionSet result = unify(),
 		expected = Unify::SolutionSet({{{{X, A}, A}, {{Y, B}, B}}});
 	
@@ -448,7 +449,7 @@ void UnifyUTest::test_unify_basic_4()
 
 void UnifyUTest::test_unify_basic_5()
 {
-	Unify unify(XY, AY);
+	Unify unify(InhXY, InhAY);
 	Unify::SolutionSet result = unify(),
 		expected = Unify::SolutionSet({{{{X, A}, A}}});
 
@@ -472,7 +473,7 @@ void UnifyUTest::test_unify_basic_6()
 void UnifyUTest::test_unify_basic_7()
 {
 	// This one is supposed to fail
-	Unify unify(XB, B);
+	Unify unify(InhXB, B);
 	Unify::SolutionSet result = unify();
 
 	TS_ASSERT(not result.is_satisfiable());
@@ -480,7 +481,7 @@ void UnifyUTest::test_unify_basic_7()
 
 void UnifyUTest::test_unify_basic_8()
 {
-	Unify unify(XY, AZ);
+	Unify unify(InhXY, InhAZ);
 	Unify::SolutionSet result = unify(),
 		expected = Unify::SolutionSet({{{{X, A}, A}, {{Y, Z}, Y}}});
 
@@ -540,7 +541,7 @@ void UnifyUTest::test_unify_undeclared_var_3()
 
 void UnifyUTest::test_unify_vardecl_1()
 {
-	Unify unify(XY, AY, XY_vardecl, Y_vardecl);
+	Unify unify(InhXY, InhAY, XY_vardecl, Y_vardecl);
 	Unify::SolutionSet result = unify(),
 		expected = Unify::SolutionSet({{{{X, A}, A}}});
 
@@ -552,7 +553,7 @@ void UnifyUTest::test_unify_vardecl_1()
 
 void UnifyUTest::test_unify_vardecl_2()
 {
-	Unify unify(XY, AY, XY_vardecl, Y_vardecl);
+	Unify unify(InhXY, InhAY, XY_vardecl, Y_vardecl);
 	Unify::SolutionSet result = unify(),
 		expected = Unify::SolutionSet({{{{X, A}, A}}});
 
@@ -564,7 +565,7 @@ void UnifyUTest::test_unify_vardecl_2()
 
 void UnifyUTest::test_unify_vardecl_3()
 {
-	Unify unify(XB, AY, X_vardecl, Y_vardecl);
+	Unify unify(InhXB, InhAY, X_vardecl, Y_vardecl);
 	Unify::SolutionSet result = unify(),
 		expected = Unify::SolutionSet({{{{X, A}, A}, {{Y, B}, B}}});
 
@@ -573,7 +574,7 @@ void UnifyUTest::test_unify_vardecl_3()
 
 void UnifyUTest::test_unify_vardecl_4()
 {
-	Unify unify(XY, AZ, XY_vardecl, Z_vardecl);
+	Unify unify(InhXY, InhAZ, XY_vardecl, Z_vardecl);
 	Unify::SolutionSet result = unify(),
 		expected = Unify::SolutionSet({{{{X, A}, A}, {{Y, Z}, Y}}});
 
@@ -587,7 +588,7 @@ void UnifyUTest::test_unify_vardecl_5()
 {
 	// This one is supposed to fail as the types of Y and W have empty
 	// intersection.
-	Unify unify(XY, AW, XY_vardecl, W_vardecl);
+	Unify unify(InhXY, InhAW, XY_vardecl, W_vardecl);
 	Unify::SolutionSet result = unify();
 
 	std::cout << "result = " << oc_to_string(result) << std::endl;
