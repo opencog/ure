@@ -234,7 +234,7 @@ public:
 	 * link after substitution would have occured given a substitution
 	 * mapping.
 	 */
-	Handle substitution_vardecl(const HandleCHandleMap&	var2val) const;
+	Handle substitution_vardecl(const HandleCHandleMap& var2val) const;
 
 	/**
 	 * If the quotations are useless or harmful, which might be the
