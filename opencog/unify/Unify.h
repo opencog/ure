@@ -170,6 +170,10 @@ public:
 		// Return true iff the solution set is satisfiable which is
 		// indicated by whether it is empty or not.
 		bool is_satisfiable() const;
+
+		// Insert sol to the existing solution set. Merely perform the
+		// union of solutions, not the join.
+		void insert(const SolutionSet& sol);
 	};
 
 	// Mapping from Handle (typically a variable) to a contextual handle

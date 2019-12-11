@@ -151,6 +151,11 @@ bool Unify::SolutionSet::is_satisfiable() const
 	return not empty();
 }
 
+void Unify::SolutionSet::insert(const SolutionSet& sol)
+{
+	Partitions::insert(sol.begin(), sol.end());
+}
+
 Unify::Unify(const Handle& lhs, const Handle& rhs,
              const Handle& lhs_vardecl, const Handle& rhs_vardecl)
 {
@@ -254,7 +259,7 @@ Unify::HandleCHandleMap Unify::substitution_closure(const HandleCHandleMap& var2
 	// Strip var2cval from its contexts
 	HandleMap var2val = strip_context(var2cval);
 
-	// Subtitute every value that have variables by other values
+	// Substitute every value that have variables by other values
 	// associated to these variables.
 	HandleCHandleMap result(var2cval);
 	for (auto& el : result) {
@@ -559,9 +564,8 @@ Unify::SolutionSet Unify::unordered_unify(const HandleSeq& lhs,
 			HandleSeq lhs_tail(cp_erase(lhs, i));
 			HandleSeq rhs_tail(cp_erase(rhs, 0));
 			auto tail_sol = unordered_unify(lhs_tail, rhs_tail, lc, rc);
-			SolutionSet perm_sol = join(head_sol, tail_sol);
 			// Union merge satisfiable permutations
-			sol.insert(perm_sol.begin(), perm_sol.end());
+			sol.insert(join(head_sol, tail_sol));
 		}
 	}
 	return sol;
@@ -666,11 +670,8 @@ Unify::SolutionSet Unify::join(const SolutionSet& lhs,
 
 	// By now both are satisfiable, thus non empty, join them
 	SolutionSet result;
-	for (const Partition& rp : rhs) {
-		SolutionSet sol(join(lhs, rp));
-		result.insert(sol.begin(), sol.end());
-	}
-
+	for (const Partition& rp : rhs)
+		result.insert(join(lhs, rp));
 	return result;
 }
 
@@ -682,10 +683,8 @@ Unify::SolutionSet Unify::join(const SolutionSet& lhs, const Partition& rhs) con
 
 	// Recursive case (a loop actually)
 	SolutionSet result;
-	for (const auto& par : lhs) {
-		SolutionSet jps = join(par, rhs);
-		result.insert(jps.begin(), jps.end());
-	}
+	for (const auto& par : lhs)
+		result.insert(join(par, rhs));
 	return result;
 }
 
@@ -711,10 +710,8 @@ Unify::SolutionSet Unify::join(const SolutionSet& sol,
                                const TypedBlock& block) const
 {
 	SolutionSet result;
-	for (const Partition& partition : sol) {
-		SolutionSet jps = join(partition, block);
-		result.insert(jps.begin(), jps.end());
-	}
+	for (const Partition& partition : sol)
+		result.insert(join(partition, block));
 	return result;
 }
 
