@@ -53,7 +53,7 @@ private:
 public:
 	UnifyUTest() : _eval(&_as)
 	{
-		logger().set_level(Logger::DEBUG);
+		logger().set_level(Logger::INFO);
 		logger().set_print_to_stdout_flag(true);
 		logger().set_timestamp_flag(false);
 
@@ -105,8 +105,8 @@ public:
 
 	void setUp();
 
-	// type (TODO: should be moved elsewhere once the unification type
-	// routines are moved elsewhere)
+	// TODO: move elsewhere once the unification type routines are
+	// moved elsewhere
 	void test_type_intersection();
 
 	void test_join_1();
@@ -135,13 +135,15 @@ public:
 	void test_unify_vardecl_4();
 	void test_unify_vardecl_5();
 
-	// // Cyclic dependence
-	// TODO: is it really needed?
-	// void test_unify_cyclic_dependence_1();
+	// Cyclic dependence
+	void test_unify_cyclic_dependence_1();
+	void test_unify_cyclic_dependence_2();
+	void test_unify_cyclic_dependence_3();
+	void test_unify_cyclic_dependence_4();
 
-	// // Type union
+	// Type union
 	// TODO: for that we need to support more powerful type
-	// void test_unify_type_union_1();
+	void xtest_unify_type_union_1();
 
 	// Unordered link
 	void test_unify_unordered_1();
@@ -596,27 +598,63 @@ void UnifyUTest::test_unify_vardecl_5()
 	TS_ASSERT(not result.is_satisfiable());
 }
 
-// void UnifyUTest::test_unify_cyclic_dependence_1()
-// {
-// 	// This one is supposed to fail as X cannot be an Inheritance link
-// 	// and a ConceptNode as specified by its type declaration.
-// 	Unify::SolutionSet result = Unify()(XY, X, XY_vardecl, X_cyclic_vardecl);
+void UnifyUTest::test_unify_cyclic_dependence_1()
+{
+	// Fails because X cannot be finitely equal to (Inheritance X Y)
+	Unify::SolutionSet result = Unify(InhXY, X)();
 
-// 	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "result = " << oc_to_string(result) << std::endl;
 
-// 	TS_ASSERT(not result.is_satisfiable());
-// }
+	TS_ASSERT(not result.is_satisfiable());
+}
 
-// void UnifyUTest::test_unify_type_union_1()
-// {
-// 	Unify::SolutionSet result = Unify()(XY, AV, XY_vardecl, V_vardecl),
-// 		expected = Unify::SolutionSet({{{{X, A}, A}, {{Y, V}, Y}}});
+void UnifyUTest::test_unify_cyclic_dependence_2()
+{
+	// Fails because X cannot be an InheritanceLink and a ConceptNode
+	// at once, according to the type declarations.
+	Unify::SolutionSet result = Unify(InhXY, X, XY_vardecl, X_cyclic_vardecl)();
 
-// 	std::cout << "result = " << oc_to_string(result) << std::endl;
-// 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+	std::cout << "result = " << oc_to_string(result) << std::endl;
 
-// 	TS_ASSERT_EQUALS(result, expected);
-// }
+	TS_ASSERT(not result.is_satisfiable());
+}
+
+void UnifyUTest::test_unify_cyclic_dependence_3()
+{
+	// Fails because X and Y are in a cycle.
+	Handle lh = al(LIST_LINK, X, Y);
+	Handle rh = al(LIST_LINK, al(LIST_LINK, Y), al(LIST_LINK, X));
+	Unify::SolutionSet result = Unify(lh, rh)();
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+
+	TS_ASSERT(not result.is_satisfiable());
+}
+
+void UnifyUTest::test_unify_cyclic_dependence_4()
+{
+	// This is an example of cycle occuring in spite of the fact that
+	// the left and right terms have no variable in common. X is in a
+	// cycle via unification with Y.
+	Handle lh = al(LIST_LINK, X, al(LIST_LINK, X));
+	Handle rh = al(LIST_LINK, Y, Y);
+	Unify::SolutionSet result = Unify(lh, rh)();
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+
+	TS_ASSERT(not result.is_satisfiable());
+}
+
+void UnifyUTest::xtest_unify_type_union_1()
+{
+	Unify::SolutionSet result = Unify(InhXY, InhAV, XY_vardecl, V_vardecl)(),
+		expected = Unify::SolutionSet({{{{X, A}, A}, {{Y, V}, Y}}});
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
 
 void UnifyUTest::test_unify_unordered_1()
 {
