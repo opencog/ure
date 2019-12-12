@@ -138,8 +138,7 @@ public:
 	// supported.
 	typedef std::map<Block, CHandle> Partition;
 
-	// This is in fact a typed block but is merely named Block due to
-	// being so frequently used.
+	// Element of a partition, that is a pair of block and its type.
 	typedef Partition::value_type TypedBlock;
 
 	// Useful for representing common block before sub-unification.
@@ -174,6 +173,9 @@ public:
 		// Insert sol to the existing solution set. Merely perform the
 		// union of solutions, not the join.
 		void insert(const SolutionSet& sol);
+
+		// Remove partitions with cycles from the solution set.
+		void remove_cycles();
 	};
 
 	// Mapping from Handle (typically a variable) to a contextual handle
@@ -250,6 +252,74 @@ public:
 	 */
 	static bool is_pm_connector(const Handle& h);
 	static bool is_pm_connector(Type t);
+
+	/**
+	 * Given a partition, return a mapping between any standalone
+	 * variable X and the union of the other variables present in the
+	 * blocks where X appears.
+	 *
+	 * For instance (ignoring types for simplicity):
+	 *
+	 * partition = { {X, (Inheritance X, Y)}, {Z, X} }
+	 *
+	 * then vargraph returns
+	 *
+	 * { { X : {X, Y, Z} },
+	 *   { Z : {X} } }
+	 *
+	 * Another example:
+	 *
+	 * partition = { {X, (Inheritance A, Y)}, {Y, (Inheritance B, X)} }
+	 *
+	 * then vargraph returns
+	 *
+	 * { { X : {Y} },
+	 *   { Y : {X} } }
+	 */
+	static HandleMultimap vargraph(const Partition& partition);
+	static HandleMultimap vargraph(const Block& blk);
+
+	/**
+	 * Return true iff partition has one or more cycles. For example if
+	 * we are trying to unify
+	 *
+	 * (List (List X Y))
+	 *
+	 * with
+	 *
+	 * (List (List (List Y) (List X)))
+	 *
+	 * its solution (ignoring types for simplicity) is
+	 *
+	 * { // Block 1
+	 *   { X, List Y },
+	 *   // Block 2
+	 *   { Y, List X } }
+	 *
+	 * One can see that such solution contains a cycle would result in
+	 * a never-ending substituion
+	 *
+	 * X -> List Y -> List List X -> List List List Y -> ...
+	 */
+	static bool has_cycle(const Partition& partition);
+	static bool has_cycle(const Block& blk);
+
+	/**
+	 * Same above but uses a graph obtained from vargraph.
+	 *
+	 * Note: argument is passed by copy for implementational convenience.
+	 */
+	static bool has_cycle(const HandleMultimap& vg);
+
+	/**
+	 * Return the closure of vg.
+	 */
+	static HandleMultimap closure(const HandleMultimap& vg);
+
+	/**
+	 * Return one step of closure of vg.
+	 */
+	static HandleMultimap closure_step(const HandleMultimap& vg);
 
 	/**
 	 * Given a typed substitution, perform the substitution over a scope
@@ -366,7 +436,9 @@ public:
 	 *
 	 * 2. Decorate partition blocks with types
 	 *
-	 * 3. Check that each partition is satisfiable
+	 * 3. Only retain partitions that are satisfiable
+	 *
+	 * 4. Only retain partitions that do not have cycles
 	 *
 	 * For now the types in 2. are represented by the substitutions, for
 	 * instance the typed block {{X, A}, A} means that X is A. Later one
@@ -462,6 +534,12 @@ private:
 	/**
 	 * Unify lhs and rhs. _lhs_vardecl and _rhs_vardecl should be set
 	 * prior to run this method.
+	 *
+	 * Note that unify does not check for cycles, only operator() does,
+	 * this is because it is an expensive operation, and cycles are
+	 * extremely rare in practice, so it is better to check in the end,
+	 * once all solutions have been constructed, and remove partitions
+	 * with cycles if necessary.
 	 *
 	 * TODO: could probably optimize by memoizing unify, due to
 	 * subunify being called redundantly.

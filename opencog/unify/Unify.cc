@@ -25,6 +25,8 @@
 
 #include "Unify.h"
 
+#include <boost/algorithm/cxx11/any_of.hpp>
+
 #include <opencog/util/algorithm.h>
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Node.h>
@@ -154,6 +156,18 @@ bool Unify::SolutionSet::is_satisfiable() const
 void Unify::SolutionSet::insert(const SolutionSet& sol)
 {
 	Partitions::insert(sol.begin(), sol.end());
+}
+
+void Unify::SolutionSet::remove_cycles()
+{
+	// TODO: replace by std::set::erase_if once C++20 is enabled
+	for (auto it = begin(); it != end();) {
+		if (has_cycle(*it)) {
+			it = erase(it);
+		} else {
+			++it;
+		}
+	}
 }
 
 Unify::Unify(const Handle& lhs, const Handle& rhs,
@@ -302,6 +316,77 @@ bool Unify::is_pm_connector(const Handle& h)
 bool Unify::is_pm_connector(Type t)
 {
 	return t == AND_LINK or t == OR_LINK or t == NOT_LINK;
+}
+
+HandleMultimap Unify::vargraph(const Partition& partition)
+{
+	HandleMultimap vg;
+	for (const auto& blk : partition) {
+		HandleMultimap bvg = vargraph(blk.first);
+		for (const auto& vvs : bvg) {
+			vg[vvs.first].insert(vvs.second.begin(), vvs.second.end());
+		}
+	}
+	return vg;
+}
+
+HandleMultimap Unify::vargraph(const Block& blk)
+{
+	// Standalone variables
+	HandleSet stdvars;
+	// Variables buried inside terms
+	HandleSet trmvars;
+
+	// Fill stdvars and trmvars
+	for (const CHandle& ch : blk) {
+		if (ch.is_free_variable()) {
+			stdvars.insert(ch.handle);
+			continue;
+		}
+		HandleSet fvs = ch.get_free_variables();
+		trmvars.insert(fvs.begin(), fvs.end());
+	}
+
+	// For each standaline variable associate all terms variables
+	HandleMultimap vg;
+	for (const Handle& stv : stdvars)
+		vg[stv] = trmvars;
+	return vg;
+}
+
+bool Unify::has_cycle(const Partition& partition)
+{
+	return has_cycle(vargraph(partition));
+}
+
+bool Unify::has_cycle(const Block& blk)
+{
+	return has_cycle(vargraph(blk));
+}
+
+bool Unify::has_cycle(const HandleMultimap& vg)
+{
+	using boost::algorithm::any_of;
+	HandleMultimap cvg = closure(vg);
+	return any_of(cvg, [](const HandleMultimap::value_type& vvs) {
+			return is_in(vvs.first, vvs.second); });
+}
+
+HandleMultimap Unify::closure(const HandleMultimap& vg)
+{
+	return fixpoint(&Unify::closure_step, vg);
+}
+
+HandleMultimap Unify::closure_step(const HandleMultimap& vg)
+{
+	HandleMultimap nvg(vg);
+	for (const auto& vvs : vg) {
+		for (const Handle& v : vvs.second) {
+			const HandleSet& third = nvg[v];
+			nvg[vvs.first].insert(third.begin(), third.end());
+		}
+	}
+	return nvg;
 }
 
 Handle Unify::substitute(BindLinkPtr bl, const TypedSubstitution& ts,
@@ -454,7 +539,12 @@ Unify::SolutionSet Unify::operator()()
 		return SolutionSet();
 
 	// It is well typed, perform the unification
-	return unify(_lhs, _rhs);
+	SolutionSet sol = unify(_lhs, _rhs);
+
+	// Remove partitions with cycles
+	sol.remove_cycles();
+
+	return sol;
 }
 
 Unify::SolutionSet Unify::unify(const CHandle& lhs, const CHandle& rhs) const
