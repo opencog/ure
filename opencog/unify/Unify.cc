@@ -745,7 +745,7 @@ Unify::SolutionSet Unify::join(const Partition& partition,
 			if (sol.is_satisfiable())
 				return join(sol, jp);
 		}
-		return SolutionSet(false);
+		return SolutionSet();
 	}
 }
 
