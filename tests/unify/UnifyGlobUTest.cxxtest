@@ -1,0 +1,115 @@
+/**
+ * tests/unify/UnifyGlobUTest.cxxtest
+ *
+ * Copyright (C) 2019 OpenCog Foundation
+ * All Rights Reserved
+ * Author: Kasim Ebrahim
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <opencog/util/Logger.h>
+
+#include <opencog/atoms/core/Context.h>
+#include <opencog/unify/Unify.h>
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/guile/SchemeEval.h>
+
+#include <cxxtest/TestSuite.h>
+
+using namespace opencog;
+
+#define al _as.add_link
+#define an _as.add_node
+
+class UnifyGlobUTest :  public CxxTest::TestSuite
+{
+private:
+	AtomSpace _as;
+	SchemeEval _eval;
+	// Note: GlobNodes are in uppercase and
+	// variables are in lower case.
+	Handle X, Y, x;
+	Context::VariablesStack X_varstack;
+
+public:
+	UnifyGlobUTest() : _eval(&_as)
+	{
+		logger().set_level(Logger::DEBUG);
+		logger().set_print_to_stdout_flag(true);
+		logger().set_timestamp_flag(false);
+
+		X = an(GLOB_NODE, "$X");
+		Y = an(GLOB_NODE, "$Y");
+
+		x = an(VARIABLE_NODE, "$x");
+	}
+
+	void setUp();
+
+	void test_type_intersection_1();
+	void test_type_intersection_2();
+
+};
+
+void UnifyGlobUTest::setUp(void)
+{
+}
+
+void UnifyGlobUTest::test_type_intersection_1()
+{
+	Handle lhs = X;
+	Handle rhs = x;
+	Unify unify(lhs, rhs);
+	Unify::CHandle result = unify.type_intersection(lhs, rhs),
+			expected = rhs;
+
+	TS_ASSERT_EQUALS(result, expected)
+}
+
+void UnifyGlobUTest::test_type_intersection_2()
+{
+	Handle lhs = X;
+	Handle rhs = Y;
+
+	// Should have declared Y in r_decl but Variables::extend
+	// doesn't work for type intervals. Cheat for now until
+	// that is fixed in the atomspace.
+	Handle l_decl = al(VARIABLE_LIST,
+	                   al(TYPED_VARIABLE_LINK,
+	                      X,
+	                      al(TYPE_SET_LINK,
+	                         al(INTERVAL_LINK,
+	                            an(NUMBER_NODE, "1"),
+	                            an(NUMBER_NODE, "4")),
+	                         an(TYPE_NODE, "PredicateNode"))),
+	                   al(TYPED_VARIABLE_LINK,
+	                      Y,
+	                      al(TYPE_SET_LINK,
+	                         al(INTERVAL_LINK,
+	                            an(NUMBER_NODE, "2"),
+	                            an(NUMBER_NODE, "3")),
+	                         an(TYPE_NODE, "PredicateNode"))));
+
+	Unify unify(lhs, rhs, l_decl);
+	Unify::CHandle result = unify.type_intersection(lhs, rhs),
+			expected = rhs;
+
+	TS_ASSERT_EQUALS(result, expected)
+}
+
+#undef al
+#undef an
