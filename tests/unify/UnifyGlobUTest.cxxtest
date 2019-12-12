@@ -42,7 +42,7 @@ private:
 	SchemeEval _eval;
 	// Note: GlobNodes are in uppercase and
 	// variables are in lower case.
-	Handle X, Y, x;
+	Handle X, Y, x, A, B, AB;
 	Context::VariablesStack X_varstack;
 
 public:
@@ -56,12 +56,20 @@ public:
 		Y = an(GLOB_NODE, "$Y");
 
 		x = an(VARIABLE_NODE, "$x");
+
+		A = an(CONCEPT_NODE, "A");
+		B = an(CONCEPT_NODE, "B");
+
+		AB = al(LIST_LINK, A, B);
 	}
 
 	void setUp();
 
 	void test_type_intersection_1();
 	void test_type_intersection_2();
+	void test_type_intersection_3();
+	void test_type_intersection_4();
+	void test_type_intersection_5();
 
 };
 
@@ -103,6 +111,69 @@ void UnifyGlobUTest::test_type_intersection_2()
 	                            an(NUMBER_NODE, "2"),
 	                            an(NUMBER_NODE, "3")),
 	                         an(TYPE_NODE, "PredicateNode"))));
+
+	Unify unify(lhs, rhs, l_decl);
+	Unify::CHandle result = unify.type_intersection(lhs, rhs),
+			expected = rhs;
+
+	TS_ASSERT_EQUALS(result, expected)
+}
+
+void UnifyGlobUTest::test_type_intersection_3()
+{
+	Handle lhs = X;
+	Handle rhs = AB;
+
+	Handle l_decl = al(VARIABLE_LIST,
+	                   al(TYPED_VARIABLE_LINK,
+	                      X,
+	                      al(TYPE_SET_LINK,
+	                         al(INTERVAL_LINK,
+	                            an(NUMBER_NODE, "1"),
+	                            an(NUMBER_NODE, "2")),
+	                         an(TYPE_NODE, "ConceptNode"))));
+
+	Unify unify(lhs, rhs, l_decl);
+	Unify::CHandle result = unify.type_intersection(lhs, rhs),
+			expected = rhs;
+
+	TS_ASSERT_EQUALS(result, expected)
+}
+
+void UnifyGlobUTest::test_type_intersection_4()
+{
+	Handle lhs = X;
+	Handle rhs = AB;
+
+	Handle l_decl = al(VARIABLE_LIST,
+	                   al(TYPED_VARIABLE_LINK,
+	                      X,
+	                      al(TYPE_SET_LINK,
+	                         al(INTERVAL_LINK,
+	                            an(NUMBER_NODE, "1"),
+	                            an(NUMBER_NODE, "1")),
+	                         an(TYPE_NODE, "ConceptNode"))));
+
+	Unify unify(lhs, rhs, l_decl);
+	Unify::CHandle result = unify.type_intersection(lhs, rhs),
+			expected = Unify::CHandle(Handle::UNDEFINED);
+
+	TS_ASSERT_EQUALS(result, expected)
+}
+
+void UnifyGlobUTest::test_type_intersection_5()
+{
+	Handle lhs = X;
+	Handle rhs = AB;
+
+	Handle l_decl = al(VARIABLE_LIST,
+	                   al(TYPED_VARIABLE_LINK,
+	                      X,
+	                      al(TYPE_SET_LINK,
+	                         al(INTERVAL_LINK,
+	                            an(NUMBER_NODE, "1"),
+	                            an(NUMBER_NODE, "2")),
+	                         an(TYPE_NODE, "ListLink"))));
 
 	Unify unify(lhs, rhs, l_decl);
 	Unify::CHandle result = unify.type_intersection(lhs, rhs),
