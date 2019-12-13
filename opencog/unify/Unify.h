@@ -795,6 +795,24 @@ private:
 	 * undeclared variables), or alpha-equivalent.
 	 */
 	bool is_node_satisfiable(const CHandle& lch, const CHandle& rch) const;
+
+	/**
+	 * Return the attractive fixpoint of a unary function and its
+	 * argument, if it exists.  If no attractive fixpoint exists then it
+	 * may never return.
+	 *
+	 * For the definition of fixpoint see
+	 *
+	 * https://en.wikipedia.org/wiki/Fixed_point_(mathematics)
+	 */
+	template<typename F, typename A>
+	static A fixpoint(const F& fun, const A& arg)
+	{
+		A res = fun(arg);
+		if (res == arg)
+			return res;
+		return fixpoint(fun, res);
+	}
 };
 
 bool unifiable(const Handle& lhs, const Handle& rhs,
