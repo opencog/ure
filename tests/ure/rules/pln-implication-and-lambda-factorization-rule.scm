@@ -45,18 +45,20 @@
 ;; -----------------------------------------------------------------------
 
 (define implication-and-lambda-factorization-variables
-  (VariableList
+  (VariableSet
      (TypedVariableLink
         (VariableNode "$TyVs-one")
         (TypeChoice
            (TypeNode "TypedVariableLink")
            (TypeNode "VariableNode")
+           (TypeNode "VariableSet")
            (TypeNode "VariableList")))
      (TypedVariableLink
         (VariableNode "$TyVs-two")
         (TypeChoice
            (TypeNode "TypedVariableLink")
            (TypeNode "VariableNode")
+           (TypeNode "VariableSet")
            (TypeNode "VariableList")))
      (VariableNode "$A1")
      (VariableNode "$A2")))

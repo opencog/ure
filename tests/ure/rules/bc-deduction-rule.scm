@@ -15,7 +15,7 @@
          (BC (Inheritance B C))
          (AC (Inheritance A C))
          (Concept (Type "ConceptNode"))
-         (vardecl (VariableList
+         (vardecl (VariableSet
                      (TypedVariable A Concept)
                      (TypedVariable B Concept)
                      (TypedVariable C Concept)))

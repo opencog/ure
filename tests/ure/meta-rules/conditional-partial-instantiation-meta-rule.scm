@@ -48,13 +48,14 @@
          (P (Variable "$P"))
          (Q (Variable "$Q"))
          ;; Meta rule variable declaration
-         (meta-vardecl (VariableList
+         (meta-vardecl (VariableSet
                          TypedV1 TypedV2 TypedV3
                          TypedV1Type TypedV2Type TypedV3Type
                          P Q))
          ;; Meta rule main clause
          (implication (Quote
                         (ImplicationScope
+                          ;; Support VariableSet
                           (Unquote (VariableList
                             (TypedVariable V1 V1Type)
                             (TypedVariable V2 V2Type)
@@ -69,7 +70,7 @@
          (meta-pattern (And implication meta-precondition))
          ;; Produced rule variable declaration. V2 and V3 are to be
          ;; substituted.
-         (produced-vardecl (VariableList
+         (produced-vardecl (VariableSet
                              (TypedVariable V2 V2Type)
                              (TypedVariable V3 V3Type)))
          ;; Produced rule pattern. Just look for groundings of V2 and V3

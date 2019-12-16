@@ -403,7 +403,7 @@ void BackwardChainerUTest::test_conditional_instantiation_tv_query()
 // thus having the type itself be a variable, like
 //
 // BindLink
-//   VariableList
+//   VariableSet
 //     TypedVariable
 //       Variable "$XVar"
 //       Type "VariableNode"

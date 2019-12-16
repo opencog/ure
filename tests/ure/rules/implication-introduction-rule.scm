@@ -18,7 +18,7 @@
 ;; ----------------------------------------------------------------------
 
 (define implication-introduction-variables
-  (VariableList
+  (VariableSet
      (TypedVariableLink
         (VariableNode "$P")
         (TypeChoice
