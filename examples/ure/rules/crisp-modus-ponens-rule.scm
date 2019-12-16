@@ -11,7 +11,7 @@
 
 (define crisp-modus-ponens-rule
     (BindLink
-        (VariableList
+        (VariableSet
             (TypedVariable
                 (VariableNode "$A")
                 (TypeNode "PredicateNode"))
