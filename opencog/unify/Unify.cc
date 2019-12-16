@@ -624,13 +624,7 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 	if (lt != rt)
 		return SolutionSet();
 
-	// At this point they are both links of the same type, check that
-	// they have the same arity
-	Arity lh_arity(lh->get_arity());
-	Arity rh_arity(rh->get_arity());
-	if (lh_arity != rh_arity)
-		return SolutionSet();
-
+	// At this point they are both links of the same type.
 	if (rh->is_unordered_link())
 		return unordered_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
 	else
