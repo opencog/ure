@@ -628,7 +628,7 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 	if (lh_arity != rh_arity)
 		return SolutionSet();
 
-	if (is_unordered(rh))
+	if (rh->is_unordered_link())
 		return unordered_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
 	else
 		return ordered_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
@@ -718,11 +718,6 @@ Unify::SolutionSet Unify::comb_unify(const std::set<CHandle>& chs) const
 		}
 	}
 	return sol;
-}
-	
-bool Unify::is_unordered(const Handle& h) const
-{
-	return nameserver().isA(h->get_type(), UNORDERED_LINK);
 }
 
 HandleSeq Unify::cp_erase(const HandleSeq& hs, Arity i) const

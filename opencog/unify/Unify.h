@@ -583,11 +583,6 @@ private:
 	SolutionSet comb_unify(const std::set<CHandle>& chs) const;
 
 	/**
-	 * Return if the atom is an unordered link.
-	 */
-	bool is_unordered(const Handle& h) const;
-
-	/**
 	 * Return a copy of a HandleSeq with the ith element removed.
 	 */
 	HandleSeq cp_erase(const HandleSeq& hs, Arity i) const;
