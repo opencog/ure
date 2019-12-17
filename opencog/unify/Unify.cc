@@ -635,26 +635,13 @@ Unify::SolutionSet Unify::unordered_unify(const HandleSeq& lhs,
                                           const HandleSeq& rhs,
                                           Context lc, Context rc) const
 {
-	Arity lhs_arity(lhs.size());
-	Arity rhs_arity(rhs.size());
-	OC_ASSERT(lhs_arity == rhs_arity);
+	SolutionSet sol(false);
 
-	// Base case
-	if (lhs_arity == 0)
-		return SolutionSet(true);
+	HandleSeq perm(rhs);
+	do {
+		sol.insert(ordered_unify(lhs, perm, lc, rc));
+	} while (std::next_permutation(perm.begin(), perm.end()));
 
-	// Recursive case
-	SolutionSet sol;
-	for (Arity i = 0; i < lhs_arity; ++i) {
-		auto head_sol = unify(lhs[i], rhs[0], lc, rc);
-		if (head_sol.is_satisfiable()) {
-			HandleSeq lhs_tail(cp_erase(lhs, i));
-			HandleSeq rhs_tail(cp_erase(rhs, 0));
-			auto tail_sol = unordered_unify(lhs_tail, rhs_tail, lc, rc);
-			// Union merge satisfiable permutations
-			sol.insert(join(head_sol, tail_sol));
-		}
-	}
 	return sol;
 }
 
