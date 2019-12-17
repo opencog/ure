@@ -466,7 +466,7 @@ Handle Unify::substitute_vardecl(const Handle& vardecl,
 
 	HandleSeq oset;
 
-	if (t == VARIABLE_LIST) {
+	if (t == VARIABLE_LIST or t == VARIABLE_SET) {
 		for (const Handle& h : vardecl->getOutgoingSet()) {
 			Handle nh = substitute_vardecl(h, var2val);
 			if (nh)

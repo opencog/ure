@@ -15,7 +15,7 @@
          (AB (Implication A B))
          (LambdaT (Type "LambdaLink"))
          (PredicateT (Type "PredicateNode"))
-         (vardecl (VariableList
+         (vardecl (VariableSet
                      (TypedVariable A (TypeChoice LambdaT PredicateT))
                      (TypedVariable B (TypeChoice LambdaT PredicateT))))
          (precon1 (Evaluation (GroundedPredicate "scm: true-enough") A))

@@ -28,11 +28,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define conditional-full-instantiation-meta-variables
-  (VariableList
+  (VariableSet
      (TypedVariable
         (Variable "$TyVs")
         (TypeChoice
            (Type "TypedVariableLink")
+           (Type "VariableSet")
            (Type "VariableList")))
      (Variable "$P")
      (Variable "$Q")))

@@ -30,11 +30,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (define implication-full-instantiation-variables
-  (VariableList
+  (VariableSet
      (TypedVariableLink
         (VariableNode "$TyVs")
         (TypeChoice
            (TypeNode "TypedVariableLink")
+           (TypeNode "VariableSet")))
            (TypeNode "VariableList")))
      (VariableNode "$P")
      (VariableNode "$Q")))
@@ -104,9 +105,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define implication-partial-instantiation-variables
-  (VariableList
+  (VariableSet
      (TypedVariableLink
         (VariableNode "$TyVs")
+        (TypeNode "VariableSet")
         (TypeNode "VariableList"))
      (VariableNode "$P")
      (VariableNode "$Q")))
@@ -158,7 +160,8 @@
                                         ; variable
          (TyV (list-ref TyVs-outgoings rnd-index))
                                         ; Build a VariableList of the
-                                        ; remaining variables
+                                        ; remaining variables. TODO:
+                                        ; support VariableSet as well.
          (TyVs-remain-list (rm-list-ref TyVs-outgoings rnd-index))
          (TyVs-remain-len (length TyVs-remain-list))
          (TyVs-remain (apply cog-new-link 'VariableList TyVs-remain-list)))

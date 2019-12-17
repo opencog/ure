@@ -3,7 +3,7 @@
 (define rule
  (BindLink
 
-  (VariableList
+  (VariableSet
    (TypedVariable (Variable "$a") (Type "ConceptNode"))
    (TypedVariable (Variable "$b") (Type "ConceptNode")))
 

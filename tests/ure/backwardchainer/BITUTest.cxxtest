@@ -165,7 +165,7 @@ void BITUTest::test_expand_1()
 	AndBIT result = andbit.expand(leaf, rule, 1);
 	AndBIT expected(
 		_eval.eval_h("(BindLink"
-		             "  (VariableList"
+		             "  (VariableSet"
 		             "  )"
 		             "  (AndLink"
 		             "    (PresentLink"
@@ -422,7 +422,7 @@ void BITUTest::test_expand_2()
 	                           "  (VariableNode \"$B-edaffcb\")"
 	                           ")");
 	Handle vardecl =
-		_eval.eval_h("(VariableList"
+		_eval.eval_h("(VariableSet"
 		             "  (TypedVariableLink"
 		             "    (VariableNode \"$B-732fec2a\")"
 		             "    (TypeChoice"
@@ -463,7 +463,7 @@ void BITUTest::test_expand_2()
 	AndBIT result = andbit.expand(leaf, rule);
 	AndBIT expected(
 		_eval.eval_h("(BindLink"
-		             "  (VariableList"
+		             "  (VariableSet"
 		             "    (TypedVariableLink"
 		             "      (VariableNode \"$B-732fec2a\")"
 		             "      (TypeChoice"
@@ -479,6 +479,7 @@ void BITUTest::test_expand_2()
 		             "      (TypeChoice"
 		             "        (TypeNode \"TypedVariableLink\")"
 		             "        (TypeNode \"VariableNode\")"
+		             "        (TypeNode \"VariableSet\")"
 		             "        (TypeNode \"VariableList\")"
 		             "      )"
 		             "    )"
@@ -879,7 +880,7 @@ void BITUTest::test_expand_3()
 	                           "    (ConceptNode \"texts\")"
 	                           "    (NumberNode \"2.000000\")))");
 	Handle vardecl =
-		_eval.eval_h("(VariableList"
+		_eval.eval_h("(VariableSet"
 		             "  (TypedVariableLink"
 		             "    (VariableNode \"$g-2101505b\")"
 		             "    (TypeChoice"
@@ -899,7 +900,7 @@ void BITUTest::test_expand_3()
 	AndBIT result = andbit.expand(leaf, rule);
 	AndBIT expected(
 		_eval.eval_h("(BindLink"
-		             "  (VariableList"
+		             "  (VariableSet"
 		             "    (TypedVariableLink"
 		             "      (VariableNode \"$f-53364b8c\")"
 		             "      (TypeChoice"

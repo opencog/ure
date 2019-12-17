@@ -11,7 +11,7 @@
 
 (define fc-deduction-rule
     (BindLink
-        (VariableList
+        (VariableSet
             (TypedVariableLink
                 (VariableNode "$A")
                 (TypeNode "ConceptNode"))
