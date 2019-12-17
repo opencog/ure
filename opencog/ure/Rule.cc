@@ -29,6 +29,7 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
 
+#include <opencog/util/oc_assert.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/core/DefineLink.h>

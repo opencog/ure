@@ -23,6 +23,7 @@
 
 #include "UREConfig.h"
 
+#include <opencog/util/oc_assert.h>
 #include <opencog/atoms/core/NumberNode.h>
 #include <opencog/atomspaceutils/AtomSpaceUtils.h>
 
