@@ -441,7 +441,7 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 		hs.insert(hs.begin(), vardecl);
 
 	// Create the substituted BindLink
-	return createLink(hs, bl->get_type());
+	return createLink(std::move(hs), bl->get_type());
 }
 
 Handle Unify::substitute_vardecl(const Handle& vardecl,
@@ -486,7 +486,7 @@ Handle Unify::substitute_vardecl(const Handle& vardecl,
 	else {
 		OC_ASSERT(false, "Not implemented");
 	}
-	return createLink(oset, t);
+	return createLink(std::move(oset), t);
 }
 
 
@@ -529,7 +529,7 @@ Handle Unify::remove_constant_clauses(const Handle& vardecl,
 	} else if (not_constant(vars, clauses, as)) {
 		return clauses;
 	}
-	return createLink(hs, AND_LINK);
+	return createLink(std::move(hs), AND_LINK);
 }
 
 Unify::SolutionSet Unify::operator()()

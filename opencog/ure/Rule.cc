@@ -249,7 +249,7 @@ void Rule::add(AtomSpace& as)
 	// place during unification (see Rule::unify_source or
 	// Rule::unify_target) we avoid re-doing the alpha-conversion that
 	// way.
-	_rule = createBindLink(_rule->getOutgoingSet());
+	_rule = createBindLink(std::move(HandleSeq(_rule->getOutgoingSet())));
 }
 
 Handle Rule::get_vardecl() const
