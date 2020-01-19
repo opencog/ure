@@ -1,9 +1,13 @@
 DECLARE_GUILE_CONFIG_TARGET(SCM_CONFIG "opencog ure-config" "URE_TEST")
 
-# The build order used here is loosely in terms of 
+# The build order used here is loosely in terms of
 # dependencies: the later parts depend on, or may
 # someday depend on the earlier parts.
 #
+IF (HAVE_UNIFY OR HAVE_URE)
+	ADD_SUBDIRECTORY(ure-utility)
+
+ENDIF (HAVE_UNIFY OR HAVE_URE)
 IF (HAVE_UNIFY)
 	ADD_SUBDIRECTORY (unify)
 ENDIF (HAVE_UNIFY)

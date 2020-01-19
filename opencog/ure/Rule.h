@@ -182,11 +182,6 @@ public:
 	bool is_meta() const;       // does that rule produces a rule?
 	bool has_cycle() const;     // is some premise equal to conclusion?
 
-	/**
-	 * Removes all Quote/UnquoteLinks from the given Handle
-	 */
-	Handle filter_quote(Handle) const;
-
 	/*
 	 * Given a rewrite term of a meta rule extract the subrule rewrite term
 	 */

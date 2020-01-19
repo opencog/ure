@@ -41,6 +41,7 @@
 
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/unify/Unify.h>
+#include <opencog/ure-utility/Utility.h>
 
 #include "URELogger.h"
 
@@ -280,28 +281,7 @@ bool Rule::is_valid() const
 
 bool Rule::is_meta() const
 {
-	Handle implicand = get_implicand();
-
-	if (not implicand)  // XXX this check is never needed !?
-		return false;
-
-	Type itype = implicand->get_type();
-	//Subrule might be quoted
-	if (Quotation::is_quotation_type(itype))
-	{
-		implicand = implicand->getOutgoingAtom(0);
-		itype = implicand->get_type();
-	}
-	//Check if implicand is a subrule
-	if (itype == BIND_LINK)
-		return true;
-
-	//Check if implicand is a subrule that requires substitution
-	auto schema = "scm: cog-substitute";
-	if (itype == EXECUTION_OUTPUT_LINK)
-		return NodeCast(implicand->getOutgoingAtom(0))->get_name() == schema;
-
-	return false;
+	return opencog::is_meta(_rule);
 }
 
 bool Rule::has_cycle() const
@@ -351,24 +331,6 @@ HandleSeq Rule::get_clauses() const
 	return hs;
 }
 
-
-Handle Rule::filter_quote(Handle h) const
-{
-	Type t = h->get_type();
-
-	if (t == UNQUOTE_LINK)
-		return h->getOutgoingAtom(0);
-
-	if (h->is_node())
-		return h;
-
-	HandleSeq res;
-	for (Handle oh : h->getOutgoingSet())
-	{
-		res.push_back(filter_quote(oh));
-	}
-	return createLink(res,t);
-}
 
 HandleSeq Rule::get_premises() const
 {

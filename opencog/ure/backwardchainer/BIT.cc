@@ -44,6 +44,7 @@
 
 #include "BIT.h"
 #include "../URELogger.h"
+#include <opencog/ure-utility/Utility.h>
 
 namespace opencog {
 
@@ -1115,29 +1116,6 @@ std::string oc_to_string(const BITNode& bitnode, const std::string& indent)
 std::string oc_to_string(const AndBIT& andbit, const std::string& indent)
 {
 	return andbit.to_string(indent);
-}
-
-bool is_meta(const Handle& h)
-{
-	BindLinkPtr h_bl(BindLinkCast(h));
-	if (not h_bl)
-		return false;
-	Handle implicand = h_bl->get_implicand();
-
-	if (not implicand)
-		return false;
-
-	Type itype = implicand->get_type();
-	if (Quotation::is_quotation_type(itype))
-		implicand = implicand->getOutgoingAtom(0);
-
-	if (implicand->get_type() == BIND_LINK)
-		return true;
-
-	auto schema = "scm: cog-substitute";
-	if (implicand->get_type() == EXECUTION_OUTPUT_LINK)
-		return NodeCast(implicand->getOutgoingAtom(0))->get_name() == schema;
-	return false;
 }
 
 // std::string oc_to_string(const BIT& bit)

@@ -29,6 +29,7 @@
 
 #include "BackwardChainer.h"
 #include "../URELogger.h"
+#include <opencog/ure-utility/Utility.h>
 
 using namespace opencog;
 

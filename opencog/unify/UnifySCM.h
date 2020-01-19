@@ -56,19 +56,14 @@ public:
 	Handle ss_substiute(Handle subrule, Handle h1, Handle h2,
 						Handle h1_vardecl, Handle h2_vardecl);
 
+	//Check if we have an Empty VariableList/Set
+	//Return Handle::UNDEFINED if this is the case
+	Handle check_empty(Handle h);
+
 protected:
 	void init(void);
 
 }; // class
-
-//Utility functions
-bool is_meta(const Handle& rule);
-//Used to remove 1 layer of Unquote Links after removing a parent QuoteLink
-Handle filter_quote(Handle h);
-
-//Check if we have an Empty VariableList/Set
-//Return Handle::UNDEFINED if this is the case
-Handle check_empty(Handle h);
 
 } // namespace opencog
 

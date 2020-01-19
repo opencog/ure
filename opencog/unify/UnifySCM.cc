@@ -14,6 +14,7 @@
 #include <opencog/atoms/base/Node.h>
 
 #include <opencog/unify/UnifySCM.h>
+#include <opencog/ure-utility/Utility.h>
 
 using namespace opencog;
 
@@ -138,50 +139,7 @@ Handle UnifySCM::ss_substiute(Handle subrule, Handle h1, Handle h2,
 	return createLink(DONT_EXEC_LINK,subrule);
 }
 
-bool opencog::is_meta(const Handle& h)
-{
-	BindLinkPtr h_bl(BindLinkCast(h));
-	if (not h_bl)
-		return false;
-	Handle implicand = h_bl->get_implicand();
-
-	if (not implicand)
-		return false;
-
-	Type itype = implicand->get_type();
-	if (Quotation::is_quotation_type(itype))
-		implicand = implicand->getOutgoingAtom(0);
-
-	if (implicand->get_type() == BIND_LINK)
-		return true;
-
-	auto schema = "scm: cog-substitute";
-
-	if (implicand->get_type() == EXECUTION_OUTPUT_LINK)
-		return NodeCast(implicand->getOutgoingAtom(0))->get_name() == schema;
-
-	return false;
-}
-
-Handle opencog::filter_quote(Handle h)
-{
-	Type t = h->get_type();
-
-	if (t == UNQUOTE_LINK)
-		return h->getOutgoingAtom(0);
-
-	if (h->is_node())
-		return h;
-
-	HandleSeq res;
-	for (Handle oh : h->getOutgoingSet())
-	{
-		res.push_back(filter_quote(oh));
-	}
-	return createLink(res,t);
-}
-
-Handle opencog::check_empty(Handle h)
+Handle UnifySCM::check_empty(Handle h)
 {
 	if ((h->get_type() == VARIABLE_LIST || h->get_type() == VARIABLE_SET) &&
 		h->getOutgoingSet().size() == 0)

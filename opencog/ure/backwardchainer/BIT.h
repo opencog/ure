@@ -520,12 +520,6 @@ BIT::AndBITs::iterator BIT::erase(It pos)
 }
 
 
-/**
- * Check weather the Handle term is a meta rule
- */
-bool is_meta(const Handle&);
-
-
 // Gdb debugging, see
 // http://wiki.opencog.org/w/Development_standards#Print_OpenCog_Objects
 std::string oc_to_string(const BITNode& bitnode,
