@@ -1743,7 +1743,7 @@ void UnifyUTest::test_unify_complex_7()
 
 	TS_ASSERT_EQUALS(result, expected);
 
-	Handle ts_vardecl = al(VARIABLE_LIST);
+	Handle ts_vardecl = al(VARIABLE_SET);
 
 	Unify::TypedSubstitutions ts_result =
 		unify.typed_substitutions(result, target);
@@ -1754,6 +1754,8 @@ void UnifyUTest::test_unify_complex_7()
 
 	logger().debug() << "ts_result = " << oc_to_string(ts_result);
 	logger().debug() << "ts_expected = " << oc_to_string(ts_expected);
+	std::cout << "ts_result = " << oc_to_string(ts_result) << std::endl;
+	std::cout << "ts_expected = " << oc_to_string(ts_expected) << std::endl;
 
 	TS_ASSERT(tss_content_eq(ts_result, ts_expected));
 }
@@ -2225,7 +2227,7 @@ void UnifyUTest::test_unify_complex_11()
 	TS_ASSERT_EQUALS(result, expected);
 
 	// Test substitution structure construction
-	Handle ts_vardecl = _eval.eval_h("(VariableList"
+	Handle ts_vardecl = _eval.eval_h("(VariableSet"
 	                                 "  (VariableNode \"$shapat-0\")"
 	                                 "  (TypedVariableLink"
 	                                 "    (VariableNode \"$f\")"
@@ -2253,7 +2255,7 @@ void UnifyUTest::test_unify_complex_11()
 	Handle sub_result = Unify::substitute(blptr, *ts_result.begin());
 	Handle sub_expected =
 		_eval.eval_h("(BindLink"
-		             "  (VariableList"
+		             "  (VariableSet"
 		             "    (VariableNode \"$shapat-0\")"
 		             "    (TypedVariableLink"
 		             "      (VariableNode \"$f\")"
