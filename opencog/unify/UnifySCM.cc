@@ -50,12 +50,8 @@ TruthValuePtr UnifySCM::ss_unify_prim(Handle h1, Handle h2)
 TruthValuePtr UnifySCM::ss_unify(Handle h1, Handle h2,
                                  Handle h1_vardecl, Handle h2_vardecl)
 {
-	if (h1_vardecl->get_type() == VARIABLE_LIST &&
-	    h1_vardecl->getOutgoingSet().size() == 0)
-		h1_vardecl = Handle::UNDEFINED;
-	if (h2_vardecl->get_type() == VARIABLE_LIST &&
-	    h2_vardecl->getOutgoingSet().size() == 0)
-		h2_vardecl = Handle::UNDEFINED;
+	h1_vardecl = check_empty(h1_vardecl);
+	h2_vardecl = check_empty(h2_vardecl);
 	Unify unify(h1, h2, h1_vardecl, h2_vardecl);
 	Unify::SolutionSet sol = unify();
 
@@ -69,12 +65,8 @@ TruthValuePtr UnifySCM::ss_meta_unify(Handle lst)
 {
 	HandleSeq hseq = lst->getOutgoingSet();
 
-	if (hseq[2]->get_type() == VARIABLE_LIST &&
-	    hseq[2]->getOutgoingSet().size() == 0)
-		hseq[2] = Handle::UNDEFINED;
-	if (hseq[3]->get_type() == VARIABLE_LIST &&
-	    hseq[3]->getOutgoingSet().size() == 0)
-		hseq[3] = Handle::UNDEFINED;
+	hseq[2] = check_empty(hseq[2]);
+	hseq[3] = check_empty(hseq[3]);
 	Unify unify = Unify(hseq[0], hseq[1], hseq[2], hseq[3]);
 	Unify::SolutionSet sol = unify();
 
@@ -83,12 +75,8 @@ TruthValuePtr UnifySCM::ss_meta_unify(Handle lst)
 
 	for (int i = 4; i < hseq.size(); i += 4)
 	{
-		if (hseq[i+2]->get_type() == VARIABLE_LIST &&
-			hseq[i+2]->getOutgoingSet().size() == 0)
-			hseq[i+2] = Handle::UNDEFINED;
-		if (hseq[i+3]->get_type() == VARIABLE_LIST &&
-			hseq[i+3]->getOutgoingSet().size() == 0)
-			hseq[i+3] = Handle::UNDEFINED;
+		hseq[i+2] = check_empty(hseq[i+2]);
+		hseq[i+3] = check_empty(hseq[i+3]);
 
 		FreeVariables vars;
 		vars.find_variables(hseq[i]);
@@ -119,12 +107,8 @@ Handle UnifySCM::ss_substiute(Handle subrule, Handle h1, Handle h2,
 	if (subrule->get_type() == QUOTE_LINK)
 		subrule = filter_quote(subrule->getOutgoingAtom(0))->getOutgoingAtom(0);
 
-	if (h1_vardecl->get_type() == VARIABLE_LIST &&
-	    h1_vardecl->getOutgoingSet().size() == 0)
-		h1_vardecl = Handle::UNDEFINED;
-	if (h2_vardecl->get_type() == VARIABLE_LIST &&
-	    h2_vardecl->getOutgoingSet().size() == 0)
-		h2_vardecl = Handle::UNDEFINED;
+	h1_vardecl = check_empty(h1_vardecl);
+	h2_vardecl = check_empty(h2_vardecl);
 	Unify unify(h1, h2, h1_vardecl, h2_vardecl);
 	Unify::SolutionSet sol = unify();
 
@@ -195,6 +179,15 @@ Handle opencog::filter_quote(Handle h)
 		res.push_back(filter_quote(oh));
 	}
 	return createLink(res,t);
+}
+
+Handle opencog::check_empty(Handle h)
+{
+	if ((h->get_type() == VARIABLE_LIST || h->get_type() == VARIABLE_SET) &&
+		h->getOutgoingSet().size() == 0)
+		return Handle::UNDEFINED;
+	else
+		return h;
 }
 
 void opencog_unify_init(void)

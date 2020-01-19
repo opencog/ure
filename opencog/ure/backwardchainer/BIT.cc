@@ -347,21 +347,26 @@ Handle AndBIT::force_merge_vardecl(const Handle& lhs, const Handle& rhs) const
 
 	HandleSeq vars;
 
-	if (lhs->get_type() == VARIABLE_LIST)
+	Type lhs_t = lhs->get_type();
+	if (lhs_t == VARIABLE_LIST && lhs_t == VARIABLE_SET)
 		vars.insert(vars.end(),
 					lhs->getOutgoingSet().begin(),
 					lhs->getOutgoingSet().end());
 	else
 		vars.push_back(lhs);
 
-	if (rhs->get_type() == VARIABLE_LIST)
+	Type rhs_t = rhs->get_type();
+	if (rhs_t == VARIABLE_LIST && rhs_t == VARIABLE_SET)
 		vars.insert(vars.end(),
 					rhs->getOutgoingSet().begin(),
 					rhs->getOutgoingSet().end());
 	else
 		vars.push_back(rhs);
 
-	return fcs->getAtomSpace()->add_link(VARIABLE_LIST, vars);
+	if (lhs_t == VARIABLE_LIST || rhs_t == VARIABLE_LIST)
+		return fcs->getAtomSpace()->add_link(VARIABLE_LIST, vars);
+	else
+		return fcs->getAtomSpace()->add_link(VARIABLE_SET, vars);
 }
 
 Handle AndBIT::modify_meta(const Handle& subrule, AtomSpace * as,

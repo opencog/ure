@@ -66,6 +66,10 @@ bool is_meta(const Handle& rule);
 //Used to remove 1 layer of Unquote Links after removing a parent QuoteLink
 Handle filter_quote(Handle h);
 
+//Check if we have an Empty VariableList/Set
+//Return Handle::UNDEFINED if this is the case
+Handle check_empty(Handle h);
+
 } // namespace opencog
 
 extern "C" {

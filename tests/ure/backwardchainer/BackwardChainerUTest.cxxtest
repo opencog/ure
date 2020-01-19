@@ -556,8 +556,6 @@ void BackwardChainerUTest::test_criminal()
 	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_mean());
 	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_confidence());
 
-    //XXX Fix this! For some reason certain Handles in traces() are invalid
-    //Leading to a segmentation fault
 	// Extract traces and return the backward chainer with these
 	// traces, which should greatly speed it up.
 	HandleSeqSet traces = bc._trace_recorder.traces();
