@@ -106,33 +106,35 @@
   fs: [optional] Focus set, a SetLink with all atoms to consider for
       forward chaining.
 
-  aa: [optional] Whether the atoms involved with the
+  aa: [optional, default=#f] Whether the atoms involved with the
       inference are restricted to the attentional focus.
 
-  mi: [optional] Maximum number of iterations.
+  mi: [optional, default=100] Maximum number of iterations.
 
-  cp: [optional] Complexity penalty. Controls breadth vs depth search.
+  cp: [optional, default=0] Complexity penalty. Controls breadth vs depth search.
       A high value means more breadth. A value of 0 means an equilibrium
       between breadth and depth. A negative value means more depth.
       Possible range is (-inf, +inf) but it's rarely necessary in practice
       to go outside of [-10, 10].
 
-  jb: [optional] Number of jobs to run in parallel. Can speed up reasoning,
-      note that this may alter the results, especially for the forward chainer
-      as the output of a rule application may depend on the output of the other
-      rules.
+  jb: [optional, default=1] Number of jobs to run in parallel. Can
+      speed up reasoning, note that this may alter the results, especially
+      for the forward chainer as the output of a rule application may depend
+      on the output of the other rules.
 
-  res: [optional] Whether exhausted sources should be retried. A source is
-       exhausted if all its valid rules (so that at least one rule premise
-       unifies with the source) have been applied to it. Given that the
-       forward chainer results are added to the kb atomspace during forward
-       chaining, the same source may yield different results as time goes,
-       thus this option.
+  res: [optional, default=#f] Whether exhausted sources should be
+       retried. A source is exhausted if all its valid rules (so that at
+       least one rule premise unifies with the source) have been applied to
+       it. Given that the forward chainer results are added to the kb
+       atomspace during forward chaining, the same source may yield different
+       results as time goes, thus this option.
 
-  Note that optional arguments do not have defaults! That is in order not
-  to overwrite existing parameters set by ure-set-maximum-iterations and such.
-  If these parameters were not set at all, then the rule engine itself selects
-  defaults. These defaults will be logged in the log file.
+  Note that the defaults of the optional arguments are not determined
+  here (although they attempt to be documented here).  That is the case
+  in order not to overwrite existing parameters set by
+  ure-set-maximum-iterations and such.  If these parameters were not set
+  at all, then the rule engine itself selects defaults in last resort.
+  All parameter values are be logged at DEBUG level in the log file.
 "
   ;; Set optional parameters
   (if (not (unspecified? attention-allocation))
@@ -191,34 +193,38 @@
   fs: [optional] focus-set, a SetLink with all atoms to
       consider for forward chaining (Not Implemented).
 
-  aa: [optional] Whether the atoms involved with the
+  aa: [optional, default=#f] Whether the atoms involved with the
       inference are restricted to the attentional focus.
 
-  mi: [optional] Maximum number of iterations.
+  mi: [optional, default=100] Maximum number of iterations.
 
-  cp: [optional] Complexity penalty. Controls breadth vs depth search.
-      A high value means more breadth. A value of 0 means an equilibrium
-      between breadth and depth. A negative value means more depth.
-      Possible range is (-inf, +inf) but it's rarely necessary in practice
-      to go outside of [-10, 10].
+  cp: [optional, default=0] Complexity penalty. Controls breadth vs
+      depth search.  A high value means more breadth.  A value of 0 means an
+      equilibrium between breadth and depth.  A negative value means more
+      depth.  Possible range is (-inf, +inf) but it's rarely necessary in
+      practice to go outside of [-10, 10].
 
-  jb: [optional] Number of jobs to run in parallel. Can speed up reasoning,
-      note that this may alter the results, especially for the forward chainer
-      as the output of a rule application may depend on the output of the other
-      rules.
+  jb: [optional, default=1] Number of jobs to run in parallel. Can
+      speed up reasoning, note that this may alter the results, especially
+      for the forward chainer as the output of a rule application may depend
+      on the output of the other rules.
 
-  mbs: [optional] Maximum size of the inference tree pool to evolve.
+  mbs: [optional, default=-1] Maximum size of the inference tree pool
+       to evolve. Negative means unlimited.
 
-  mcp: [optional] Complexity penalty applied to the control rules during
-       Bayesian Model Averaging.
+  mcp: [optional, default=0] Complexity penalty applied to the control
+       rules during Bayesian Model Averaging.
 
-  mc: [optional] Compressiveness parameter for partial control rules
-      (how well a control rule can explain data outside of its context).
+  mc: [optional, default=1] Compressiveness parameter for partial
+      control rules (how well a control rule can explain data outside of its
+      context).
 
-  Note that optional arguments do not have defaults! That is in order not
-  to overwrite existing parameters set by ure-set-maximum-iterations and such.
-  If these parameters were not set at all, then the rule engine itself selects
-  defaults. These defaults will be logged in the log file.
+  Note that the defaults of the optional arguments are not determined
+  here (although they attempt to be documented here).  That is the case
+  in order not to overwrite existing parameters set by
+  ure-set-maximum-iterations and such.  If these parameters were not set
+  at all, then the rule engine itself selects defaults in last resort.
+  All parameter values are be logged at DEBUG level in the log file.
 "
   ;; Set optional parameters
   (if (not (unspecified? attention-allocation))
