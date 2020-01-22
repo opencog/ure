@@ -771,6 +771,12 @@ private:
 	bool inherit(const TypeSet& lhs, const TypeSet& rhs) const;
 
 	/**
+	 * Return true if lgm is in rgm.
+	 */
+	bool inherit(const std::pair<double, double> &lgm,
+	             const std::pair<double, double> &rgm) const;
+
+	/**
 	 * Return true iff h (or ch) is a variable that is declared in
 	 * _variables.
 	 */

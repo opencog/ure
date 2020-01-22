@@ -1073,7 +1073,8 @@ bool Unify::inherit(const Handle& lh, const Handle& rh,
 	// If both are free variables and declared then look at their types
 	// (only simple types are considered for now).
 	if (is_free_declared_variable(lc, lh) and is_free_declared_variable(rc, rh))
-		return inherit(get_union_type(lh), get_union_type(rh));
+		return inherit(get_union_type(lh), get_union_type(rh)) and
+		       inherit(_variables.get_interval(lh), _variables.get_interval(rh));
 
 	// If only rh is a free and declared variable then check whether lh
 	// type inherits from it (using Variables::is_type).
@@ -1102,6 +1103,12 @@ bool Unify::inherit(const TypeSet& lhs, const TypeSet& rhs) const
 		if (not inherit(ty, rhs))
 			return false;
 	return true;
+}
+
+bool Unify::inherit(const std::pair<double, double> &lgm,
+                    const std::pair<double, double> &rgm) const
+{
+	return rgm.first <= lgm.first and rgm.second >= lgm.second;
 }
 
 bool Unify::is_declared_variable(const Handle& h) const
