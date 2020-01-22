@@ -71,6 +71,11 @@ public:
 	void test_type_intersection_4();
 	void test_type_intersection_5();
 
+	void test_unify_basic_1();
+	void test_unify_basic_2();
+	void test_unify_basic_3();
+	void test_unify_basic_4();
+	void test_unify_basic_5();
 };
 
 void UnifyGlobUTest::setUp(void)
@@ -93,26 +98,23 @@ void UnifyGlobUTest::test_type_intersection_2()
 	Handle lhs = X;
 	Handle rhs = Y;
 
-	// Should have declared Y in r_decl but Variables::extend
-	// doesn't work for type intervals. Cheat for now until
-	// that is fixed in the atomspace.
-	Handle l_decl = al(VARIABLE_LIST,
-	                   al(TYPED_VARIABLE_LINK,
-	                      X,
-	                      al(TYPE_SET_LINK,
-	                         al(INTERVAL_LINK,
-	                            an(NUMBER_NODE, "1"),
-	                            an(NUMBER_NODE, "4")),
-	                         an(TYPE_NODE, "PredicateNode"))),
-	                   al(TYPED_VARIABLE_LINK,
-	                      Y,
-	                      al(TYPE_SET_LINK,
-	                         al(INTERVAL_LINK,
-	                            an(NUMBER_NODE, "2"),
-	                            an(NUMBER_NODE, "3")),
-	                         an(TYPE_NODE, "PredicateNode"))));
+	Handle l_decl = al(TYPED_VARIABLE_LINK,
+	                   X,
+	                   al(TYPE_SET_LINK,
+	                      al(INTERVAL_LINK,
+	                         an(NUMBER_NODE, "1"),
+	                         an(NUMBER_NODE, "4")),
+	                      an(TYPE_NODE, "PredicateNode")));
 
-	Unify unify(lhs, rhs, l_decl);
+	Handle r_decl = al(TYPED_VARIABLE_LINK,
+	                   Y,
+	                   al(TYPE_SET_LINK,
+	                      al(INTERVAL_LINK,
+	                         an(NUMBER_NODE, "2"),
+	                         an(NUMBER_NODE, "3")),
+	                      an(TYPE_NODE, "PredicateNode")));
+
+	Unify unify(lhs, rhs, l_decl, r_decl);
 	Unify::CHandle result = unify.type_intersection(lhs, rhs),
 			expected = rhs;
 
@@ -178,6 +180,88 @@ void UnifyGlobUTest::test_type_intersection_5()
 	Unify unify(lhs, rhs, l_decl);
 	Unify::CHandle result = unify.type_intersection(lhs, rhs),
 			expected = rhs;
+
+	TS_ASSERT_EQUALS(result, expected)
+}
+
+void UnifyGlobUTest::test_unify_basic_1()
+{
+	Unify unify(X, A);
+	Unify::SolutionSet result = unify();
+	Unify::SolutionSet expected =
+			Unify::SolutionSet({{{{X, A}, A}}});
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected)
+}
+
+void UnifyGlobUTest::test_unify_basic_2()
+{
+	Unify unify(X, Y);
+	Unify::SolutionSet result = unify();
+
+	// Note: The second element in a TypedBlock contains the most
+	// specialized term. Yet at this instance neither[X nor Y] is more
+	// specialized than the other.
+	// The most specialized term is used to designate the type, meaning
+	// for variables 'X' and 'Y' {{X, Y}, Y} and {{X, Y}, X} are considered
+	// the same and wont be considered as two partitions of a solutionset.
+	Unify::SolutionSet expected_1 =
+			Unify::SolutionSet({{{{X, Y}, Y}}});
+	Unify::SolutionSet expected_2 =
+			Unify::SolutionSet({{{{X, Y}, X}}});
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "expected_1 = " << oc_to_string(expected_1) << std::endl;
+	std::cout << "expected_2 = " << oc_to_string(expected_2) << std::endl;
+
+	TS_ASSERT((result==expected_1) or (result==expected_2))
+}
+
+void UnifyGlobUTest::test_unify_basic_3()
+{
+	Unify unify(X, x);
+	Unify::SolutionSet result = unify();
+
+	// Note: For two type undeclared Glob 'X' and Variable 'x', the
+	// variable x is considered more specialized than the GlobNode.
+	Unify::SolutionSet expected =
+			Unify::SolutionSet({{{{X, x}, x}}});
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected)
+}
+
+void UnifyGlobUTest::test_unify_basic_4()
+{
+	Unify unify(x, X);
+	Unify::SolutionSet result = unify();
+
+	// Note: For two type undeclared Glob 'X' and Variable 'x', the
+	// variable x is considered more specialized than the GlobNode.
+	Unify::SolutionSet expected =
+			Unify::SolutionSet({{{{X, x}, x}}});
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected)
+}
+
+void UnifyGlobUTest::test_unify_basic_5()
+{
+	Unify unify(X, AB);
+	Unify::SolutionSet result = unify();
+
+	Unify::SolutionSet expected =
+			Unify::SolutionSet({{{{X, al(LIST_LINK, A, B)}, al(LIST_LINK, A, B)}}});
+
+	std::cout << "result = " << oc_to_string(result) << std::endl;
+	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
 }
