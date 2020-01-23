@@ -25,14 +25,14 @@
 
 #include "Unify.h"
 
+#include <boost/algorithm/cxx11/any_of.hpp>
+
 #include <opencog/util/algorithm.h>
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/core/Context.h>
 #include <opencog/atoms/core/FindUtils.h>
-// #include <opencog/atoms/core/Quotation.h>
 #include <opencog/atoms/core/TypeUtils.h>
-// #include <opencog/atoms/core/Variables.h>
 #include <opencog/atoms/core/RewriteLink.h>
 #include <opencog/atoms/pattern/PatternUtils.h>
 #include <opencog/atomspace/AtomSpace.h>
@@ -153,6 +153,23 @@ bool Unify::SolutionSet::is_satisfiable() const
 	return not empty();
 }
 
+void Unify::SolutionSet::insert(const SolutionSet& sol)
+{
+	Partitions::insert(sol.begin(), sol.end());
+}
+
+void Unify::SolutionSet::remove_cycles()
+{
+	// TODO: replace by std::set::erase_if once C++20 is enabled
+	for (auto it = begin(); it != end();) {
+		if (has_cycle(*it)) {
+			it = erase(it);
+		} else {
+			++it;
+		}
+	}
+}
+
 Unify::Unify(const Handle& lhs, const Handle& rhs,
              const Handle& lhs_vardecl, const Handle& rhs_vardecl)
 {
@@ -223,8 +240,8 @@ void Unify::set_variables(const Handle& lhs, const Handle& rhs,
                           const Handle& lhs_vardecl, const Handle& rhs_vardecl)
 {
 	// Merge the 2 type declarations
-	Variables lv = gen_varlist(lhs, lhs_vardecl)->get_variables();
-	Variables rv = gen_varlist(rhs, rhs_vardecl)->get_variables();
+	Variables lv = gen_variables(lhs, lhs_vardecl);
+	Variables rv = gen_variables(rhs, rhs_vardecl);
 	_variables = merge_variables(lv, rv);
 }
 
@@ -256,7 +273,7 @@ Unify::HandleCHandleMap Unify::substitution_closure(const HandleCHandleMap& var2
 	// Strip var2cval from its contexts
 	HandleMap var2val = strip_context(var2cval);
 
-	// Subtitute every value that have variables by other values
+	// Substitute every value that have variables by other values
 	// associated to these variables.
 	HandleCHandleMap result(var2cval);
 	for (auto& el : result) {
@@ -299,6 +316,77 @@ bool Unify::is_pm_connector(const Handle& h)
 bool Unify::is_pm_connector(Type t)
 {
 	return t == AND_LINK or t == OR_LINK or t == NOT_LINK;
+}
+
+HandleMultimap Unify::vargraph(const Partition& partition)
+{
+	HandleMultimap vg;
+	for (const auto& blk : partition) {
+		HandleMultimap bvg = vargraph(blk.first);
+		for (const auto& vvs : bvg) {
+			vg[vvs.first].insert(vvs.second.begin(), vvs.second.end());
+		}
+	}
+	return vg;
+}
+
+HandleMultimap Unify::vargraph(const Block& blk)
+{
+	// Standalone variables
+	HandleSet stdvars;
+	// Variables buried inside terms
+	HandleSet trmvars;
+
+	// Fill stdvars and trmvars
+	for (const CHandle& ch : blk) {
+		if (ch.is_free_variable()) {
+			stdvars.insert(ch.handle);
+			continue;
+		}
+		HandleSet fvs = ch.get_free_variables();
+		trmvars.insert(fvs.begin(), fvs.end());
+	}
+
+	// For each standaline variable associate all terms variables
+	HandleMultimap vg;
+	for (const Handle& stv : stdvars)
+		vg[stv] = trmvars;
+	return vg;
+}
+
+bool Unify::has_cycle(const Partition& partition)
+{
+	return has_cycle(vargraph(partition));
+}
+
+bool Unify::has_cycle(const Block& blk)
+{
+	return has_cycle(vargraph(blk));
+}
+
+bool Unify::has_cycle(const HandleMultimap& vg)
+{
+	using boost::algorithm::any_of;
+	HandleMultimap cvg = closure(vg);
+	return any_of(cvg, [](const HandleMultimap::value_type& vvs) {
+			return is_in(vvs.first, vvs.second); });
+}
+
+HandleMultimap Unify::closure(const HandleMultimap& vg)
+{
+	return fixpoint(&Unify::closure_step, vg);
+}
+
+HandleMultimap Unify::closure_step(const HandleMultimap& vg)
+{
+	HandleMultimap nvg(vg);
+	for (const auto& vvs : vg) {
+		for (const Handle& v : vvs.second) {
+			const HandleSet& third = nvg[v];
+			nvg[vvs.first].insert(third.begin(), third.end());
+		}
+	}
+	return nvg;
 }
 
 Handle Unify::substitute(BindLinkPtr bl, const TypedSubstitution& ts,
@@ -378,7 +466,7 @@ Handle Unify::substitute_vardecl(const Handle& vardecl,
 
 	HandleSeq oset;
 
-	if (t == VARIABLE_LIST) {
+	if (t == VARIABLE_LIST or t == VARIABLE_SET) {
 		for (const Handle& h : vardecl->getOutgoingSet()) {
 			Handle nh = substitute_vardecl(h, var2val);
 			if (nh)
@@ -451,7 +539,12 @@ Unify::SolutionSet Unify::operator()()
 		return SolutionSet();
 
 	// It is well typed, perform the unification
-	return unify(_lhs, _rhs);
+	SolutionSet sol = unify(_lhs, _rhs);
+
+	// Remove partitions with cycles
+	sol.remove_cycles();
+
+	return sol;
 }
 
 Unify::SolutionSet Unify::unify(const CHandle& lhs, const CHandle& rhs) const
@@ -535,7 +628,7 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 	if (lh_arity != rh_arity)
 		return SolutionSet();
 
-	if (is_unordered(rh))
+	if (rh->is_unordered_link())
 		return unordered_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
 	else
 		return ordered_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
@@ -561,9 +654,8 @@ Unify::SolutionSet Unify::unordered_unify(const HandleSeq& lhs,
 			HandleSeq lhs_tail(cp_erase(lhs, i));
 			HandleSeq rhs_tail(cp_erase(rhs, 0));
 			auto tail_sol = unordered_unify(lhs_tail, rhs_tail, lc, rc);
-			SolutionSet perm_sol = join(head_sol, tail_sol);
 			// Union merge satisfiable permutations
-			sol.insert(perm_sol.begin(), perm_sol.end());
+			sol.insert(join(head_sol, tail_sol));
 		}
 	}
 	return sol;
@@ -627,11 +719,6 @@ Unify::SolutionSet Unify::comb_unify(const std::set<CHandle>& chs) const
 	}
 	return sol;
 }
-	
-bool Unify::is_unordered(const Handle& h) const
-{
-	return nameserver().isA(h->get_type(), UNORDERED_LINK);
-}
 
 HandleSeq Unify::cp_erase(const HandleSeq& hs, Arity i) const
 {
@@ -668,11 +755,8 @@ Unify::SolutionSet Unify::join(const SolutionSet& lhs,
 
 	// By now both are satisfiable, thus non empty, join them
 	SolutionSet result;
-	for (const Partition& rp : rhs) {
-		SolutionSet sol(join(lhs, rp));
-		result.insert(sol.begin(), sol.end());
-	}
-
+	for (const Partition& rp : rhs)
+		result.insert(join(lhs, rp));
 	return result;
 }
 
@@ -684,10 +768,8 @@ Unify::SolutionSet Unify::join(const SolutionSet& lhs, const Partition& rhs) con
 
 	// Recursive case (a loop actually)
 	SolutionSet result;
-	for (const auto& par : lhs) {
-		SolutionSet jps = join(par, rhs);
-		result.insert(jps.begin(), jps.end());
-	}
+	for (const auto& par : lhs)
+		result.insert(join(par, rhs));
 	return result;
 }
 
@@ -713,10 +795,8 @@ Unify::SolutionSet Unify::join(const SolutionSet& sol,
                                const TypedBlock& block) const
 {
 	SolutionSet result;
-	for (const Partition& partition : sol) {
-		SolutionSet jps = join(partition, block);
-		result.insert(jps.begin(), jps.end());
-	}
+	for (const Partition& partition : sol)
+		result.insert(join(partition, block));
 	return result;
 }
 
@@ -750,7 +830,7 @@ Unify::SolutionSet Unify::join(const Partition& partition,
 			if (sol.is_satisfiable())
 				return join(sol, jp);
 		}
-		return SolutionSet(false);
+		return SolutionSet();
 	}
 }
 
@@ -760,16 +840,16 @@ Unify::TypedBlock Unify::join(const TypedBlockSeq& common_blocks,
 	std::pair<Block, CHandle> result{block};
 	for (const auto& c_block : common_blocks) {
 		result =  join(result, c_block);
-        // Abort if unsatisfiable
-        if (not is_satisfiable(result))
-            return result;
-    }
+		// Abort if unsatisfiable
+		if (not is_satisfiable(result))
+			return result;
+	}
 	return result;
 }
 
 Unify::TypedBlock Unify::join(const TypedBlock& lhs, const TypedBlock& rhs) const
 {
-    OC_ASSERT(lhs.second and rhs.second, "Can only join 2 satisfiable blocks");
+	OC_ASSERT(lhs.second and rhs.second, "Can only join 2 satisfiable blocks");
 	return {set_union(lhs.first, rhs.first),
 			type_intersection(lhs.second, rhs.second)};
 }
@@ -1078,7 +1158,7 @@ std::string oc_to_string(const Unify::CHandle& ch, const std::string& indent)
 {
 	std::stringstream ss;
 	ss << indent << "context:" << std::endl
-	   << oc_to_string(ch.context, indent + OC_TO_STRING_INDENT)
+	   << oc_to_string(ch.context, indent + OC_TO_STRING_INDENT) << std::endl
 	   << indent << "atom:" << std::endl
 	   << oc_to_string(ch.handle, indent + OC_TO_STRING_INDENT);
 	return ss.str();
@@ -1087,10 +1167,10 @@ std::string oc_to_string(const Unify::CHandle& ch, const std::string& indent)
 std::string oc_to_string(const Unify::Block& pb, const std::string& indent)
 {
 	std::stringstream ss;
-	ss << indent << "size = " << pb.size() << std::endl;
+	ss << indent << "size = " << pb.size();
 	int i = 0;
 	for (const auto& el : pb)
-		ss << indent << "catom[" << i++ << "]:" << std::endl
+		ss << std::endl << indent << "catom[" << i++ << "]:" << std::endl
 		   << oc_to_string(el, indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
@@ -1099,7 +1179,7 @@ std::string oc_to_string(const Unify::TypedBlock& tb, const std::string& indent)
 {
 	std::stringstream ss;
 	ss << indent << "block:" << std::endl
-	   << oc_to_string(tb.first, indent + OC_TO_STRING_INDENT)
+	   << oc_to_string(tb.first, indent + OC_TO_STRING_INDENT) << std::endl
 	   << indent << "type:" << std::endl
 	   << oc_to_string(tb.second, indent + OC_TO_STRING_INDENT);
 	return ss.str();
@@ -1108,9 +1188,9 @@ std::string oc_to_string(const Unify::TypedBlock& tb, const std::string& indent)
 std::string oc_to_string(const Unify::TypedBlockSeq& tbs, const std::string& indent)
 {
 	std::stringstream ss;
-	ss << indent << "size = " << tbs.size() << std::endl;
+	ss << indent << "size = " << tbs.size();
 	for (size_t i = 0; i < tbs.size(); i++)
-		ss << indent << "typed block[" << i << "]:" << std::endl
+		ss << std::endl << indent << "typed block[" << i << "]:" << std::endl
 		   << oc_to_string(tbs[i], indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
@@ -1118,11 +1198,11 @@ std::string oc_to_string(const Unify::TypedBlockSeq& tbs, const std::string& ind
 std::string oc_to_string(const Unify::Partition& up, const std::string& indent)
 {
 	std::stringstream ss;
-	ss << indent << "size = " << up.size() << std::endl;
+	ss << indent << "size = " << up.size();
 	int i = 0;
 	for (const auto& p : up) {
-		ss << indent << "block[" << i << "]:" << std::endl
-		   << oc_to_string(p.first, indent + OC_TO_STRING_INDENT)
+		ss << std::endl << indent << "block[" << i << "]:" << std::endl
+		   << oc_to_string(p.first, indent + OC_TO_STRING_INDENT) << std::endl
 		   << indent << "type[" << i << "]:" << std::endl
 		   << oc_to_string(p.second, indent + OC_TO_STRING_INDENT);
 		i++;
@@ -1133,10 +1213,10 @@ std::string oc_to_string(const Unify::Partition& up, const std::string& indent)
 std::string oc_to_string(const Unify::Partitions& par, const std::string& indent)
 {
 	std::stringstream ss;
-	ss << indent << "size = " << par.size() << std::endl;
+	ss << indent << "size = " << par.size();
 	int i = 0;
 	for (const auto& el : par) {
-		ss << indent << "typed partition[" << i << "]:"
+		ss << std::endl << indent << "typed partition[" << i << "]:"
 		   << std::endl << oc_to_string(el, indent + OC_TO_STRING_INDENT);
 		i++;
 	}
@@ -1147,11 +1227,11 @@ std::string oc_to_string(const Unify::HandleCHandleMap& hchm,
                          const std::string& indent)
 {
 	std::stringstream ss;
-	ss << indent << "size = " << hchm.size() << std::endl;
+	ss << indent << "size = " << hchm.size();
 	int i = 0;
 	for (const auto& hch : hchm) {
-		ss << indent << "atom[" << i << "]:" << std::endl
-		   << oc_to_string(hch.first, indent + OC_TO_STRING_INDENT);
+		ss << std::endl << indent << "atom[" << i << "]:" << std::endl
+		   << oc_to_string(hch.first, indent + OC_TO_STRING_INDENT) << std::endl;
 		ss << indent << "catom[" << i << "]:" << std::endl
 		   << oc_to_string(hch.second, indent + OC_TO_STRING_INDENT);
 		i++;
@@ -1164,7 +1244,7 @@ std::string oc_to_string(const Unify::HandleCHandleMap::value_type& hch,
 {
 	std::stringstream ss;
 	ss << indent << "atom:" << std::endl
-	   << oc_to_string(hch.first, indent + OC_TO_STRING_INDENT);
+	   << oc_to_string(hch.first, indent + OC_TO_STRING_INDENT) << std::endl;
 	ss << indent << "catom:" << std::endl
 	   << oc_to_string(hch.second, indent + OC_TO_STRING_INDENT);
 	return ss.str();
@@ -1175,7 +1255,7 @@ std::string oc_to_string(const Unify::TypedSubstitution& ts,
 {
 	std::stringstream ss;
 	ss << indent << "substitution:" << std::endl
-	   << oc_to_string(ts.first, indent + OC_TO_STRING_INDENT)
+	   << oc_to_string(ts.first, indent + OC_TO_STRING_INDENT) << std::endl
 	   << indent << "vardecl:" << std::endl
 	   << oc_to_string(ts.second, indent + OC_TO_STRING_INDENT);
 	return ss.str();
@@ -1186,7 +1266,7 @@ std::string oc_to_string(const Unify::TypedSubstitutions::value_type& ts,
 {
 	std::stringstream ss;
 	ss << indent << "substitution:" << std::endl
-	   << oc_to_string(ts.first, indent + OC_TO_STRING_INDENT)
+	   << oc_to_string(ts.first, indent + OC_TO_STRING_INDENT) << std::endl
 	   << indent << "vardecl:" << std::endl
 	   << oc_to_string(ts.second, indent + OC_TO_STRING_INDENT);
 	return ss.str();
@@ -1196,11 +1276,11 @@ std::string oc_to_string(const Unify::TypedSubstitutions& tss,
                          const std::string& indent)
 {
 	std::stringstream ss;
-	ss << indent << "size = " << tss.size() << std::endl;
+	ss << indent << "size = " << tss.size();
 	int i = 0;
 	for (const auto& ts : tss) {
-		ss << indent << "typed substitution[" << i << "]:" << std::endl
-		   << oc_to_string(ts, indent + OC_TO_STRING_INDENT);
+		ss << std::endl << indent << "typed substitution[" << i << "]:"
+		   << std::endl << oc_to_string(ts, indent + OC_TO_STRING_INDENT);
 		i++;
 	}
 	return ss.str();

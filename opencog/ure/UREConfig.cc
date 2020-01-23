@@ -23,6 +23,7 @@
 
 #include "UREConfig.h"
 
+#include <opencog/util/oc_assert.h>
 #include <opencog/atoms/core/NumberNode.h>
 #include <opencog/atomspaceutils/AtomSpaceUtils.h>
 
@@ -165,7 +166,7 @@ void UREConfig::fetch_common_parameters(const Handle& rbs)
 	}
 
 	// Fetch maximum number of iterations
-	_common_params.max_iter = fetch_num_param(max_iter_name, rbs, -1);
+	_common_params.max_iter = fetch_num_param(max_iter_name, rbs, 100);
 
 	// Fetch complexity penalty parameter
 	_common_params.complexity_penalty =
@@ -191,7 +192,7 @@ void UREConfig::fetch_bc_parameters(const Handle& rbs)
 	_bc_params.mm_complexity_penalty =
 		fetch_num_param(bc_mm_complexity_penalty_name, rbs, 0);
 
-	// Fetch BC Mixture Model complexity penalty parameter
+	// Fetch BC Mixture Model compressiveness parameter
 	_bc_params.mm_compressiveness =
 		fetch_num_param(bc_mm_compressiveness_name, rbs, 1);
 }

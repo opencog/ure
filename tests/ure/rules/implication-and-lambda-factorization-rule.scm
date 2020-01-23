@@ -45,12 +45,13 @@
 ;; -----------------------------------------------------------------------
 
 (define implication-and-lambda-factorization-vardecl
-  (VariableList
+  (VariableSet
      (TypedVariableLink
         (VariableNode "$TyVs")
         (TypeChoice
            (TypeNode "TypedVariableLink")
            (TypeNode "VariableNode")
+           (TypeNode "VariableSet")
            (TypeNode "VariableList")))
      ;; We intensionally restrict $A1 and $A2 to be EvaluationLink to
      ;; ensure that we don't produce indefinitely nested AndLinks

@@ -55,7 +55,7 @@
 ;; and retrieve all the other instances in the rule formula
 
 (define implication-scope-direct-evaluation-vardecl
-  (VariableList
+  (VariableSet
      (TypedVariable
         (Variable "$P")
         (Type "PredicateNode"))

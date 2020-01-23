@@ -52,7 +52,7 @@
         (bky (Evaluation kp (List vB vY))))
 
   (BindLink
-   (VariableList
+   (VariableSet
      (TypedVariable
         vA
         (Type "ConceptNode"))

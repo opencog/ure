@@ -11,7 +11,7 @@
 
 (define crisp-deduction-rule
     (BindLink
-        (VariableList
+        (VariableSet
             (VariableNode "$A")
             (VariableNode "$B")
             (VariableNode "$C")
