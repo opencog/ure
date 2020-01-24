@@ -166,6 +166,9 @@ private:
 	double complexity_factor(const Source& src) const;
 
 	const UREConfig& _config;
+
+	// NEXT TODO: subdivide in smaller and shared mutexes
+	mutable std::mutex _whole_mutex;
 };
 
 std::string oc_to_string(const Source& source,

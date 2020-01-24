@@ -40,13 +40,11 @@ Source::Source(const Handle& bdy, const Handle& vdcl, double cpx, double cpx_fct
 
 bool Source::operator==(const Source& other) const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
 	return body == other.body && vardecl == other.vardecl;
 }
 
 bool Source::operator<(const Source& other) const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
 	// Sort by complexity to so that simpler sources come first. Then
 	// by content. Makes it easier to prune by complexity. It should
 	// also make sampling a bit faster. And finally the user probabably
@@ -76,7 +74,6 @@ bool Source::is_exhausted(const Rule& pos_rule) const
 
 double Source::expand_complexity(double prob) const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
 	return complexity - log2(prob);
 }
 
@@ -117,6 +114,7 @@ SourceSet::SourceSet(const UREConfig& config,
 
 std::vector<double> SourceSet::get_weights() const
 {
+	std::lock_guard<std::mutex> lock(_whole_mutex);
 	std::vector<double> results;
 	for (const Source& src : sources)
 		results.push_back(get_weight(src));
@@ -125,6 +123,7 @@ std::vector<double> SourceSet::get_weights() const
 
 void SourceSet::reset_exhausted()
 {
+	std::lock_guard<std::mutex> lock(_whole_mutex);
 	if (sources.empty()) {
 		exhausted = true;
 		return;
@@ -137,6 +136,7 @@ void SourceSet::reset_exhausted()
 
 void SourceSet::insert(const HandleSet& products, const Source& src, double prob)
 {
+	std::lock_guard<std::mutex> lock(_whole_mutex);
 	const static Handle empty_variable_list = Handle(createVariableList(HandleSeq()));
 
 	// Calculate the complexity of the new sources
@@ -169,16 +169,19 @@ void SourceSet::insert(const HandleSet& products, const Source& src, double prob
 
 size_t SourceSet::size() const
 {
+	std::lock_guard<std::mutex> lock(_whole_mutex);
 	return sources.size();
 }
 
 bool SourceSet::empty() const
 {
+	std::lock_guard<std::mutex> lock(_whole_mutex);
 	return sources.empty();
 }
 
 std::string SourceSet::to_string(const std::string& indent) const
 {
+	std::lock_guard<std::mutex> lock(_whole_mutex);
 	return oc_to_string(sources, indent);
 }
 
