@@ -70,7 +70,7 @@ std::string	BITNode::to_string(const std::string& indent) const
 {
 	std::stringstream ss;
 	ss << indent << "body:" << std::endl
-	   << oc_to_string(body, indent + OC_TO_STRING_INDENT)
+	   << oc_to_string(body, indent + OC_TO_STRING_INDENT) << std::endl
 	   << indent << "exhausted: " << exhausted << std::endl
 	   << indent << "rules:" << std::endl
 	   << (indent + oc_to_string_indent) << "size = " << rules.size();
