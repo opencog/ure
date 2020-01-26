@@ -132,7 +132,7 @@ AndBIT AndBIT::expand(const Handle& leaf,
 	}
 
 	// Discard expansion with cycle
-	if (has_cycle(BindLinkCast(new_fcs)->get_implicand())) {
+	if (has_cycle(BindLinkCast(new_fcs)->get_implicand()[0])) {
 		ure_logger().debug() << "The new FCS has some cycle (some conclusion "
 		                     << "has itself has premise, directly or "
 		                     << "indirectly). This expansion has been cancelled.";
@@ -173,7 +173,7 @@ void AndBIT::reset_exhausted()
 
 bool AndBIT::has_cycle() const
 {
-	return has_cycle(BindLinkCast(fcs)->get_implicand());
+	return has_cycle(BindLinkCast(fcs)->get_implicand()[0]);
 }
 
 bool AndBIT::has_cycle(const Handle& h, HandleSet ancestors) const
@@ -240,7 +240,7 @@ std::string AndBIT::to_string(const std::string& indent) const
 
 std::string AndBIT::fcs_to_ascii_art(const Handle& nfcs) const
 {
-	return fcs_rewrite_to_ascii_art(BindLinkCast(nfcs)->get_implicand());
+	return fcs_rewrite_to_ascii_art(BindLinkCast(nfcs)->get_implicand()[0]);
 }
 
 std::string AndBIT::fcs_rewrite_to_ascii_art(const Handle& h) const
@@ -321,7 +321,7 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 	BindLinkPtr nfcs_bl(BindLinkCast(nfcs));
 	Handle nfcs_vardecl = nfcs_bl->get_vardecl();
 	Handle nfcs_pattern = nfcs_bl->get_body();
-	Handle nfcs_rewrite = nfcs_bl->get_implicand();
+	Handle nfcs_rewrite = nfcs_bl->get_implicand()[0]; // assume that there is only one
 	Handle rule_vardecl = rule.first.get_vardecl();
 
 	// Generate new pattern term
@@ -382,7 +382,8 @@ HandleSet AndBIT::get_leaves(const Handle& h) const
 	Type t = h->get_type();
 	if (t == BIND_LINK) {
 		BindLinkPtr hsc = BindLinkCast(h);
-		Handle rewrite = hsc->get_implicand();
+		// Assume there is only one rewrite.
+		Handle rewrite = hsc->get_implicand()[0];
 		return get_leaves(rewrite);
 	} else if (t == EXECUTION_OUTPUT_LINK) {
 		// All arguments except the first one are potential target leaves

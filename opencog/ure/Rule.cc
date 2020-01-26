@@ -154,7 +154,7 @@ bool Rule::verify_rule()
     if (is_meta())
         return true;
 
-    Handle rewrite = _rule->get_implicand();
+    Handle rewrite = _rule->get_implicand()[0]; // assume only one rewrite
     Type rewrite_type = rewrite->get_type();
 
     // check 1: If there are multiple conclusions
@@ -284,7 +284,7 @@ Handle Rule::get_implicant() const
 Handle Rule::get_implicand() const
 {
 	if (_rule)
-		return _rule->get_implicand();
+		return _rule->get_implicand()[0];  // assume that there is only one.
 	return Handle::UNDEFINED;
 }
 
@@ -297,7 +297,7 @@ bool Rule::is_meta() const
 {
 	Handle implicand = get_implicand();
 
-	if (not implicand)
+	if (not implicand)  // XXX this check is never needed !?
 		return false;
 
 	Type itype = implicand->get_type();
@@ -358,7 +358,7 @@ HandleSeq Rule::get_premises() const
 	if (not is_valid())
 		return HandleSeq();
 
-	Handle rewrite = _rule->get_implicand();
+	Handle rewrite = _rule->get_implicand()[0];  // assume there is only one.
 	Type rewrite_type = rewrite->get_type();
 
 	// If not an ExecutionOutputLink then return the clauses
@@ -394,7 +394,7 @@ Handle Rule::get_conclusion() const
 	if (not is_valid())
 		return Handle::UNDEFINED;
 
-	Handle rewrite = _rule->get_implicand();
+	Handle rewrite = _rule->get_implicand()[0];  // assume there is only one.
 	Type rewrite_type = rewrite->get_type();
 
 	// If not an ExecutionOutputLink then return the rewrite term

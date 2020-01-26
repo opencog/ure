@@ -428,10 +428,13 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 		clauses = remove_constant_clauses(vardecl, clauses, queried_as);
 	hs.push_back(clauses);
 
-	// Perform substitution over the rewrite term
-	Handle rewrite = variables.substitute_nocheck(bl->get_implicand(), values);
-	rewrite = RewriteLink::consume_quotations(vardecl, rewrite, false);
-	hs.push_back(rewrite);
+	// Perform substitution over the rewrite terms
+	for (const Handle& himp: bl->get_implicand())
+	{
+		Handle rewrite = variables.substitute_nocheck(himp, values);
+		rewrite = RewriteLink::consume_quotations(vardecl, rewrite, false);
+		hs.push_back(rewrite);
+	}
 
 	// Filter vardecl
 	vardecl = filter_vardecl(vardecl, hs);
