@@ -56,8 +56,11 @@ public:
     virtual bool grounding(const HandleMap &var_soln,
                            const HandleMap &term_soln)
     {
-        Handle h(HandleCast(_inst->instantiate(implicand, var_soln, true)));
-        if (h) insert_result(h);
+        for (const Handle& himp : implicand)
+        {
+            Handle h(HandleCast(_inst->instantiate(himp, var_soln, true)));
+            if (h) insert_result(h);
+        }
 
         return false;
     }
