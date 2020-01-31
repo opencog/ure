@@ -25,7 +25,7 @@
         (vX (Variable "$X"))
         (akx (Evaluation kp (List vA vX))))
   (BindLink
-   (VariableList
+   (VariableSet
      (TypedVariable
         vA
         (Type "ConceptNode"))

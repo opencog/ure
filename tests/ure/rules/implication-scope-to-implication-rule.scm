@@ -19,11 +19,12 @@
 ;; -----------------------------------------------------------------------
 
 (define implication-scope-to-implication-variables
-  (VariableList
+  (VariableSet
      (TypedVariableLink
         (VariableNode "$TyVs")
         (TypeChoice
            (TypeNode "TypedVariableLink")
+           ;; TODO: support VariableSet
            (TypeNode "VariableList")))
      (VariableNode "$P")
      (VariableNode "$Q")))

@@ -14,11 +14,12 @@
 ;; ----------------------------------------------------------------------
 
 (define closed-lambda-introduction-vardecl
-  (VariableList
+  (VariableSet
      (TypedVariableLink
         (VariableNode "$V")
         (TypeChoice
            (TypeNode "TypedVariableLink")
+           (TypeNode "VariableSet")
            (TypeNode "VariableList")
            (TypeNode "VariableNode")))
      (VariableNode "$B")))

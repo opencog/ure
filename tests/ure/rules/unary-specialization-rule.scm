@@ -1,6 +1,6 @@
 (define unary-specialization-rule
 (BindLink
-  (VariableList
+  (VariableSet
     (TypedVariableLink
       (VariableNode "$g")
       (TypeChoice

@@ -20,7 +20,7 @@
          (AB (link-type A B))
          (BC (link-type B C))
          (AC (link-type A C))
-         (vardecl (VariableList A B C))
+         (vardecl (VariableSet A B C))
          (precon1 (Evaluation (GroundedPredicate "scm: true-enough") AB))
          (precon2 (Evaluation (GroundedPredicate "scm: true-enough") BC))
          (precon3 (Not (Identical A C)))

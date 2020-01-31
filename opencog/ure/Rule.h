@@ -30,6 +30,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/core/ScopeLink.h>
 #include <opencog/atoms/core/VariableList.h>
+#include <opencog/atoms/core/Variables.h>
 #include <opencog/atoms/pattern/BindLink.h>
 #include <opencog/unify/Unify.h>
 #include <opencog/util/empty_string.h>
@@ -172,6 +173,7 @@ public:
 	 * Return the variable declaration of the rule.
 	 */
 	Handle get_vardecl() const;
+	const Variables& get_variables() const;
 	Handle get_implicant() const;
 	Handle get_implicand() const;
 
@@ -215,14 +217,6 @@ public:
 	 * Get the default TruthValue associated with the rule.
 	 */
 	TruthValuePtr get_tv() const;
-
-	/**
-	 * Create a new rule where all variables are uniquely renamed.
-	 *
-	 * @param as  pointer to the atomspace where the new BindLink will be added
-	 * @return    a new Rule object with its own new BindLink
-	 */
-	Rule gen_standardize_apart(AtomSpace*);
 
 	/**
 	 * Used by the forward chainer to select rules. Given a source,
@@ -306,8 +300,6 @@ private:
 	// Return a copy of the rule with the variables alpha-converted
 	// into random variable names.
 	Rule rand_alpha_converted() const;
-
-	Handle standardize_helper(AtomSpace*, const Handle&, HandleMap&);
 
 	// Return the conclusion patterns of the rule. There are several
 	// of them because the conclusions can be wrapped in the

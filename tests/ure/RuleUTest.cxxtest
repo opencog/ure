@@ -149,7 +149,7 @@ void RuleUTest::test_unify_target_deduction_1()
 
 	Handle rule = rules.begin()->first.get_rule(),
 		// Expected up to an alpha conversion
-		vardecl = al(VARIABLE_LIST,
+		vardecl = al(VARIABLE_SET,
 		             al(TYPED_VARIABLE_LINK, X, CT),
 		             al(TYPED_VARIABLE_LINK, V, CT)),
 		XV = al(INHERITANCE_LINK, X, V),
@@ -189,7 +189,7 @@ void RuleUTest::test_unify_target_deduction_2()
 
 	Handle rule = rules.begin()->first.get_rule(),
 		// Expected up to an alpha conversion
-		vardecl = al(VARIABLE_LIST,
+		vardecl = al(VARIABLE_SET,
 		             al(TYPED_VARIABLE_LINK, X, CT),
 		             al(TYPED_VARIABLE_LINK, V, CT)),
 		XV = al(INHERITANCE_LINK, X, V),
@@ -482,7 +482,7 @@ void RuleUTest::test_unify_target_implication_scope_to_implication_4()
 		             "  (VariableNode \"$Q-38ea0de8\")"
 		             ")");
 	Handle vardecl =
-		_eval.eval_h("(VariableList"
+		_eval.eval_h("(VariableSet"
 		             "  (VariableNode \"$B-2db76aad\")"
 		             "  (TypedVariableLink"
 		             "    (VariableNode \"$Q-38ea0de8\")"
@@ -502,7 +502,7 @@ void RuleUTest::test_unify_target_implication_scope_to_implication_4()
 	// Expected up to an alpha conversion
 	Handle expected =
 		_eval.eval_h("(BindLink"
-		             "  (VariableList"
+		             "  (VariableSet"
 		             "    (TypedVariableLink"
 		             "      (VariableNode \"$TyVs-6c74a409\")"
 		             "      (TypeChoice"
@@ -531,10 +531,10 @@ void RuleUTest::test_unify_target_implication_scope_to_implication_4()
 		             "        (Unquote (VariableNode \"$Q-7005b724\")))))))");
 
 	std::cout << "implication_scope_to_implication_rule = "
-	          << oc_to_string(implication_scope_to_implication_rule);
-	std::cout << "target = " << oc_to_string(target);
-	std::cout << "rule = " << oc_to_string(rule);
-	std::cout << "expected = " << oc_to_string(expected);
+	          << oc_to_string(implication_scope_to_implication_rule) << std::endl;
+	std::cout << "target = " << oc_to_string(target) << std::endl;
+	std::cout << "rule = " << oc_to_string(rule) << std::endl;
+	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -719,7 +719,7 @@ void RuleUTest::test_unify_target_closed_lambda_introduction_1()
 	Handle rule = rules.begin()->first.get_rule();
 	Handle expected =
 		_eval.eval_h("(BindLink"
-		             "  (VariableList"
+		             "  (VariableSet"
 		             "  )"
 		             "  (AndLink"
 		             "    (EvaluationLink"
@@ -802,7 +802,7 @@ void RuleUTest::test_unify_target_closed_lambda_introduction_2()
 	Handle rule = rules.begin()->first.get_rule();
 	Handle expected =
 		_eval.eval_h("(BindLink"
-		             "  (VariableList)"
+		             "  (VariableSet)"
 		             "  (AndLink"
 		             "    (EvaluationLink"
 		             "      (GroundedPredicateNode \"scm: closed-lambda-introduction-precondition\")"
