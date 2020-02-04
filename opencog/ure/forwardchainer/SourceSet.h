@@ -69,9 +69,19 @@ public:
 	bool operator<(const Source& other) const;
 
 	/**
+	 * Insert rule in the rule set to remember it has been exhausted
+	 */
+	void insert_rule(const Rule& rule);
+
+	/**
 	 * Set exhausted flag back to false, and erase tried rules
 	 */
 	void reset_exhausted();
+
+	/**
+	 * Set exhausted flag to true
+	 */
+	void set_exhausted();
 
 	/**
 	 * Check if the given rule is has been tried already
@@ -100,7 +110,7 @@ public:
 	const double complexity_factor;
 
 	// True iff all rules that could expand the source have been tried
-	bool exhausted;
+	std::atomic<bool> exhausted;
 
 	// Rules so far applied to that source
 	RuleSet rules;

@@ -150,9 +150,12 @@ private:
 
 	std::atomic<bool> _search_focus_set;
 
-	// NEXT TODO: subdivide in smaller and shared mutexes
+	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _whole_mutex;
 	mutable std::mutex _part_mutex;
+
+	// TODO: use shared mutexes
+	mutable std::mutex _rules_mutex;
 
 	// Population of sources to expand forward
 	SourceSet _sources;

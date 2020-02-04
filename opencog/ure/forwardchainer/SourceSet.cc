@@ -56,11 +56,23 @@ bool Source::operator<(const Source& other) const
 		             and content_based_handle_less()(vardecl, other.vardecl))));
 }
 
+void Source::insert_rule(const Rule& rule)
+{
+	std::lock_guard<std::mutex> lock(_whole_mutex);
+	rules.insert(rule);
+}
+
 void Source::reset_exhausted()
 {
 	std::lock_guard<std::mutex> lock(_whole_mutex);
 	exhausted = false;
 	rules.clear();
+}
+
+void Source::set_exhausted()
+{
+	std::lock_guard<std::mutex> lock(_whole_mutex);
+	exhausted = true;
 }
 
 bool Source::is_exhausted(const Rule& pos_rule) const

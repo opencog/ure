@@ -155,6 +155,7 @@ void ForwardChainer::do_step_rec()
 
 void ForwardChainer::do_step()
 {
+	std::lock_guard<std::mutex> lock(_whole_mutex);
 	int local_iteration = _iteration++;
 	ure_logger().debug() << "Iteration " << (local_iteration + 1)
 	                     << "/" << _config.get_maximum_iterations_str();
@@ -165,7 +166,6 @@ void ForwardChainer::do_step()
 
 	// Select source
 	Source* source = select_source();
-	std::lock_guard<std::mutex> lock(_whole_mutex);
 	if (source) {
 		LAZY_URE_LOG_DEBUG << "Selected source:" << std::endl
 		                   << source->to_string();
@@ -298,6 +298,8 @@ Source* ForwardChainer::select_source()
 
 RuleSet ForwardChainer::get_valid_rules(const Source& source)
 {
+	std::lock_guard<std::mutex> lock(_rules_mutex); // TODO: use shared
+
 	// Generate all valid rules
 	RuleSet valid_rules;
 	for (const Rule& rule : _rules) {
@@ -342,7 +344,7 @@ RuleProbabilityPair ForwardChainer::select_rule(const Handle& h)
 
 RuleProbabilityPair ForwardChainer::select_rule(Source& source)
 {
-	std::lock_guard<std::mutex> lock(_part_mutex);
+	// std::lock_guard<std::mutex> lock(_part_mutex);
 
 	const RuleSet valid_rules = get_valid_rules(source);
 
@@ -358,7 +360,7 @@ RuleProbabilityPair ForwardChainer::select_rule(Source& source)
 	}
 
 	if (valid_rules.empty()) {
-		source.exhausted = true;
+		source.set_exhausted();
 		return {Rule(), 0.0};
 	}
 
@@ -400,10 +402,8 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules)
 
 HandleSet ForwardChainer::apply_rule(const Rule& rule, Source& source)
 {
-	std::lock_guard<std::mutex> lock(_part_mutex);
-
 	// Keep track of rule application to not do it again, and apply rule
-	source.rules.insert(rule);
+	source.insert_rule(rule);
 	return apply_rule(rule);
 }
 
@@ -482,7 +482,7 @@ void ForwardChainer::validate(const Handle& source)
 
 void ForwardChainer::expand_meta_rules()
 {
-	std::lock_guard<std::mutex> lock(_part_mutex);
+	std::lock_guard<std::mutex> lock(_rules_mutex);
 	// This is kinda of hack before meta rules are fully supported by
 	// the Rule class.
 	size_t rules_size = _rules.size();
