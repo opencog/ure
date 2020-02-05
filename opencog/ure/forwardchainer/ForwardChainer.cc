@@ -122,11 +122,16 @@ void ForwardChainer::do_chain()
 		return;
 	}
 
+	// Set log thread ID if multi-threaded
+	bool prev_thread_id = ure_logger().get_thread_id_flag();
 	if (1 < (unsigned)_config.get_jobs())
 		ure_logger().set_thread_id_flag(true);
 
 	// Call do_step till termination
 	do_step_rec();
+
+	// Restore logging thread ID flag
+	ure_logger().set_thread_id_flag(prev_thread_id);
 
 	ure_logger().debug("Finished Forward Chaining");
 }
