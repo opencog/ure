@@ -814,6 +814,16 @@ private:
 			return res;
 		return fixpoint(fun, res);
 	}
+
+	HandleSeq tail(const HandleSeq &seq) const;
+
+	HandleSeq tail(const HandleSeq &seq, const size_t offset) const;
+
+	void ordered_unify_glob(const HandleSeq &lhs, const HandleSeq &rhs,
+	                        SolutionSet &sol,
+	                        Context lhs_context=Context(),
+	                        Context rhs_context=Context(),
+	                        bool flip=false) const;
 };
 
 bool unifiable(const Handle& lhs, const Handle& rhs,
