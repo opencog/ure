@@ -75,11 +75,11 @@ void Source::set_exhausted()
 	exhausted = true;
 }
 
-bool Source::is_exhausted(const Rule& pos_rule) const
+bool Source::is_rule_exhausted(const Rule& pos_rule) const
 {
 	std::lock_guard<std::mutex> lock(_whole_mutex);
 	for (const Rule& rule : rules)
-		if (pos_rule.is_alpha_equivalent(rule))
+		if (pos_rule.is_alpha_equivalent(rule) /* TODO and rule.is_exhausted() */)
 			return true;
 	return false;
 }

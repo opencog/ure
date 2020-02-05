@@ -86,7 +86,7 @@ public:
 	/**
 	 * Check if the given rule is has been tried already
 	 */
-	bool is_exhausted(const Rule& rule) const;
+	bool is_rule_exhausted(const Rule& rule) const;
 
 	/**
 	 * Return the complexity of new source expanded from this source by
