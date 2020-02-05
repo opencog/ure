@@ -31,7 +31,6 @@
 #include <opencog/ure/Rule.h>
 
 #include "ForwardChainer.h"
-#include "FocusSetPMCB.h"
 #include "../URELogger.h"
 #include "../backwardchainer/ControlPolicy.h"
 #include "../ThompsonSampling.h"
@@ -435,7 +434,6 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 		AtomSpace derived_rule_as(&ref_as);
 		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
 
-
 		// Make Sure that all constant clauses appear in the AtomSpace
 		// as unification might have created constant clauses which aren't
 		HandleSeq clauses = rule.get_clauses();
@@ -445,27 +443,8 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 				if (ref_as.get_atom(clause) == Handle::UNDEFINED)
 					return results;
 
-		if (_search_focus_set) {
-			// rule.get_rule() may introduce a new atom that satisfies
-			// condition for the output. In order to prevent this
-			// undesirable effect, lets store rule.get_rule() in a
-			// child atomspace of parent focus_set_as so that PM will
-			// never be able to find this new undesired atom created
-			// from partial grounding.
-			BindLinkPtr bl = BindLinkCast(rhcpy);
-			FocusSetPMCB fs_pmcb(&derived_rule_as, &_kb_as);
-			fs_pmcb.implicand = bl->get_implicand();
-			bl->satisfy(fs_pmcb);
-			HandleSeq rslts;
-			for (const ValuePtr& v: fs_pmcb.get_result_set())
-				rslts.push_back(HandleCast(v));
-			add_results(_focus_set_as, rslts);
-		}
-		// Search the whole atomspace.
-		else {
-			Handle h = HandleCast(rhcpy->execute(&_kb_as));
-			add_results(_kb_as, h->getOutgoingSet());
-		}
+		Handle h = HandleCast(rhcpy->execute(&_kb_as));
+		add_results(_kb_as, h->getOutgoingSet());
 	}
 	catch (...) {}
 
