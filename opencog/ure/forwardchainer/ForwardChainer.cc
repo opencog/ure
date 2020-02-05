@@ -225,8 +225,6 @@ bool ForwardChainer::termination()
 
 /**
  * Applies all rules in the rule base.
- *
- * @param search_focus_set flag for searching focus set.
  */
 void ForwardChainer::apply_all_rules()
 {
