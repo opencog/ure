@@ -85,6 +85,7 @@
                  (trace-as #f)
                  (focus-set (Set))
                  (attention-allocation *unspecified*)
+                 (jobs *unspecified*)
                  (maximum-iterations *unspecified*)
                  (complexity-penalty *unspecified*)
                  (jobs *unspecified*)
@@ -98,6 +99,7 @@
                  #:trace-as tas
                  #:focus-set fs
                  #:attention-allocation aa
+                 #:jobs jb
                  #:maximum-iterations mi
                  #:complexity-penalty cp
                  #:jobs jb
@@ -120,6 +122,11 @@
   aa: [optional, default=#f] Whether the atoms involved with the
       inference are restricted to the attentional focus.
 
+  jb: [optional, default=1] Number of jobs to run in parallel. Can
+      speed up reasoning. Note that this may alter the results, especially
+      for the forward chainer as the output of a rule application may depend
+      on the output of other rules.
+
   mi: [optional, default=100] Maximum number of iterations.
 
   cp: [optional, default=0] Complexity penalty. Controls breadth vs depth search.
@@ -127,11 +134,6 @@
       between breadth and depth. A negative value means more depth.
       Possible range is (-inf, +inf) but it's rarely necessary in practice
       to go outside of [-10, 10].
-
-  jb: [optional, default=1] Number of jobs to run in parallel. Can
-      speed up reasoning, note that this may alter the results, especially
-      for the forward chainer as the output of a rule application may depend
-      on the output of the other rules.
 
   res: [optional, default=#f] Whether exhausted sources should be
        retried. A source is exhausted if all its valid rules (so that at
