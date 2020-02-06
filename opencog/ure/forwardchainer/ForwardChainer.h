@@ -164,6 +164,16 @@ private:
 	unsigned _jobs;
 	unsigned _max_jobs;
 
+	void init(const Handle& source,
+	          const Handle& vardecl,
+	          const HandleSeq& focus_set);
+
+	void apply_all_rules();
+
+	void validate(const Handle& source);
+
+	void expand_meta_rules(int iteration);
+
 protected:
 	/**
 	 * choose next source to expand
@@ -173,7 +183,7 @@ protected:
 	 * Warning: it is not const because the source is gonna be modified
 	 * by keeping track of the rules applied to it.
 	 */
-	Source* select_source();
+	Source* select_source(int iteration);
 
 	/**
 	 * Get rules that unify with the source and that are not exhausted,
@@ -191,9 +201,9 @@ protected:
 	 *
 	 * TODO: move to ControlPolicy
 	 */
-	RuleProbabilityPair select_rule(const Handle& source);
-	RuleProbabilityPair select_rule(Source& source);
-	RuleProbabilityPair select_rule(const RuleSet& valid_rules);
+	RuleProbabilityPair select_rule(const Handle& source, int iteration);
+	RuleProbabilityPair select_rule(Source& source, int iteration);
+	RuleProbabilityPair select_rule(const RuleSet&, int iteration);
 
 	/**
 	 * Apply rule.
