@@ -24,7 +24,6 @@
 #ifndef _OPENCOG_FORWARDCHAINER_H_
 #define _OPENCOG_FORWARDCHAINER_H_
 
-#include <atomic>
 #include <mutex>
 // #include <shared_mutex>
 
@@ -146,9 +145,9 @@ private:
 	UREConfig _config;
 
 	// Current iteration
-	std::atomic<int> _iteration;
+	int _iteration;
 
-	std::atomic<bool> _search_focus_set;
+	bool _search_focus_set;
 
 	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _whole_mutex;
@@ -162,7 +161,7 @@ private:
 
 	FCStat _fcstat;
 
-	std::atomic<unsigned> _jobs;
+	unsigned _jobs;
 	unsigned _max_jobs;
 
 protected:
