@@ -38,7 +38,13 @@
 namespace opencog {
 
 class Rule;
-class RuleSet : public std::set<Rule>
+
+/**
+ * The rule set is in fact a sorted vector, as to be able to change
+ * some features of the rules such as their exhausted flag without
+ * having to resort or rebuild the set.
+ */
+class RuleSet : public std::vector<Rule>
 {
 public:
 	/**
@@ -52,6 +58,24 @@ public:
 	 * are used in control rules.
 	 */
 	HandleSet aliases() const;
+
+	/**
+	 * Insert rule in the rule set if no other alpha-equivalent rule is
+	 * in it.
+	 *
+	 * Return true iff rule has been successfully inserted.
+	 */
+	bool insert(const Rule& rule);
+
+	/**
+	 * Insert a range of rules
+	 */
+	template<typename It>
+	void insert(It from, It to)
+	{
+		for (; from != to; ++from)
+			insert(*from);
+	}
 
 	std::string to_string(const std::string& indent=empty_string) const;
 	std::string to_short_string(const std::string& indent=empty_string) const;
@@ -115,6 +139,7 @@ public:
 	 */
 	Rule();
 	explicit Rule(const Handle& rule);
+	Rule(const Rule& rule);
 	Rule(const Handle& rule_alias, const Handle& rbs);
 	Rule(const Handle& rule_alias, const Handle& rule, const Handle& rbs);
 
@@ -134,6 +159,10 @@ public:
 	
 	// Comparison
 	bool operator==(const Rule& r) const;
+
+	// Assignment
+	Rule& operator=(const Rule& r);
+
 	/**
 	 * Order by weight, or if equal by handle value.
 	 */
@@ -266,6 +295,21 @@ public:
 	 */
 	Handle apply(AtomSpace& as) const;
 
+	/**
+	 * Set exhausted flag to true.
+	 */
+	void set_exhausted();
+
+	/**
+	 * Set exhausted flag to false.
+	 */
+	void reset_exhausted();
+
+	/**
+	 * Get exhausted flag.
+	 */
+	bool is_exhausted() const;
+
 	std::string to_string(const std::string& indent=empty_string) const;
 	std::string to_short_string(const std::string& indent=empty_string) const;
 
@@ -296,6 +340,12 @@ private:
 	// otherwise, if given the choice between several valid rules, the
 	// URE will always choose the one with the highest confidence.
 	TruthValuePtr _tv;
+
+	// True if the rule has already been applied.
+	bool _exhausted;
+
+	// NEXT TODO: subdivide in smaller and shared mutexes
+	mutable std::mutex _mutex;
 
 	// Return a copy of the rule with the variables alpha-converted
 	// into random variable names.

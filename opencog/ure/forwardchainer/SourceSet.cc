@@ -56,30 +56,44 @@ bool Source::operator<(const Source& other) const
 		             and content_based_handle_less()(vardecl, other.vardecl))));
 }
 
-void Source::insert_rule(const Rule& rule)
+bool Source::insert_rule(const Rule& rule)
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
-	rules.insert(rule);
-}
-
-void Source::reset_exhausted()
-{
-	std::lock_guard<std::mutex> lock(_whole_mutex);
-	exhausted = false;
-	rules.clear();
+	std::lock_guard<std::mutex> lock(_mutex);
+	return rules.insert(rule);
 }
 
 void Source::set_exhausted()
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	exhausted = true;
 }
 
-bool Source::is_rule_exhausted(const Rule& pos_rule) const
+void Source::reset_exhausted()
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
-	for (const Rule& rule : rules)
-		if (pos_rule.is_alpha_equivalent(rule) /* TODO and rule.is_exhausted() */)
+	std::lock_guard<std::mutex> lock(_mutex);
+	exhausted = false;
+	rules.clear();
+}
+
+bool Source::is_exhausted() const
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	return exhausted;
+}
+
+void Source::set_rule_exhausted(const Rule& rule)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	for (Rule& r : rules)
+		if (rule.is_alpha_equivalent(r))
+			r.set_exhausted();
+}
+
+bool Source::is_rule_exhausted(const Rule& rule) const
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	for (const Rule& r : rules)
+		if (rule.is_alpha_equivalent(r) and r.is_exhausted())
 			return true;
 	return false;
 }
@@ -91,7 +105,7 @@ double Source::expand_complexity(double prob) const
 
 std::string Source::to_string(const std::string& indent) const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	std::stringstream ss;
 	ss << indent << "body:" << std::endl
 	   << oc_to_string(body, indent + oc_to_string_indent) << std::endl
@@ -126,16 +140,22 @@ SourceSet::SourceSet(const UREConfig& config,
 
 std::vector<double> SourceSet::get_weights() const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	std::vector<double> results;
 	for (const Source& src : sources)
 		results.push_back(get_weight(src));
 	return results;
 }
 
+void SourceSet::set_exhausted()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	exhausted = true;
+}
+
 void SourceSet::reset_exhausted()
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	if (sources.empty()) {
 		exhausted = true;
 		return;
@@ -146,9 +166,15 @@ void SourceSet::reset_exhausted()
 	exhausted = false;
 }
 
+bool SourceSet::is_exhausted() const
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	return exhausted;
+}
+
 void SourceSet::insert(const HandleSet& products, const Source& src, double prob)
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	const static Handle empty_variable_list = Handle(createVariableList(HandleSeq()));
 
 	// Calculate the complexity of the new sources
@@ -181,19 +207,19 @@ void SourceSet::insert(const HandleSet& products, const Source& src, double prob
 
 size_t SourceSet::size() const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	return sources.size();
 }
 
 bool SourceSet::empty() const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	return sources.empty();
 }
 
 std::string SourceSet::to_string(const std::string& indent) const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	return oc_to_string(sources, indent);
 }
 
@@ -204,7 +230,7 @@ double SourceSet::get_weight(const Source& src) const
 	// factor in the confidence of the source, as the higher the
 	// confidence of the source, the higher the confidence of the
 	// conclusion.
-	return src.exhausted ? 0.0 : complexity_factor(src);
+	return src.is_exhausted() ? 0.0 : complexity_factor(src);
 }
 
 double SourceSet::complexity_factor(const Source& src) const

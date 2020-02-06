@@ -69,14 +69,11 @@ public:
 	bool operator<(const Source& other) const;
 
 	/**
-	 * Insert rule in the rule set to remember it has been exhausted
+	 * Insert rule in the rule set to remember it is being
+	 * applied. Return true if insertion is successful (that is if no
+	 * alpha-equivalent rule was already there).
 	 */
-	void insert_rule(const Rule& rule);
-
-	/**
-	 * Set exhausted flag back to false, and erase tried rules
-	 */
-	void reset_exhausted();
+	bool insert_rule(const Rule& rule);
 
 	/**
 	 * Set exhausted flag to true
@@ -84,7 +81,22 @@ public:
 	void set_exhausted();
 
 	/**
-	 * Check if the given rule is has been tried already
+	 * Set exhausted flag back to false, and erase tried rules
+	 */
+	void reset_exhausted();
+
+	/**
+	 * Get exhausted flag
+	 */
+	bool is_exhausted() const;
+
+	/**
+	 * Set the exhausted flag of that rule to true
+	 */
+	void set_rule_exhausted(const Rule& rule);
+
+	/**
+	 * Check if the given rule has been tried
 	 */
 	bool is_rule_exhausted(const Rule& rule) const;
 
@@ -110,14 +122,14 @@ public:
 	const double complexity_factor;
 
 	// True iff all rules that could expand the source have been tried
-	std::atomic<bool> exhausted;
+	bool exhausted;
 
-	// Rules so far applied to that source
+	// Rules so far attempted on that source
 	RuleSet rules;
 
 private:
 	// NEXT TODO: subdivide in smaller and shared mutexes
-	mutable std::mutex _whole_mutex;
+	mutable std::mutex _mutex;
 };
 
 /**
@@ -139,10 +151,20 @@ public:
 	std::vector<double> get_weights() const;
 
 	/**
+	 * Set exhausted flag to true
+	 */
+	void set_exhausted();
+
+	/**
 	 * When new inference rules come in or we get to retry exhausted
 	 * sources, then reset exhausted flags.
 	 */
 	void reset_exhausted();
+
+	/**
+	 * Get exhausted flag
+	 */
+	bool is_exhausted() const;
 
 	/**
 	 * Insert produced sources from src into the population, by
@@ -178,7 +200,7 @@ private:
 	const UREConfig& _config;
 
 	// NEXT TODO: subdivide in smaller and shared mutexes
-	mutable std::mutex _whole_mutex;
+	mutable std::mutex _mutex;
 };
 
 std::string oc_to_string(const Source& source,

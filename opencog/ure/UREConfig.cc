@@ -173,7 +173,7 @@ void UREConfig::fetch_common_parameters(const Handle& rbs)
 		          "Please check rules in /atomspace/examples/ure for example.\n\n",
 		          rule_name->to_short_string().c_str());
 
-		_common_params.rules.emplace(rule_name, rbs);
+		_common_params.rules.insert(Rule(rule_name, rbs));
 	}
 
 	// Fetch maximum number of iterations

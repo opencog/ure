@@ -159,7 +159,7 @@ void ForwardChainer::do_step_rec()
 
 void ForwardChainer::do_step()
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	// std::lock_guard<std::mutex> lock(_whole_mutex);
 	int local_iteration = _iteration++;
 	ure_logger().debug() << "Iteration " << (local_iteration + 1)
 	                     << "/" << _config.get_maximum_iterations_str();
@@ -190,14 +190,24 @@ void ForwardChainer::do_step()
 		                   << " of success:" << std::endl << rule.to_string();
 	}
 
-	// Apply rule on source
-	HandleSet products = apply_rule(rule, *source);
+	if (source->insert_rule(rule)) {
+		// Apply rule on source
+		HandleSet products = apply_rule(rule);
 
-	// Insert the produced sources in the population of sources
-	_sources.insert(products, *source, prob);
+		// Insert the produced sources in the population of sources
+		_sources.insert(products, *source, prob);
 
-	// Save trace and results
-	_fcstat.add_inference_record(local_iteration, source->body, rule, products);
+		// The rule has been applied, we can set the exhausted flag
+		source->set_rule_exhausted(rule);
+
+		// Save trace and results
+		_fcstat.add_inference_record(local_iteration, source->body, rule, products);
+	} else {
+		LAZY_URE_LOG_DEBUG << "Rule " << rule.to_short_string()
+		                   << " is probably being applied on source "
+		                   << source->body->id_to_string()
+		                   << " in another thread. Abort iteration.";
+	}
 }
 
 bool ForwardChainer::termination()
@@ -206,7 +216,7 @@ bool ForwardChainer::termination()
 	std::string msg;
 
 	// Terminate if all sources have been tried
-	if (_sources.exhausted) {
+	if (_sources.is_exhausted()) {
 		msg = "all sources have been exhausted";
 		terminate = true;
 	}
@@ -253,6 +263,7 @@ HandleSet ForwardChainer::get_results_set() const
 
 Source* ForwardChainer::select_source()
 {
+	// TODO: refine mutex
 	std::unique_lock<std::mutex> lock(_part_mutex);
 
 	std::vector<double> weights = _sources.get_weights();
@@ -288,7 +299,7 @@ Source* ForwardChainer::select_source()
 			lock.unlock();
 			return select_source();
 		} else {
-			_sources.exhausted = true;
+			_sources.set_exhausted();
 			return nullptr;
 		}
 	}
@@ -300,7 +311,7 @@ Source* ForwardChainer::select_source()
 
 RuleSet ForwardChainer::get_valid_rules(const Source& source)
 {
-	std::lock_guard<std::mutex> lock(_rules_mutex); // TODO: use shared
+	std::lock_guard<std::mutex> lock(_rules_mutex); // TODO: refine
 
 	// Generate all valid rules
 	RuleSet valid_rules;
@@ -346,8 +357,6 @@ RuleProbabilityPair ForwardChainer::select_rule(const Handle& h)
 
 RuleProbabilityPair ForwardChainer::select_rule(Source& source)
 {
-	// std::lock_guard<std::mutex> lock(_part_mutex);
-
 	const RuleSet valid_rules = get_valid_rules(source);
 
 	// Log valid rules
@@ -363,7 +372,7 @@ RuleProbabilityPair ForwardChainer::select_rule(Source& source)
 
 	if (valid_rules.empty()) {
 		source.set_exhausted();
-		return {Rule(), 0.0};
+		return RuleProbabilityPair{Rule(), 0.0};
 	}
 
 	return select_rule(valid_rules);
@@ -382,10 +391,10 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules)
 	// Log the distribution
 	if (ure_logger().is_debug_enabled()) {
 		std::stringstream ss;
-		ss << "Rule weights:" << std::endl;
+		ss << "Rule weights:";
 		size_t i = 0;
 		for (const Rule& rule : valid_rules) {
-			ss << weights[i] << " " << rule.get_name() << std::endl;
+			ss << std::endl << weights[i] << " " << rule.get_name();
 			i++;
 		}
 		ure_logger().debug() << ss.str();
@@ -399,14 +408,7 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules)
 	// the objective (required to calculate its complexity)
 	double prob = BetaDistribution(selected_rule.get_tv()).mean();
 
-	return {selected_rule, prob};
-}
-
-HandleSet ForwardChainer::apply_rule(const Rule& rule, Source& source)
-{
-	// Keep track of rule application to not do it again, and apply rule
-	source.insert_rule(rule);
-	return apply_rule(rule);
+	return RuleProbabilityPair{selected_rule, prob};
 }
 
 HandleSet ForwardChainer::apply_rule(const Rule& rule)

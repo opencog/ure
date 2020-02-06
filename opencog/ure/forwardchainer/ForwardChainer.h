@@ -177,7 +177,8 @@ protected:
 	Source* select_source();
 
 	/**
-	 * Get rules that unify with the source
+	 * Get rules that unify with the source and that are not exhausted,
+	 * which include rules currently being run.
 	 */
 	RuleSet get_valid_rules(const Source& source);
 
@@ -198,7 +199,6 @@ protected:
 	/**
 	 * Apply rule.
 	 */
-	HandleSet apply_rule(const Rule& rule, Source& source);
 	HandleSet apply_rule(const Rule& rule);
 
 	RuleSet _rules; /* loaded rules */
