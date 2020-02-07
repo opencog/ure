@@ -128,7 +128,7 @@ void ForwardChainer::do_chain()
 		ure_logger().set_thread_id_flag(true);
 
 	// Call do_step till termination
-	do_step_rec();
+	do_steps();
 
 	// Restore logging thread ID flag
 	ure_logger().set_thread_id_flag(prev_thread_id);
@@ -146,61 +146,62 @@ void ForwardChainer::do_step_rec()
 		if ((_jobs + 1) < (unsigned)_config.get_jobs()) {
 			auto policy = std::launch::async;
 			_jobs++;
-			auto ft = std::async(policy, [&]() { do_step(); });
+			auto ft = std::async(policy, [&]() { do_step(0); });
 			do_step_rec();
 			ft.wait();
 			_jobs--;
 		} else {
-			do_step();
+			do_step(0);
 			do_step_rec();
 		}
 	}
 }
 
-void ForwardChainer::do_step()
+void ForwardChainer::do_steps()
 {
-	// std::lock_guard<std::mutex> lock(_whole_mutex);
-	int local_iteration = _iteration++;
-	int lipo = local_iteration + 1;
-	ure_logger().debug() << "[Iteration " << lipo << "] "
-	                     << "Start iteration (" << lipo
+	while (not termination()) {
+		do_step(_iteration++);
+	}
+}
+
+void ForwardChainer::do_step(int iteration)
+{
+	int lipo = iteration + 1;
+	std::string msgprfx = std::string("[Iteration ") + std::to_string(lipo) + "] ";
+	ure_logger().debug() << msgprfx << "Start iteration (" << lipo
 	                     << "/" << _config.get_maximum_iterations_str() << ")";
 
 	// Expand meta rules. This should probably be done on-the-fly in
 	// the select_rule method, but for now it's here
-	expand_meta_rules(lipo);
+	expand_meta_rules(msgprfx);
 
 	// Select source
-	Source* source = select_source(lipo);
+	Source* source = select_source(msgprfx);
 	if (source) {
-		LAZY_URE_LOG_DEBUG << "[Iteration " << lipo << "] "
-		                   << "Selected source:" << std::endl
+		LAZY_URE_LOG_DEBUG << msgprfx << "Selected source:" << std::endl
 		                   << source->to_string();
 	} else {
-		LAZY_URE_LOG_DEBUG << "[Iteration " << lipo << "] "
-		                   << "No source selected, abort iteration";
+		LAZY_URE_LOG_DEBUG << msgprfx << "No source selected, abort iteration";
 		return;
 	}
 
 	// Select rule
-	RuleProbabilityPair rule_prob = select_rule(*source, lipo);
+	RuleProbabilityPair rule_prob = select_rule(*source, msgprfx);
 	const Rule& rule = rule_prob.first;
 	double prob(rule_prob.second);
 	if (not rule.is_valid()) {
-		ure_logger().debug() << "[Iteration " << lipo << "] "
-		                     << "No selected rule, abort iteration";
+		ure_logger().debug() << msgprfx << "No selected rule, abort iteration";
 		return;
 	} else {
-		LAZY_URE_LOG_DEBUG << "[Iteration " << lipo << "] "
-		                   << "Selected rule, with probability " << prob
+		LAZY_URE_LOG_DEBUG << msgprfx << "Selected rule, with probability " << prob
 		                   << " of success:" << std::endl << rule.to_string();
 	}
 
 	if (source->insert_rule(rule)) {
 		// Apply rule on source
 		HandleSet products = apply_rule(rule);
-		LAZY_URE_LOG_DEBUG << "[Iteration " << lipo << "] "
-		                   << "Results:" << std::endl << oc_to_string(products);
+		LAZY_URE_LOG_DEBUG << msgprfx << "Results:" << std::endl
+		                   << oc_to_string(products);
 
 		// Insert the produced sources in the population of sources
 		_sources.insert(products, *source, prob);
@@ -209,10 +210,9 @@ void ForwardChainer::do_step()
 		source->set_rule_exhausted(rule);
 
 		// Save trace and results
-		_fcstat.add_inference_record(local_iteration, source->body, rule, products);
+		_fcstat.add_inference_record(iteration, source->body, rule, products);
 	} else {
-		LAZY_URE_LOG_DEBUG << "[Iteration " << lipo << "] "
-		                   << "Rule " << rule.to_short_string()
+		LAZY_URE_LOG_DEBUG << msgprfx << "Rule " << rule.to_short_string()
 		                   << " is probably being applied on source "
 		                   << source->body->id_to_string()
 		                   << " in another thread. Abort iteration.";
@@ -270,7 +270,7 @@ HandleSet ForwardChainer::get_results_set() const
 	return _fcstat.get_all_products();
 }
 
-Source* ForwardChainer::select_source(int iteration)
+Source* ForwardChainer::select_source(const std::string& msgprfx)
 {
 	// TODO: refine mutex
 	std::unique_lock<std::mutex> lock(_part_mutex);
@@ -291,8 +291,7 @@ Source* ForwardChainer::select_source(int iteration)
 				}
 			}
 		}
-		LAZY_URE_LOG_DEBUG  << "[Iteration " << iteration << "] "
-		                    << "Positively weighted sources ("
+		LAZY_URE_LOG_DEBUG  << msgprfx << "Positively weighted sources ("
 		                    << wi << "/" << weights.size() << ")";
 		LAZY_URE_LOG_FINE << wsrc_ss.str();
 	}
@@ -301,15 +300,14 @@ Source* ForwardChainer::select_source(int iteration)
 	double total = boost::accumulate(weights, 0.0);
 
 	if (total == 0.0) {
-		ure_logger().debug() << "[Iteration " << iteration << "] "
-		                     << "All sources have been exhausted";
+		ure_logger().debug() << msgprfx << "All sources have been exhausted";
 		if (_config.get_retry_exhausted_sources()) {
-			ure_logger().debug() << "[Iteration " << iteration << "] "
+			ure_logger().debug() << msgprfx
 			                     << "Reset all exhausted flags to retry them";
 			_sources.reset_exhausted();
 			// Try again
 			lock.unlock();
-			return select_source(iteration);
+			return select_source(msgprfx);
 		} else {
 			_sources.set_exhausted();
 			return nullptr;
@@ -344,13 +342,13 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 			// Insert the unaltered rule, which will have the effect of
 			// applying to all sources, not just this one. Convenient for
 			// quickly achieving inference closure albeit expensive.
-			if (not unified_rules.empty() and not source.is_exhausted(rule)) {
+			if (not unified_rules.empty() and not source.is_rule_exhausted(rule)) {
 				une_rules.insert(rule);
 			}
 		} else {
 			// Insert all specializations obtained from the unificiation
 			for (const auto& ur : unified_rules) {
-				if (not source.is_exhausted(ur)) {
+				if (not source.is_rule_exhausted(ur)) {
 					une_rules.insert(ur);
 				}
 			}
@@ -361,13 +359,15 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 	return valid_rules;
 }
 
-RuleProbabilityPair ForwardChainer::select_rule(const Handle& h, int iteration)
+RuleProbabilityPair ForwardChainer::select_rule(const Handle& h,
+                                                const std::string& msgprfx)
 {
 	Source src(h);
-	return select_rule(src, iteration);
+	return select_rule(src, msgprfx);
 }
 
-RuleProbabilityPair ForwardChainer::select_rule(Source& source, int iteration)
+RuleProbabilityPair ForwardChainer::select_rule(Source& source,
+                                                const std::string& msgprfx)
 {
 	const RuleSet valid_rules = get_valid_rules(source);
 
@@ -375,11 +375,9 @@ RuleProbabilityPair ForwardChainer::select_rule(Source& source, int iteration)
 	if (ure_logger().is_debug_enabled()) {
 		std::stringstream ss;
 		if (valid_rules.empty())
-			ss << "[Iteration " << iteration << "] "
-			   << "No valid rule";
+			ss << msgprfx << "No valid rule";
 		else
-			ss << "[Iteration " << iteration << "] "
-			   << "The following rules are valid:" << std::endl
+			ss << msgprfx << "The following rules are valid:" << std::endl
 			   << valid_rules.to_short_string();
 		LAZY_URE_LOG_DEBUG << ss.str();
 	}
@@ -389,11 +387,11 @@ RuleProbabilityPair ForwardChainer::select_rule(Source& source, int iteration)
 		return RuleProbabilityPair{Rule(), 0.0};
 	}
 
-	return select_rule(valid_rules, iteration);
+	return select_rule(valid_rules, msgprfx);
 };
 
 RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules,
-                                                int iteration)
+                                                const std::string& msgprfx)
 {
 	// Build vector of all valid truth values
 	TruthValueSeq tvs;
@@ -406,7 +404,7 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules,
 	// Log the distribution
 	if (ure_logger().is_debug_enabled()) {
 		std::stringstream ss;
-		ss << "[Iteration " << iteration << "] " << "Rule weights:";
+		ss << msgprfx << "Rule weights:";
 		size_t i = 0;
 		for (const Rule& rule : valid_rules) {
 			ss << std::endl << weights[i] << " " << rule.get_name();
@@ -477,7 +475,7 @@ void ForwardChainer::validate(const Handle& source)
 		throw RuntimeException(TRACE_INFO, "ForwardChainer - Invalid source.");
 }
 
-void ForwardChainer::expand_meta_rules(int iteration)
+void ForwardChainer::expand_meta_rules(const std::string& msgprfx)
 {
 	std::lock_guard<std::mutex> lock(_rules_mutex);
 	// This is kinda of hack before meta rules are fully supported by
@@ -486,8 +484,7 @@ void ForwardChainer::expand_meta_rules(int iteration)
 	_rules.expand_meta_rules(_kb_as);
 
 	if (rules_size != _rules.size()) {
-		ure_logger().debug() << "[Iteration " << iteration << "] "
-		                     << "The rule set has gone from "
+		ure_logger().debug() << msgprfx << "The rule set has gone from "
 		                     << rules_size << " rules to " << _rules.size();
 	}
 }

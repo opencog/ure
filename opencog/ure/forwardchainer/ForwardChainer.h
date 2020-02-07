@@ -101,9 +101,15 @@ public:
 	void do_step_rec();
 
 	/**
-	 * Perform a single forward chaining inference step.
+	 * run steps until termination criteria are met.
 	 */
-	void do_step();
+	void do_steps();
+
+	/**
+	 * Perform a single forward chaining inference step on the given
+	 * iteration.
+	 */
+	void do_step(int iteration);
 
 	/**
 	 * @return true if the termination criteria have been met.
@@ -127,7 +133,52 @@ private:
 
 	void validate(const Handle& source);
 
-	void expand_meta_rules();
+	/**
+	 * Expand all meta rules into mesa rules.
+	 *
+	 * @param msgprfx is a prefix to prepend before each log message.
+	 */
+	void expand_meta_rules(const std::string& msgprfx);
+
+	/**
+	 * choose next source to expand
+	 *
+	 * @return  A Source to expand
+	 *
+	 * Warning: it is not const because the source is gonna be modified
+	 * by keeping track of the rules applied to it.
+	 */
+	Source* select_source(const std::string& msgprfx);
+
+	/**
+	 * Get rules that unify with the source and that are not exhausted,
+	 * which include rules currently being run.
+	 */
+	RuleSet get_valid_rules(const Source& source);
+
+	/**
+	 * Choose an applicable rules from the rule base by selecting
+	 * rules whose premise structurally matches with the source.
+	 *
+	 * If no rule can be chosen return invalid rule.
+	 *
+	 * @return  A rule that in which @param source could ground.
+	 *
+	 * TODO: move to ControlPolicy
+	 */
+	RuleProbabilityPair select_rule(const Handle& source,
+	                                const std::string& msgprfx="");
+	RuleProbabilityPair select_rule(Source& source,
+	                                const std::string& msgprfx="");
+	RuleProbabilityPair select_rule(const RuleSet&,
+	                                const std::string& msgprfx="");
+
+	/**
+	 * Apply rule.
+	 */
+	HandleSet apply_rule(const Rule& rule);
+
+	RuleSet _rules; /* loaded rules */
 
 	// Knowledge base atomspace
 	AtomSpace& _kb_as;
@@ -163,54 +214,6 @@ private:
 
 	unsigned _jobs;
 	unsigned _max_jobs;
-
-	void init(const Handle& source,
-	          const Handle& vardecl,
-	          const HandleSeq& focus_set);
-
-	void apply_all_rules();
-
-	void validate(const Handle& source);
-
-	void expand_meta_rules(int iteration);
-
-protected:
-	/**
-	 * choose next source to expand
-	 *
-	 * @return  A Source to expand
-	 *
-	 * Warning: it is not const because the source is gonna be modified
-	 * by keeping track of the rules applied to it.
-	 */
-	Source* select_source(int iteration);
-
-	/**
-	 * Get rules that unify with the source and that are not exhausted,
-	 * which include rules currently being run.
-	 */
-	RuleSet get_valid_rules(const Source& source);
-
-	/**
-	 * Choose an applicable rules from the rule base by selecting
-	 * rules whose premise structurally matches with the source.
-	 *
-	 * If no rule can be chosen return invalid rule.
-	 *
-	 * @return  A rule that in which @param source could ground.
-	 *
-	 * TODO: move to ControlPolicy
-	 */
-	RuleProbabilityPair select_rule(const Handle& source, int iteration);
-	RuleProbabilityPair select_rule(Source& source, int iteration);
-	RuleProbabilityPair select_rule(const RuleSet&, int iteration);
-
-	/**
-	 * Apply rule.
-	 */
-	HandleSet apply_rule(const Rule& rule);
-
-	RuleSet _rules; /* loaded rules */
 };
 
 } // ~namespace opencog

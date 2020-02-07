@@ -85,7 +85,6 @@
                  (trace-as #f)
                  (focus-set (Set))
                  (attention-allocation *unspecified*)
-                 (jobs *unspecified*)
                  (maximum-iterations *unspecified*)
                  (complexity-penalty *unspecified*)
                  (jobs *unspecified*)
@@ -99,7 +98,6 @@
                  #:trace-as tas
                  #:focus-set fs
                  #:attention-allocation aa
-                 #:jobs jb
                  #:maximum-iterations mi
                  #:complexity-penalty cp
                  #:jobs jb
