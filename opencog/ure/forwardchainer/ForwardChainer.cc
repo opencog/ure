@@ -24,6 +24,7 @@
 #include <future>
 
 #include <opencog/util/random.h>
+#include <opencog/util/pool.h>
 #include <opencog/atoms/core/VariableList.h>
 #include <opencog/atoms/core/FindUtils.h>
 #include <opencog/atoms/pattern/BindLink.h>
@@ -159,6 +160,8 @@ void ForwardChainer::do_step_rec()
 
 void ForwardChainer::do_steps()
 {
+	opencog::pool<int> wrkpool;
+
 	while (not termination()) {
 		do_step(_iteration++);
 	}
