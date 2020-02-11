@@ -37,6 +37,7 @@ const std::string UREConfig::max_iter_name = "URE:maximum-iterations";
 const std::string UREConfig::complexity_penalty_name = "URE:complexity-penalty";
 const std::string UREConfig::jobs_name = "URE:jobs";
 const std::string UREConfig::fc_retry_exhausted_sources_name = "URE:FC:retry-exhausted-sources";
+const std::string UREConfig::fc_full_rule_application_name = "URE:FC:full-rule-application";
 const std::string UREConfig::bc_max_bit_size_name = "URE:BC:maximum-bit-size";
 const std::string UREConfig::bc_mm_complexity_penalty_name = "URE:BC:MM:complexity-penalty";
 const std::string UREConfig::bc_mm_compressiveness_name = "URE:BC:MM:compressiveness";
@@ -82,6 +83,11 @@ bool UREConfig::get_retry_exhausted_sources() const
 	return _fc_params.retry_exhausted_sources;
 }
 
+bool UREConfig::get_full_rule_application() const
+{
+	return _fc_params.full_rule_application;
+}
+
 double UREConfig::get_max_bit_size() const
 {
 	return _bc_params.max_bit_size;
@@ -122,6 +128,11 @@ void UREConfig::set_jobs(int j)
 void UREConfig::set_retry_exhausted_sources(bool rs)
 {
 	_fc_params.retry_exhausted_sources = rs;
+}
+
+void UREConfig::set_full_rule_application(bool rs)
+{
+	_fc_params.full_rule_application = rs;
 }
 
 void UREConfig::set_mm_complexity_penalty(double mm_cp)
@@ -181,6 +192,8 @@ void UREConfig::fetch_fc_parameters(const Handle& rbs)
 	// Fetch retry exhausted sources parameter
 	_fc_params.retry_exhausted_sources =
 		fetch_bool_param(fc_retry_exhausted_sources_name, rbs, false);
+	_fc_params.full_rule_application =
+		fetch_bool_param(fc_full_rule_application_name, rbs, false);
 }
 
 void UREConfig::fetch_bc_parameters(const Handle& rbs)

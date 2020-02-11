@@ -23,6 +23,7 @@
 ;; -- ure-set-complexity-penalty -- Set the URE:complexity-penalty parameter
 ;; -- ure-set-jobs -- Set the URE:jobs parameter
 ;; -- ure-set-fc-retry-exhausted-sources -- Set the URE:FC:retry-exhausted-sources parameter
+;; -- ure-set-fc-full-rule-application -- Set the URE:FC:full-rule-application parameter
 ;; -- ure-set-bc-maximum-bit-size -- Set the URE:BC:maximum-bit-size
 ;; -- ure-set-bc-mm-complexity-penalty -- Set the URE:BC:MM:complexity-penalty
 ;; -- ure-set-bc-mm-compressiveness -- Set the URE:BC:MM:compressiveness
@@ -83,7 +84,8 @@
                  (maximum-iterations *unspecified*)
                  (complexity-penalty *unspecified*)
                  (jobs *unspecified*)
-                 (fc-retry-exhausted-sources *unspecified*))
+                 (fc-retry-exhausted-sources *unspecified*)
+                 (fc-full-rule-application *unspecified*))
 "
   Forward Chainer call.
 
@@ -95,7 +97,8 @@
                  #:maximum-iterations mi
                  #:complexity-penalty cp
                  #:jobs jb
-                 #:fc-retry-exhausted-sources res)
+                 #:fc-retry-exhausted-sources res
+                 #:fc-full-rule-application fra)
 
   rbs: ConceptNode representing a rulebase.
 
@@ -133,6 +136,10 @@
        atomspace during forward chaining, the same source may yield different
        results as time goes, thus this option.
 
+  fra: [optional, default=#f] Whether the selected rule is applied over the
+       entire atomspace, not just the source. This can be convienient if
+       the goal is to rapidly achieve inference closure.
+
   Note that the defaults of the optional arguments are not determined
   here (although they attempt to be documented here).  That is the case
   in order not to overwrite existing parameters set by
@@ -151,11 +158,13 @@
       (ure-set-jobs rbs jobs))
   (if (not (unspecified? fc-retry-exhausted-sources))
       (ure-set-fc-retry-exhausted-sources rbs fc-retry-exhausted-sources))
+  (if (not (unspecified? fc-full-rule-application))
+      (ure-set-fc-full-rule-application rbs fc-full-rule-application))
 
   ;; Defined optional atomspaces and call the forward chainer
   (let* ((trace-enabled (cog-atomspace? trace-as))
          (tas (if trace-enabled trace-as (cog-atomspace))))
-  (cog-mandatory-args-fc rbs source vardecl trace-enabled tas focus-set)))
+    (cog-mandatory-args-fc rbs source vardecl trace-enabled tas focus-set)))
 
 (define* (cog-bc rbs target
                  #:key
@@ -630,6 +639,19 @@
 "
   (ure-set-fuzzy-bool-parameter rbs "URE:FC:retry-exhausted-sources" value))
 
+(define (ure-set-fc-full-rule-application rbs value)
+"
+  Set the URE:FC:full-rule-application parameter of a given RBS
+
+  EvaluationLink (stv value 1)
+    PredicateNode \"URE:FC:full-rule-application\"
+    rbs
+
+  If the provided value is a boolean, then it is automatically
+  converted into tv.
+"
+  (ure-set-fuzzy-bool-parameter rbs "URE:FC:full-rule-application" value))
+
 (define (ure-set-bc-maximum-bit-size rbs value)
 "
   Set the URE:BC:maximum-bit-size parameter of a given RBS
@@ -914,6 +936,7 @@
           ure-set-complexity-penalty
           ure-set-jobs
           ure-set-fc-retry-exhausted-sources
+          ure-set-fc-full-rule-application
           ure-set-bc-maximum-bit-size
           ure-set-bc-mm-complexity-penalty
           ure-set-bc-mm-compressiveness

@@ -313,23 +313,21 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 
 		// Only insert unexhausted rules for this source
 		RuleSet une_rules;
-#define RULE_SPECIALIZATION 1   // TODO: turn that into user option
-		if (RULE_SPECIALIZATION) {
-			// Insert all specializations obtained from the unificiation
-			for (const auto& ur : unified_rules) {
-				if (not source.is_exhausted(ur)) {
-					une_rules.insert(ur);
-				}
-			}
-		} else {
+		if (_config.get_full_rule_application()) {
 			// Insert the unaltered rule, which will have the effect of
 			// applying to all sources, not just this one. Convenient for
 			// quickly achieving inference closure albeit expensive.
 			if (not unified_rules.empty() and not source.is_exhausted(rule)) {
 				une_rules.insert(rule);
 			}
+		} else {
+			// Insert all specializations obtained from the unificiation
+			for (const auto& ur : unified_rules) {
+				if (not source.is_exhausted(ur)) {
+					une_rules.insert(ur);
+				}
+			}
 		}
-#undef RULE_SPECIALIZATION
 
 		valid_rules.insert(une_rules.begin(), une_rules.end());
 	}
