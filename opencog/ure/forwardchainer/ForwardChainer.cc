@@ -254,13 +254,15 @@ Source* ForwardChainer::select_source()
 		for (size_t i = 0; i < weights.size(); i++) {
 			if (0 < weights[i]) {
 				wi++;
-				wsrc_ss << std::endl << weights[i] << " "
-				        << _sources.sources[i].body->id_to_string();
+				if (ure_logger().is_fine_enabled()) {
+					wsrc_ss << std::endl << weights[i] << " "
+					        << _sources.sources[i].body->id_to_string();
+				}
 			}
 		}
-		std::stringstream ss;
-		ss << "Positively weighted sources (" << wi << "/" << weights.size() << "):";
-		ure_logger().debug() << ss.str() << wsrc_ss.str();
+		LAZY_URE_LOG_DEBUG << "Positively weighted sources ("
+		                   << wi << "/" << weights.size() << ")";
+		LAZY_URE_LOG_FINE << ":" << std::endl << wsrc_ss.str();
 	}
 
 	// Calculate the total weight to be sure it's greater than zero
