@@ -10,10 +10,11 @@ cdef extern from "opencog/ure/forwardchainer/ForwardChainer.h" namespace "openco
                         const cHandle& rbs,
                         const cHandle& source,
                         const cHandle& vardecl,
+                        cAtomSpace* trace_as,
                         const vector[cHandle]& focus_set) except +
 
         void do_chain()
-        set[cHandle] get_chaining_result() const
+        cHandle get_results() const
 
 
 cdef extern from "opencog/ure/backwardchainer/Fitness.h" namespace "opencog::BITNodeFitness":

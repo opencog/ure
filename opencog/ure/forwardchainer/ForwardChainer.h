@@ -50,89 +50,6 @@ typedef std::pair<Rule, double> RuleProbabilityPair;
 
 class ForwardChainer
 {
-private:
-	friend class ::ForwardChainerUTest;
-
-	// Knowledge base atomspace
-	AtomSpace& _kb_as;
-
-	// Rule base atomspace (can be the same as _kb_as)
-	AtomSpace& _rb_as;
-
-	// The focus set is copied into this atomspace; during chaining,
-	// the pattern matcher is applied only to this atomspace.  This
-	// is the primary mechanism by which chaining is restricted to
-	// the focus set.  This is effective, but not very efficient;
-	// perhaps there is some better mechanism?
-	AtomSpace _focus_set_as;
-
-	UREConfig _config;
-
-	// Current iteration
-	std::atomic<int> _iteration;
-
-	std::atomic<bool> _search_focus_set;
-
-	// NEXT TODO: subdivide in smaller and shared mutexes
-	mutable std::mutex _whole_mutex;
-	mutable std::mutex _part_mutex;
-
-	// Population of sources to expand forward
-	SourceSet _sources;
-
-	FCStat _fcstat;
-
-	std::atomic<unsigned> _jobs;
-	unsigned _max_jobs;
-
-	void init(const Handle& source,
-	          const Handle& vardecl,
-	          const HandleSeq& focus_set);
-
-	void apply_all_rules();
-
-	void validate(const Handle& source);
-
-	void expand_meta_rules();
-
-protected:
-	RuleSet _rules; /* loaded rules */
-
-	/**
-	 * choose next source to expand
-	 *
-	 * @return  A Source to expand
-	 *
-	 * Warning: it is not const because the source is gonna be modified
-	 * by keeping track of the rules applied to it.
-	 */
-	Source* select_source();
-
-	/**
-	 * Get rules that unify with the source
-	 */
-	RuleSet get_valid_rules(const Source& source);
-
-	/**
-	 * Choose an applicable rules from the rule base by selecting
-	 * rules whose premise structurally matches with the source.
-	 *
-	 * If no rule can be chosen return invalid rule.
-	 *
-	 * @return  A rule that in which @param source could ground.
-	 *
-	 * TODO: move to ControlPolicy
-	 */
-	RuleProbabilityPair select_rule(const Handle& source);
-	RuleProbabilityPair select_rule(Source& source);
-	RuleProbabilityPair select_rule(const RuleSet& valid_rules);
-
-	/**
-	 * Apply rule.
-	 */
-	HandleSet apply_rule(const Rule& rule, Source& source);
-	HandleSet apply_rule(const Rule& rule);
-
 public:
 	/**
 	 * Ctor.
@@ -150,6 +67,7 @@ public:
 	               const Handle& rbs,
 	               const Handle& source,
 	               const Handle& vardecl=Handle::UNDEFINED,
+	               AtomSpace* trace_as=nullptr,
 	               const HandleSeq& focus_set=HandleSeq());
 
 	/**
@@ -160,6 +78,7 @@ public:
 	               const Handle& rbs,
 	               const Handle& source,
 	               const Handle& vardecl=Handle::UNDEFINED,
+	               AtomSpace* trace_as=nullptr,
 	               const HandleSeq& focus_set=HandleSeq());
 	~ForwardChainer();
 
@@ -195,7 +114,91 @@ public:
 	/**
 	 * @return all results in their order of inference.
 	 */
-	HandleSet get_chaining_result();
+	Handle get_results() const;
+	HandleSet get_results_set() const;
+
+private:
+	friend class ::ForwardChainerUTest;
+
+	void init(const Handle& source,
+	          const Handle& vardecl,
+	          const HandleSeq& focus_set);
+
+	void apply_all_rules();
+
+	void validate(const Handle& source);
+
+	void expand_meta_rules();
+
+	// Knowledge base atomspace
+	AtomSpace& _kb_as;
+
+	// Rule base atomspace (can be the same as _kb_as)
+	AtomSpace& _rb_as;
+
+	// The focus set is copied into this atomspace; during chaining,
+	// the pattern matcher is applied only to this atomspace.  This
+	// is the primary mechanism by which chaining is restricted to
+	// the focus set.  This is effective, but not very efficient;
+	// perhaps there is some better mechanism?
+	AtomSpace _focus_set_as;
+
+	UREConfig _config;
+
+	// Current iteration
+	std::atomic<int> _iteration;
+
+	std::atomic<bool> _search_focus_set;
+
+	// NEXT TODO: subdivide in smaller and shared mutexes
+	mutable std::mutex _whole_mutex;
+	mutable std::mutex _part_mutex;
+
+	// Population of sources to expand forward
+	SourceSet _sources;
+
+	FCStat _fcstat;
+
+	std::atomic<unsigned> _jobs;
+	unsigned _max_jobs;
+
+protected:
+	/**
+	 * choose next source to expand
+	 *
+	 * @return  A Source to expand
+	 *
+	 * Warning: it is not const because the source is gonna be modified
+	 * by keeping track of the rules applied to it.
+	 */
+	Source* select_source();
+
+	/**
+	 * Get rules that unify with the source
+	 */
+	RuleSet get_valid_rules(const Source& source);
+
+	/**
+	 * Choose an applicable rules from the rule base by selecting
+	 * rules whose premise structurally matches with the source.
+	 *
+	 * If no rule can be chosen return invalid rule.
+	 *
+	 * @return  A rule that in which @param source could ground.
+	 *
+	 * TODO: move to ControlPolicy
+	 */
+	RuleProbabilityPair select_rule(const Handle& source);
+	RuleProbabilityPair select_rule(Source& source);
+	RuleProbabilityPair select_rule(const RuleSet& valid_rules);
+
+	/**
+	 * Apply rule.
+	 */
+	HandleSet apply_rule(const Rule& rule, Source& source);
+	HandleSet apply_rule(const Rule& rule);
+
+	RuleSet _rules; /* loaded rules */
 };
 
 } // ~namespace opencog

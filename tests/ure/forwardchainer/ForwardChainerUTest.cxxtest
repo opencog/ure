@@ -151,7 +151,7 @@ void ForwardChainerUTest::test_deduction()
 	fc.do_chain();
 
 	// Collect the results
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 
 	// Check that AC is in the results
 	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
@@ -190,7 +190,7 @@ void ForwardChainerUTest::test_deduction_neg_max_iter()
 	fc.do_chain();
 
 	// Collect the results
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 
 	// Check that AC is in the results
 	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
@@ -219,7 +219,7 @@ void ForwardChainerUTest::test_fritz_green()
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	Handle Fritz_green = al(INHERITANCE_LINK, Fritz, green);
 
 	logger().debug() << "results = " << oc_to_string(results);
@@ -252,7 +252,7 @@ void ForwardChainerUTest::test_tweety_not_green()
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	Handle Tweety_green = al(INHERITANCE_LINK, Tweety, green);
 
 	logger().debug() << "results = " << oc_to_string(results);
@@ -285,7 +285,7 @@ void ForwardChainerUTest::test_fritz_green_alt()
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	Handle Fritz_green = al(INHERITANCE_LINK, Fritz, green);
 
 	logger().debug() << "results = " << oc_to_string(results);
@@ -319,7 +319,7 @@ void ForwardChainerUTest::test_tweety_not_green_alt()
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	Handle Tweety_green = al(INHERITANCE_LINK, Tweety, green);
 
 	logger().debug() << "results = " << oc_to_string(results);
@@ -348,7 +348,7 @@ void ForwardChainerUTest::test_unsatisfied_premise(void)
 	fc.get_config().set_maximum_iterations(20);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	TS_ASSERT_EQUALS(results.size(), 0);
 }
 
@@ -369,7 +369,7 @@ void ForwardChainerUTest::test_negation_conflict()
 	fc.get_config().set_maximum_iterations(20);
 	fc.do_chain();
 
-	HandleSet resultSet = fc.get_chaining_result();
+	HandleSet resultSet = fc.get_results_set();
 	HandleSeq resultHandleSeq(resultSet.begin(), resultSet.end());
 	Handle results = al(SET_LINK, resultHandleSeq);
 
@@ -405,7 +405,7 @@ void ForwardChainerUTest::test_bindlink_no_vardecl()
 	fc.get_config().set_maximum_iterations(10);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 
 	logger().debug() << "results = " << oc_to_string(results);
 

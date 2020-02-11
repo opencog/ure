@@ -77,6 +77,7 @@
 (define* (cog-fc rbs source
                  #:key
                  (vardecl (List))
+                 (trace-as #f)
                  (focus-set (Set))
                  (attention-allocation *unspecified*)
                  (maximum-iterations *unspecified*)
@@ -88,6 +89,7 @@
 
   Usage: (cog-fc rbs source
                  #:vardecl vd
+                 #:trace-as tas
                  #:focus-set fs
                  #:attention-allocation aa
                  #:maximum-iterations mi
@@ -102,6 +104,8 @@
 
   vd: [optional] Variable declaration of the source (in case it has
       variables).
+
+  tas: [optional] AtomSpace to record the inference traces.
 
   fs: [optional] Focus set, a SetLink with all atoms to consider for
       forward chaining.
@@ -148,8 +152,10 @@
   (if (not (unspecified? fc-retry-exhausted-sources))
       (ure-set-fc-retry-exhausted-sources rbs fc-retry-exhausted-sources))
 
-  ;; Call the forward chainer
-  (cog-mandatory-args-fc rbs source vardecl focus-set))
+  ;; Defined optional atomspaces and call the forward chainer
+  (let* ((trace-enabled (cog-atomspace? trace-as))
+         (tas (if trace-enabled trace-as (cog-atomspace))))
+  (cog-mandatory-args-fc rbs source vardecl trace-enabled tas focus-set)))
 
 (define* (cog-bc rbs target
                  #:key

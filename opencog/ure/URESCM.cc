@@ -40,6 +40,7 @@ protected:
 	 * @param rbs          A node, holding the name of the rulebase.
 	 * @param source       The source atom with which to start the chaining.
 	 * @param vardecl      The variable declaration, if any, of the source.
+	 * @param trace_as     AtomSpace where to record the inference traces
 	 * @param focus_set    A SetLink containing the atoms to which forward
 	 *                     chaining will be applied.  If the set link is
 	 *                     empty, chaining will be invoked on the entire
@@ -50,6 +51,8 @@ protected:
 	Handle do_forward_chaining(Handle rbs,
 	                           Handle source,
 	                           Handle vardecl,
+	                           bool trace_enabled,
+	                           AtomSpace *trace_as,
 	                           Handle focus_set);
 
 	/**
@@ -118,6 +121,8 @@ void URESCM::init(void)
 Handle URESCM::do_forward_chaining(Handle rbs,
                                    Handle source,
                                    Handle vardecl,
+                                   bool trace_enabled,
+                                   AtomSpace *trace_as,
                                    Handle focus_set_h)
 {
 	AtomSpace *as = SchemeSmob::ss_get_env_as("cog-mandatory-args-fc");
@@ -127,6 +132,9 @@ Handle URESCM::do_forward_chaining(Handle rbs,
 	if (vardecl->get_type() == LIST_LINK)
 		vardecl = Handle::UNDEFINED;
 
+	if (not trace_enabled)
+		trace_as = nullptr;
+
 	if (focus_set_h->get_type() == SET_LINK)
 		focus_set = focus_set_h->getOutgoingSet();
 	else
@@ -134,11 +142,9 @@ Handle URESCM::do_forward_chaining(Handle rbs,
 			TRACE_INFO,
 			"URESCM::do_forward_chaining - focus set should be SET_LINK type!");
 
-	ForwardChainer fc(*as, rbs, source, vardecl, focus_set);
+	ForwardChainer fc(*as, rbs, source, vardecl, trace_as, focus_set);
 	fc.do_chain();
-	HandleSet result = fc.get_chaining_result();
-
-	return as->add_link(SET_LINK, HandleSeq(result.begin(), result.end()));
+	return fc.get_results();
 }
 
 Handle URESCM::do_backward_chaining(Handle rbs,

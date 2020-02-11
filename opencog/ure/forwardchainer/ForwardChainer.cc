@@ -43,12 +43,13 @@ ForwardChainer::ForwardChainer(AtomSpace& kb_as,
                                const Handle& rbs,
                                const Handle& source,
                                const Handle& vardecl,
+                               AtomSpace* trace_as,
                                const HandleSeq& focus_set)
 	: _kb_as(kb_as),
 	  _rb_as(rb_as),
 	  _config(rb_as, rbs),
 	  _sources(_config, source, vardecl),
-	  _fcstat(kb_as)
+	  _fcstat(trace_as)
 {
 	init(source, vardecl, focus_set);
 }
@@ -57,10 +58,11 @@ ForwardChainer::ForwardChainer(AtomSpace& kb_as,
                                const Handle& rbs,
                                const Handle& source,
                                const Handle& vardecl,
+                               AtomSpace* trace_as,
                                const HandleSeq& focus_set)
 	: ForwardChainer(kb_as,
 	                 rbs->getAtomSpace() ? *rbs->getAtomSpace() : kb_as,
-	                 rbs, source, vardecl, focus_set)
+	                 rbs, source, vardecl, trace_as, focus_set)
 {
 }
 
@@ -235,7 +237,14 @@ void ForwardChainer::apply_all_rules()
 	}
 }
 
-HandleSet ForwardChainer::get_chaining_result()
+Handle ForwardChainer::get_results() const
+{
+	HandleSet rs = get_results_set();
+	HandleSeq results(rs.begin(), rs.end());
+	return _kb_as.add_link(SET_LINK, results);
+}
+
+HandleSet ForwardChainer::get_results_set() const
 {
 	return _fcstat.get_all_products();
 }
@@ -302,13 +311,27 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 			rule.unify_source(source.body, source.vardecl, &ref_as);
 		RuleSet unified_rules = Rule::strip_typed_substitution(urm);
 
-		// Only insert unexplored rules for this source
-		RuleSet pos_rules;
-		for (const auto& rule : unified_rules)
-			if (not source.is_exhausted(rule))
-				pos_rules.insert(rule);
+		// Only insert unexhausted rules for this source
+		RuleSet une_rules;
+#define RULE_SPECIALIZATION 1   // TODO: turn that into user option
+		if (RULE_SPECIALIZATION) {
+			// Insert all specializations obtained from the unificiation
+			for (const auto& ur : unified_rules) {
+				if (not source.is_exhausted(ur)) {
+					une_rules.insert(ur);
+				}
+			}
+		} else {
+			// Insert the unaltered rule, which will have the effect of
+			// applying to all sources, not just this one. Convenient for
+			// quickly achieving inference closure albeit expensive.
+			if (not unified_rules.empty() and not source.is_exhausted(rule)) {
+				une_rules.insert(rule);
+			}
+		}
+#undef RULE_SPECIALIZATION
 
-		valid_rules.insert(pos_rules.begin(), pos_rules.end());
+		valid_rules.insert(une_rules.begin(), une_rules.end());
 	}
 	return valid_rules;
 }
