@@ -22,7 +22,7 @@
 
 #include "SourceSet.h"
 
-#include <boost/range/algorithm/find.hpp>
+#include <boost/range/algorithm/binary_search.hpp>
 #include <boost/range/algorithm/lower_bound.hpp>
 
 #include <opencog/util/numeric.h>
@@ -139,11 +139,11 @@ void SourceSet::insert(const HandleSet& products, const Source& src, double prob
 	double new_cpx = src.expand_complexity(prob);
 
 	// Insert all new sources
-	for (const Handle& product :  products) {
+	for (const Handle& product : products) {
 		Source* new_src = new Source(product, empty_variable_list, new_cpx);
 
 		// Make sure it isn't already in the sources
-		if (boost::find(sources, *new_src) != sources.end()) {
+		if (boost::binary_search(sources, *new_src)) {
 			LAZY_URE_LOG_DEBUG << "The following source is already in the population: "
 			                   << new_src->body->id_to_string();
 			delete new_src;
