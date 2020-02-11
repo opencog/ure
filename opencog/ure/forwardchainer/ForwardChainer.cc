@@ -271,7 +271,7 @@ Source* ForwardChainer::select_source()
 		}
 		LAZY_URE_LOG_DEBUG << "Positively weighted sources ("
 		                   << wi << "/" << weights.size() << ")";
-		LAZY_URE_LOG_FINE << ":" << std::endl << wsrc_ss.str();
+		LAZY_URE_LOG_FINE << wsrc_ss.str();
 	}
 
 	// Calculate the total weight to be sure it's greater than zero
