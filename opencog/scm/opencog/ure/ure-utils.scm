@@ -15,6 +15,8 @@
 ;; -- ure-rm-rule-by-name -- Remove rule from a rbs given the name of its alias
 ;; -- ure-rm-rules -- Remove rules from a rbs
 ;; -- ure-rm-rules-by-names -- Remove rules from a rbs given the names of its aliases
+;; -- ure-rm-all-rules -- Remove all rules from the given rbs
+;; -- ure-rules -- List all rules of a given rule base
 ;; -- ure-weighted-rules -- List all weighted rules of a given rule base
 ;; -- ure-set-num-parameter -- Set a numeric parameter of an rbs
 ;; -- ure-set-fuzzy-bool-parameter -- Set a fuzzy boolean parameter of an rbs
@@ -479,6 +481,23 @@
   (cog-set-atomspace! current-as)
   *unspecified*
 )
+
+(define-public (ure-rm-all-rules rbs)
+"
+  Remove all rule of the given rbs
+"
+  (ure-rm-rules rbs (ure-rules rbs)))
+
+(define-public (ure-rules rbs)
+"
+  List all rules of rbs, as follow
+
+  (rule-1 ... rule-n)
+"
+  (define current-as (cog-set-atomspace! (cog-as rbs)))
+  (let* ((rules (cog-chase-link 'MemberLink 'DefinedSchemaNode rbs)))
+    (cog-set-atomspace! current-as)
+    rules))
 
 (define-public (ure-weighted-rules rbs)
 "
