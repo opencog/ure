@@ -624,13 +624,7 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 	if (lt != rt)
 		return SolutionSet();
 
-	// At this point they are both links of the same type, check that
-	// they have the same arity
-	Arity lh_arity(lh->get_arity());
-	Arity rh_arity(rh->get_arity());
-	if (lh_arity != rh_arity)
-		return SolutionSet();
-
+	// At this point they are both links of the same type.
 	if (rh->is_unordered_link())
 		return unordered_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
 	else
@@ -641,26 +635,13 @@ Unify::SolutionSet Unify::unordered_unify(const HandleSeq& lhs,
                                           const HandleSeq& rhs,
                                           Context lc, Context rc) const
 {
-	Arity lhs_arity(lhs.size());
-	Arity rhs_arity(rhs.size());
-	OC_ASSERT(lhs_arity == rhs_arity);
+	SolutionSet sol(false);
 
-	// Base case
-	if (lhs_arity == 0)
-		return SolutionSet(true);
+	HandleSeq perm(rhs);
+	do {
+		sol.insert(ordered_unify(lhs, perm, lc, rc));
+	} while (std::next_permutation(perm.begin(), perm.end()));
 
-	// Recursive case
-	SolutionSet sol;
-	for (Arity i = 0; i < lhs_arity; ++i) {
-		auto head_sol = unify(lhs[i], rhs[0], lc, rc);
-		if (head_sol.is_satisfiable()) {
-			HandleSeq lhs_tail(cp_erase(lhs, i));
-			HandleSeq rhs_tail(cp_erase(rhs, 0));
-			auto tail_sol = unordered_unify(lhs_tail, rhs_tail, lc, rc);
-			// Union merge satisfiable permutations
-			sol.insert(join(head_sol, tail_sol));
-		}
-	}
 	return sol;
 }
 
@@ -668,18 +649,66 @@ Unify::SolutionSet Unify::ordered_unify(const HandleSeq& lhs,
                                         const HandleSeq& rhs,
                                         Context lc, Context rc) const
 {
-	Arity lhs_arity(lhs.size());
-	Arity rhs_arity(rhs.size());
-	OC_ASSERT(lhs_arity == rhs_arity);
+	SolutionSet sol(false);
 
-	SolutionSet sol(true);
-	for (Arity i = 0; i < lhs_arity; ++i) {
-		auto rs = unify(lhs[i], rhs[i], lc, rc);
-		sol = join(sol, rs);
-		if (not sol.is_satisfiable())     // Stop if unification has failed
-			break;
+	if (lhs.empty() and rhs.empty()) return SolutionSet(true);
+
+#define is_lh_glob lhs[0]->get_type() == GLOB_NODE
+#define is_rh_glob rhs[0]->get_type() == GLOB_NODE
+
+	if (!lhs.empty() and !rhs.empty() and !(is_lh_glob) and !(is_rh_glob)){
+		const auto head_sol = unify(lhs[0], rhs[0], lc, rc);
+		const auto tail_sol = ordered_unify(tail(lhs), tail(rhs), lc, rc);
+		return join(head_sol, tail_sol);
 	}
+
+	// If lhs[0] we need to try to unify for every possible number
+	// of arguments the glob can contain.
+	if (!lhs.empty() and is_lh_glob)
+		ordered_unify_glob(lhs, rhs, sol, lc, rc);
+
+	// The flip flag is to prevent redundant partitions.
+	// i:e for globs X and U with the same type restriction
+	//     {{{X, U}, U}} and {{{X, U}, X}} are equivalent.
+	if (!rhs.empty() and is_rh_glob)
+		ordered_unify_glob(rhs, lhs, sol, rc, lc, true);
+
+#undef is_lh_glob
+#undef is_rh_glob
+
 	return sol;
+}
+
+void Unify::ordered_unify_glob(const HandleSeq &lhs,
+                               const HandleSeq &rhs,
+                               Unify::SolutionSet &sol,
+                               Context lc, Context rc, bool flip) const
+{
+	const auto inter = _variables.get_interval(lhs[0]);
+	for (size_t i = inter.first;
+	     (i <= inter.second and i <= rhs.size()); i++) {
+		const Handle r_h =
+				i == 1 ?
+				*rhs.begin() :
+				createLink(HandleSeq(rhs.begin(), rhs.begin() + i), LIST_LINK);
+		auto head_sol = flip ?
+		                unify(r_h, lhs[0], rc, lc) :
+		                unify(lhs[0], r_h, lc, rc);
+		auto tail_sol = flip ?
+		                ordered_unify(tail(rhs, i), tail(lhs), rc, lc) :
+		                ordered_unify(tail(lhs), tail(rhs, i), lc, rc);
+		sol.insert(join(tail_sol, head_sol));
+	}
+}
+
+HandleSeq Unify::tail(const HandleSeq &seq) const
+{
+	return seq.empty() ? seq : HandleSeq(std::next(seq.begin()), seq.end());
+}
+
+HandleSeq Unify::tail(const HandleSeq &seq, const size_t offset) const
+{
+	return seq.size() < offset ? seq : HandleSeq(seq.begin() + offset, seq.end());
 }
 
 Unify::SolutionSet Unify::pairwise_unify(const std::set<CHandlePair>& pchs) const
@@ -1073,7 +1102,8 @@ bool Unify::inherit(const Handle& lh, const Handle& rh,
 	// If both are free variables and declared then look at their types
 	// (only simple types are considered for now).
 	if (is_free_declared_variable(lc, lh) and is_free_declared_variable(rc, rh))
-		return inherit(get_union_type(lh), get_union_type(rh));
+		return inherit(get_union_type(lh), get_union_type(rh)) and
+		       inherit(_variables.get_interval(lh), _variables.get_interval(rh));
 
 	// If only rh is a free and declared variable then check whether lh
 	// type inherits from it (using Variables::is_type).
@@ -1102,6 +1132,12 @@ bool Unify::inherit(const TypeSet& lhs, const TypeSet& rhs) const
 		if (not inherit(ty, rhs))
 			return false;
 	return true;
+}
+
+bool Unify::inherit(const std::pair<double, double> &lgm,
+                    const std::pair<double, double> &rgm) const
+{
+	return rgm.first <= lgm.first and rgm.second >= lgm.second;
 }
 
 bool Unify::is_declared_variable(const Handle& h) const
