@@ -43,12 +43,13 @@ ForwardChainer::ForwardChainer(AtomSpace& kb_as,
                                const Handle& rbs,
                                const Handle& source,
                                const Handle& vardecl,
+                               AtomSpace* trace_as,
                                const HandleSeq& focus_set)
 	: _kb_as(kb_as),
 	  _rb_as(rb_as),
 	  _config(rb_as, rbs),
 	  _sources(_config, source, vardecl),
-	  _fcstat(kb_as)
+	  _fcstat(trace_as)
 {
 	init(source, vardecl, focus_set);
 }
@@ -57,10 +58,11 @@ ForwardChainer::ForwardChainer(AtomSpace& kb_as,
                                const Handle& rbs,
                                const Handle& source,
                                const Handle& vardecl,
+                               AtomSpace* trace_as,
                                const HandleSeq& focus_set)
 	: ForwardChainer(kb_as,
 	                 rbs->getAtomSpace() ? *rbs->getAtomSpace() : kb_as,
-	                 rbs, source, vardecl, focus_set)
+	                 rbs, source, vardecl, trace_as, focus_set)
 {
 }
 
@@ -235,7 +237,14 @@ void ForwardChainer::apply_all_rules()
 	}
 }
 
-HandleSet ForwardChainer::get_chaining_result()
+Handle ForwardChainer::get_results() const
+{
+	HandleSet rs = get_results_set();
+	HandleSeq results(rs.begin(), rs.end());
+	return _kb_as.add_link(SET_LINK, results);
+}
+
+HandleSet ForwardChainer::get_results_set() const
 {
 	return _fcstat.get_all_products();
 }
@@ -254,13 +263,15 @@ Source* ForwardChainer::select_source()
 		for (size_t i = 0; i < weights.size(); i++) {
 			if (0 < weights[i]) {
 				wi++;
-				wsrc_ss << std::endl << weights[i] << " "
-				        << _sources.sources[i].body->id_to_string();
+				if (ure_logger().is_fine_enabled()) {
+					wsrc_ss << std::endl << weights[i] << " "
+					        << _sources.sources[i].body->id_to_string();
+				}
 			}
 		}
-		std::stringstream ss;
-		ss << "Positively weighted sources (" << wi << "/" << weights.size() << "):";
-		ure_logger().debug() << ss.str() << wsrc_ss.str();
+		LAZY_URE_LOG_DEBUG << "Positively weighted sources ("
+		                   << wi << "/" << weights.size() << ")";
+		LAZY_URE_LOG_FINE << wsrc_ss.str();
 	}
 
 	// Calculate the total weight to be sure it's greater than zero
@@ -300,13 +311,25 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 			rule.unify_source(source.body, source.vardecl, &ref_as);
 		RuleSet unified_rules = Rule::strip_typed_substitution(urm);
 
-		// Only insert unexplored rules for this source
-		RuleSet pos_rules;
-		for (const auto& rule : unified_rules)
-			if (not source.is_exhausted(rule))
-				pos_rules.insert(rule);
+		// Only insert unexhausted rules for this source
+		RuleSet une_rules;
+		if (_config.get_full_rule_application()) {
+			// Insert the unaltered rule, which will have the effect of
+			// applying to all sources, not just this one. Convenient for
+			// quickly achieving inference closure albeit expensive.
+			if (not unified_rules.empty() and not source.is_exhausted(rule)) {
+				une_rules.insert(rule);
+			}
+		} else {
+			// Insert all specializations obtained from the unificiation
+			for (const auto& ur : unified_rules) {
+				if (not source.is_exhausted(ur)) {
+					une_rules.insert(ur);
+				}
+			}
+		}
 
-		valid_rules.insert(pos_rules.begin(), pos_rules.end());
+		valid_rules.insert(une_rules.begin(), une_rules.end());
 	}
 	return valid_rules;
 }
@@ -446,7 +469,7 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 	}
 	catch (...) {}
 
-	LAZY_URE_LOG_DEBUG << "Results:" << std::endl << oc_to_string(results);
+	LAZY_URE_LOG_FINE << "Results:" << std::endl << oc_to_string(results);
 
 	return results;
 }

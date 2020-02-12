@@ -45,10 +45,10 @@ class FCStat
 {
 private:
 	std::vector<InferenceRecord> _inf_rec;
-	AtomSpace& _as;
+	AtomSpace* _trace_as;
 
 public:
-	FCStat(AtomSpace& as) : _as(as) {}
+	FCStat(AtomSpace* trace_as) : _trace_as(trace_as) {}
 
 	/**
 	 * Record the inference step into memory, as well as in the
@@ -68,9 +68,8 @@ public:
 	 * 4. <product> is a SetLink <p1> ... <pn> where pi are the products
 	 */
 	void add_inference_record(unsigned iteration, Handle source,
-	                          const Rule& rule,
-	                          const HandleSet& product);
-	HandleSet get_all_products();
+	                          const Rule& rule, const HandleSet& product);
+	HandleSet get_all_products() const;
 };
 
 }

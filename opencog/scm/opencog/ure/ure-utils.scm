@@ -15,6 +15,8 @@
 ;; -- ure-rm-rule-by-name -- Remove rule from a rbs given the name of its alias
 ;; -- ure-rm-rules -- Remove rules from a rbs
 ;; -- ure-rm-rules-by-names -- Remove rules from a rbs given the names of its aliases
+;; -- ure-rm-all-rules -- Remove all rules from the given rbs
+;; -- ure-rules -- List all rules of a given rule base
 ;; -- ure-weighted-rules -- List all weighted rules of a given rule base
 ;; -- ure-set-num-parameter -- Set a numeric parameter of an rbs
 ;; -- ure-set-fuzzy-bool-parameter -- Set a fuzzy boolean parameter of an rbs
@@ -23,6 +25,7 @@
 ;; -- ure-set-complexity-penalty -- Set the URE:complexity-penalty parameter
 ;; -- ure-set-jobs -- Set the URE:jobs parameter
 ;; -- ure-set-fc-retry-exhausted-sources -- Set the URE:FC:retry-exhausted-sources parameter
+;; -- ure-set-fc-full-rule-application -- Set the URE:FC:full-rule-application parameter
 ;; -- ure-set-bc-maximum-bit-size -- Set the URE:BC:maximum-bit-size
 ;; -- ure-set-bc-mm-complexity-penalty -- Set the URE:BC:MM:complexity-penalty
 ;; -- ure-set-bc-mm-compressiveness -- Set the URE:BC:MM:compressiveness
@@ -77,23 +80,27 @@
 (define* (cog-fc rbs source
                  #:key
                  (vardecl (List))
+                 (trace-as #f)
                  (focus-set (Set))
                  (attention-allocation *unspecified*)
                  (maximum-iterations *unspecified*)
                  (complexity-penalty *unspecified*)
                  (jobs *unspecified*)
-                 (fc-retry-exhausted-sources *unspecified*))
+                 (fc-retry-exhausted-sources *unspecified*)
+                 (fc-full-rule-application *unspecified*))
 "
   Forward Chainer call.
 
   Usage: (cog-fc rbs source
                  #:vardecl vd
+                 #:trace-as tas
                  #:focus-set fs
                  #:attention-allocation aa
                  #:maximum-iterations mi
                  #:complexity-penalty cp
                  #:jobs jb
-                 #:fc-retry-exhausted-sources res)
+                 #:fc-retry-exhausted-sources res
+                 #:fc-full-rule-application fra)
 
   rbs: ConceptNode representing a rulebase.
 
@@ -102,6 +109,8 @@
 
   vd: [optional] Variable declaration of the source (in case it has
       variables).
+
+  tas: [optional] AtomSpace to record the inference traces.
 
   fs: [optional] Focus set, a SetLink with all atoms to consider for
       forward chaining.
@@ -129,6 +138,10 @@
        atomspace during forward chaining, the same source may yield different
        results as time goes, thus this option.
 
+  fra: [optional, default=#f] Whether the selected rule is applied over the
+       entire atomspace, not just the source. This can be convienient if
+       the goal is to rapidly achieve inference closure.
+
   Note that the defaults of the optional arguments are not determined
   here (although they attempt to be documented here).  That is the case
   in order not to overwrite existing parameters set by
@@ -147,9 +160,13 @@
       (ure-set-jobs rbs jobs))
   (if (not (unspecified? fc-retry-exhausted-sources))
       (ure-set-fc-retry-exhausted-sources rbs fc-retry-exhausted-sources))
+  (if (not (unspecified? fc-full-rule-application))
+      (ure-set-fc-full-rule-application rbs fc-full-rule-application))
 
-  ;; Call the forward chainer
-  (cog-mandatory-args-fc rbs source vardecl focus-set))
+  ;; Defined optional atomspaces and call the forward chainer
+  (let* ((trace-enabled (cog-atomspace? trace-as))
+         (tas (if trace-enabled trace-as (cog-atomspace))))
+    (cog-mandatory-args-fc rbs source vardecl trace-enabled tas focus-set)))
 
 (define* (cog-bc rbs target
                  #:key
@@ -465,6 +482,23 @@
   *unspecified*
 )
 
+(define-public (ure-rm-all-rules rbs)
+"
+  Remove all rule of the given rbs
+"
+  (ure-rm-rules rbs (ure-rules rbs)))
+
+(define-public (ure-rules rbs)
+"
+  List all rules of rbs, as follow
+
+  (rule-1 ... rule-n)
+"
+  (define current-as (cog-set-atomspace! (cog-as rbs)))
+  (let* ((rules (cog-chase-link 'MemberLink 'DefinedSchemaNode rbs)))
+    (cog-set-atomspace! current-as)
+    rules))
+
 (define-public (ure-weighted-rules rbs)
 "
   List all weighted rules of rbs, as follow
@@ -623,6 +657,19 @@
   converted into tv.
 "
   (ure-set-fuzzy-bool-parameter rbs "URE:FC:retry-exhausted-sources" value))
+
+(define (ure-set-fc-full-rule-application rbs value)
+"
+  Set the URE:FC:full-rule-application parameter of a given RBS
+
+  EvaluationLink (stv value 1)
+    PredicateNode \"URE:FC:full-rule-application\"
+    rbs
+
+  If the provided value is a boolean, then it is automatically
+  converted into tv.
+"
+  (ure-set-fuzzy-bool-parameter rbs "URE:FC:full-rule-application" value))
 
 (define (ure-set-bc-maximum-bit-size rbs value)
 "
@@ -908,6 +955,7 @@
           ure-set-complexity-penalty
           ure-set-jobs
           ure-set-fc-retry-exhausted-sources
+          ure-set-fc-full-rule-application
           ure-set-bc-maximum-bit-size
           ure-set-bc-mm-complexity-penalty
           ure-set-bc-mm-compressiveness

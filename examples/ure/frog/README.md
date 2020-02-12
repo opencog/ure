@@ -134,8 +134,7 @@ been used too.
 (define source
   (Evaluation (stv 1.0 1.0)
      (Predicate "croaks")
-     (Concept "Fritz"))
-)
+     (Concept "Fritz")))
 ```
 
 We may optionally define its variable declaration if the source had
@@ -189,15 +188,13 @@ We can run the backward chainer to find out "What is green?" by
 defining a target instead of a source
 ```scheme
 (define target
-  (InheritanceLink (VariableNode "$what") (ConceptNode "green"))
-)
+  (InheritanceLink (VariableNode "$what") (ConceptNode "green")))
 ```
 
 with the following variable declaration
 ```scheme
 (define vd
-  (TypedVariable (VariableNode "$what") (TypeNode "ConceptNode"))
-)
+  (TypedVariable (VariableNode "$what") (TypeNode "ConceptNode")))
 ```
 
 We can now call the backward chainer as follows

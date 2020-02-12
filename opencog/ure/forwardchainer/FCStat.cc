@@ -22,6 +22,7 @@
  */
 
 #include "FCStat.h"
+#include <opencog/atoms/core/NumberNode.h>
 
 using namespace opencog;
 
@@ -31,14 +32,15 @@ void FCStat::add_inference_record(unsigned iteration, Handle source,
 {
 	_inf_rec.emplace_back(source, rule, product);
 
-	for (const Handle& p : product)
-		_as.add_link(EXECUTION_LINK,
-		             rule.get_alias(),
-		             _as.add_node(NUMBER_NODE, std::to_string(iteration)),
-		             source, p);
+	if (_trace_as)
+		for (const Handle& p : product)
+			_trace_as->add_link(EXECUTION_LINK,
+			                    rule.get_alias(),
+			                    HandleCast(createNumberNode(iteration)),
+			                    source, p);
 }
 
-HandleSet FCStat::get_all_products()
+HandleSet FCStat::get_all_products() const
 {
 	HandleSet all;
 	for(const auto& ir : _inf_rec)

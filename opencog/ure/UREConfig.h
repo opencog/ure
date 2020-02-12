@@ -65,6 +65,7 @@ public:
 	int get_jobs() const;
 	// FC
 	bool get_retry_exhausted_sources() const;
+	bool get_full_rule_application() const;
 	// BC
 	double get_max_bit_size() const;
 	double get_mm_complexity_penalty() const;
@@ -84,6 +85,7 @@ public:
 	void set_jobs(int);
 	// FC
 	void set_retry_exhausted_sources(bool);
+	void set_full_rule_application(bool);
 	// BC
 	void set_mm_complexity_penalty(double);
 	void set_mm_compressiveness(double);
@@ -110,6 +112,11 @@ public:
 	// Name of the PredicateNode outputting whether sources should be
 	// retried after exhaustion
 	static const std::string fc_retry_exhausted_sources_name;
+
+	// Name of the PredicateNode outputting whether a selected rule
+	// should be applied over the entire atomspace or just the selected
+	// source.
+	static const std::string fc_full_rule_application_name;
 
 	// Name of the maximum number of and-BITs in the BIT parameter
 	static const std::string bc_max_bit_size_name;
@@ -151,7 +158,11 @@ private:
 	struct FCParameters {
 		// Retry all sources even if they have all been tried
 		bool retry_exhausted_sources;
-	};
+
+		// Apply the selected rule over the entire atomspace, not just
+		// the selected source.
+		bool full_rule_application;
+};
 	FCParameters _fc_params;
 
 	// Parameter specific to the backward chainer.
