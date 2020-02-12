@@ -469,7 +469,7 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 	}
 	catch (...) {}
 
-	LAZY_URE_LOG_DEBUG << "Results:" << std::endl << oc_to_string(results);
+	LAZY_URE_LOG_FINE << "Results:" << std::endl << oc_to_string(results);
 
 	return results;
 }

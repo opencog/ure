@@ -157,7 +157,8 @@ void SourceSet::insert(const HandleSet& products, const Source& src, double prob
 		sources.insert(boost::lower_bound(sources, new_src, ptr_less), new_src);
 		new_sources++;
 	}
-	LAZY_URE_LOG_DEBUG << new_sources << " new sources added";
+	LAZY_URE_LOG_DEBUG << products.size() << " results, including "
+	                   << new_sources << " new sources";
 }
 
 size_t SourceSet::size() const
