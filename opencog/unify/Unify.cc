@@ -28,6 +28,7 @@
 #include <boost/algorithm/cxx11/any_of.hpp>
 
 #include <opencog/util/algorithm.h>
+#include <opencog/util/Logger.h>
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/core/Context.h>
