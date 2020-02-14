@@ -51,6 +51,8 @@
 ;; -- ure-logger-flush -- flush the URE logger
 ;; -- bool->tv -- Convert #t to TRUE_TV and #f to FALSE_TV
 ;; -- tv->bool -- Convert TRUE_TV to #t, anything else to #f
+;; -- confidence->count -- Convert Simple TV confidence to count
+;; -- count->confidence -- Convert Simple TV count to confidence
 ;; -- atom->number -- Convert NumberNode into its corresponding number
 ;; -- gt-zero-confidence -- Return TrueTV iff A's confidence is greater than 0
 ;; -- gt-zero-confidence-eval -- EvaluationLink wrapping up gt-zero-confidence call
@@ -765,6 +767,19 @@
   Convert TRUE_TV to #t, anything else to #f
 "
     (equal? (stv 1 1) tv))
+
+(define-public (confidence->count c)
+"
+  Convert Simple TV confidence into count
+"
+  (cog-tv-count (stv 1 c)))
+
+(define-public (count->confidence c)
+"
+  Convert Simple TV count into confidence
+"
+  (define K 800)
+  (exact->inexact (/ c (+ c K))))
 
 (define (atom->number A)
 "
