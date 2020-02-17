@@ -11,7 +11,7 @@ inline bool is_meta(const BindLinkPtr h_bl)
 {
 	if (not h_bl)
 		return false;
-	Handle implicand = h_bl->get_implicand();
+	Handle implicand = h_bl->get_implicand()[0]; //Assume there is only one
 
 	if (not implicand)
 		return false;

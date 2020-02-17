@@ -441,8 +441,10 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 
 		//Only consume_quotations if something changed
 		if (rewrite != himp)
+		{
 			rewrite = RewriteLink::consume_quotations(vardecl, rewrite, false);
 			hs.push_back(rewrite);
+		}
 	}
 
 	// Filter vardecl

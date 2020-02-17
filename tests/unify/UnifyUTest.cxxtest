@@ -1754,8 +1754,6 @@ void UnifyUTest::test_unify_complex_7()
 
 	logger().debug() << "ts_result = " << oc_to_string(ts_result);
 	logger().debug() << "ts_expected = " << oc_to_string(ts_expected);
-	std::cout << "ts_result = " << oc_to_string(ts_result) << std::endl;
-	std::cout << "ts_expected = " << oc_to_string(ts_expected) << std::endl;
 
 	TS_ASSERT(tss_content_eq(ts_result, ts_expected));
 }

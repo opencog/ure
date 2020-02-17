@@ -388,7 +388,7 @@ Handle Rule::ExtractSubruleRewrite(Handle rewrite) const
 	else
 		rewrite = rewrite->getOutgoingAtom(0);
 
-	rewrite = BindLinkCast(rewrite)->get_implicand();
+	rewrite = BindLinkCast(rewrite)->get_implicand()[0]; // assume there is only one
 	rewrite = filter_quote(rewrite);
 	return rewrite;
 }
@@ -617,7 +617,7 @@ Rule Rule::substituted(const Unify::TypedSubstitution& ts,
 		BindLinkPtr subrulebl = BindLinkCast(subrule);
 		Handle subvardecl = subrulebl->get_vardecl();
 		Handle subbody = subrulebl->get_body();
-		Handle subrewite = subrulebl->get_implicand();
+		Handle subrewite = subrulebl->get_implicand()[0]; //Assume there is only one
 
 		//Get the SubRule VarDecl required for Unification
 		if (subvardecl)

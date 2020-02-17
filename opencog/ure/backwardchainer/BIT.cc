@@ -180,7 +180,7 @@ bool AndBIT::has_cycle() const
 
 Handle AndBIT::ExtractSubFCS(Handle fcs) const
 {
-	Handle rewrite = BindLinkCast(fcs)->get_implicand();
+	Handle rewrite = BindLinkCast(fcs)->get_implicand()[0]; //Assume there is only one
 	Type rewrite_type = rewrite->get_type();
 
 	if (rewrite_type == EXECUTION_OUTPUT_LINK)
@@ -204,7 +204,7 @@ bool AndBIT::has_cycle(Handle h, HandleSet ancestors) const
 		h = ExtractSubFCS(h);
 
 	if (h->get_type() == BIND_LINK)
-		return has_cycle(BindLinkCast(h)->get_implicand());
+		return has_cycle(BindLinkCast(h)->get_implicand()[0]); //Assume there is only one
 
 	if (h->get_type() == EXECUTION_OUTPUT_LINK) {
 		Handle arg = h->getOutgoingAtom(1);
@@ -425,7 +425,7 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 		BindLinkPtr nfcs_bl(BindLinkCast(nfcs));
 		Handle nfcs_mvardecl = nfcs_bl->get_vardecl();
 		Handle nfcs_mpattern = nfcs_bl->get_body();
-		Handle nfcs_mrewrite = nfcs_bl->get_implicand();
+		Handle nfcs_mrewrite = nfcs_bl->get_implicand()[0]; //Assume there is only one
 
 		if (rule.first.is_meta())
 		{
@@ -448,7 +448,7 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 					BindLinkPtr blp = BindLinkCast(bnd);
 					Handle vardecl = blp->get_vardecl();
 					Handle pattern = blp->get_body();
-					Handle rewrite = blp->get_implicand();
+					Handle rewrite = blp->get_implicand()[0]; //Assume there is only one
 
 					//Merge Sub-Rule with FCS
 					Handle npattern = expand_fcs_pattern(nfcs_mpattern, conclusion,
@@ -461,7 +461,7 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 							BindLinkPtr blp = BindLinkCast(bnd);
 							Handle nfcs_vardecl = blp->get_vardecl();
 							Handle nfcs_pattern = blp->get_body();
-							Handle nfcs_rewrite = blp->get_implicand();
+							Handle nfcs_rewrite = blp->get_implicand()[0]; //Assume there is only one
 
 							Handle nrewrite;
 							if (is_meta(bnd))
@@ -519,7 +519,7 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 				{
 					Handle vardecl = BindLinkCast(bnd)->get_vardecl();
 					Handle pattern = BindLinkCast(bnd)->get_body();
-					Handle rewrite = BindLinkCast(bnd)->get_implicand();
+					Handle rewrite = BindLinkCast(bnd)->get_implicand()[0]; //Assume only one exists
 
 					Handle nrewrite = expand_fcs_rewrite(rewrite,
 														 rule_conclusion,
@@ -569,7 +569,7 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 				{
 					Handle vardecl = BindLinkCast(bnd)->get_vardecl();
 					Handle pattern = BindLinkCast(bnd)->get_body();
-					Handle rewrite = BindLinkCast(bnd)->get_implicand();
+					Handle rewrite = BindLinkCast(bnd)->get_implicand()[0]; // Assume there is only one
 
 					//Merge Sub-Rule with FCS
 					Handle npattern = expand_fcs_pattern(nfcs_pattern, conclusion,
