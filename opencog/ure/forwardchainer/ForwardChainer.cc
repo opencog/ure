@@ -241,7 +241,7 @@ Handle ForwardChainer::get_results() const
 {
 	HandleSet rs = get_results_set();
 	HandleSeq results(rs.begin(), rs.end());
-	return _kb_as.add_link(SET_LINK, results);
+	return _kb_as.add_link(SET_LINK, std::move(results));
 }
 
 HandleSet ForwardChainer::get_results_set() const

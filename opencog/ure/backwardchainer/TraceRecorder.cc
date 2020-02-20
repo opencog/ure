@@ -34,13 +34,13 @@ const std::string TraceRecorder::proof_predicate_name = "URE:BC:proof-of";
 TraceRecorder::TraceRecorder(AtomSpace* tr_as) : _trace_as(tr_as) {
 	if (_trace_as) {
 		_target_predicate =
-			_trace_as->add_node(PREDICATE_NODE, target_predicate_name);
+			_trace_as->add_node(PREDICATE_NODE, std::move(std::string(target_predicate_name)));
 		_andbit_predicate =
-			_trace_as->add_node(PREDICATE_NODE, andbit_predicate_name);
+			_trace_as->add_node(PREDICATE_NODE, std::move(std::string(andbit_predicate_name)));
 		_expand_andbit_schema =
-			_trace_as->add_node(SCHEMA_NODE, expand_andbit_schema_name);
+			_trace_as->add_node(SCHEMA_NODE, std::move(std::string(expand_andbit_schema_name)));
 		_proof_predicate =
-			_trace_as->add_node(PREDICATE_NODE, proof_predicate_name);
+			_trace_as->add_node(PREDICATE_NODE, std::move(std::string(proof_predicate_name)));
 	}
 }
 

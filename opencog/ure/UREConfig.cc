@@ -216,7 +216,8 @@ HandleSeq UREConfig::fetch_execution_outputs(const Handle& schema,
 {
 	// Retrieve rules
 	Handle var_node = _as.add_node(VARIABLE_NODE, "__EXECUTION_OUTPUT_VAR__"),
-		type_node = _as.add_node(TYPE_NODE, nameserver().getTypeName(type)),
+		type_node = _as.add_node(TYPE_NODE,
+		                std::move(std::string(nameserver().getTypeName(type)))),
 		typed_var = _as.add_link(TYPED_VARIABLE_LINK, var_node, type_node),
 		gl = _as.add_link(GET_LINK,
 		                  // TypedVariableLink
@@ -246,7 +247,8 @@ double UREConfig::fetch_num_param(const string& schema_name,
                                   const Handle& input,
                                   double default_value)
 {
-	Handle param_schema = _as.add_node(SCHEMA_NODE, schema_name);
+	Handle param_schema = _as.add_node(SCHEMA_NODE,
+	                             std::move(std::string(schema_name)));
 	HandleSeq outputs = fetch_execution_outputs(param_schema, input, NUMBER_NODE);
 
 	if (outputs.size() == 0) {
@@ -278,7 +280,8 @@ bool UREConfig::fetch_bool_param(const string& pred_name,
                                  bool default_value)
 {
 	string input_name = input->get_name();
-	Handle pred = _as.get_node(PREDICATE_NODE, pred_name);
+	Handle pred = _as.get_node(PREDICATE_NODE,
+	                           std::move(std::string(pred_name)));
 	if (pred) {
 		Handle eval = _as.get_link(EVALUATION_LINK, pred, input);
 		if (eval) {

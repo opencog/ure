@@ -401,7 +401,8 @@ Handle ControlPolicy::mk_expand_exec(const Handle& input_andbit_var,
                                      const Handle& inf_rule,
                                      const Handle& output_andbit_var)
 {
-	Handle expand_schema = an(SCHEMA_NODE, TraceRecorder::expand_andbit_schema_name);
+	Handle expand_schema = an(SCHEMA_NODE,
+		std::move(std::string(TraceRecorder::expand_andbit_schema_name)));
 	return al(EXECUTION_LINK,
 	          expand_schema,
 	          al(LIST_LINK,
@@ -413,7 +414,8 @@ Handle ControlPolicy::mk_expand_exec(const Handle& input_andbit_var,
 
 Handle ControlPolicy::mk_preproof_eval(const Handle& preproof_args_var)
 {
-	Handle preproof_pred = an(PREDICATE_NODE, preproof_predicate_name);
+	Handle preproof_pred = an(PREDICATE_NODE,
+	                          std::move(std::string(preproof_predicate_name)));
 	return al(EVALUATION_LINK,
 	          preproof_pred,
 	          al(UNQUOTE_LINK, preproof_args_var));
@@ -449,7 +451,7 @@ Handle ControlPolicy::mk_expansion_control_rules_query(const Handle& inf_rule,
 	Handle pat_expand_preproof_impl = al(QUOTE_LINK,
 	                                     al(IMPLICATION_SCOPE_LINK,
 	                                        al(UNQUOTE_LINK, vardecl_var),
-	                                        al(AND_LINK, antecedents),
+	                                        al(AND_LINK, std::move(antecedents)),
 	                                        out_preproof_eval));
 
 	// Bind of ImplicationScope with a pattern in its antecedent
@@ -463,7 +465,7 @@ Handle ControlPolicy::mk_expansion_control_rules_query(const Handle& inf_rule,
 	vardecls.insert(vardecls.end(), pattern_vars.begin(), pattern_vars.end());
 
 	Handle pat_expand_preproof_impl_bl = al(BIND_LINK,
-	                                        al(VARIABLE_LIST, vardecls),
+	                                        al(VARIABLE_LIST, std::move(vardecls)),
 	                                        pat_expand_preproof_impl,
 	                                        pat_expand_preproof_impl);
 
@@ -481,7 +483,7 @@ HandleSeq ControlPolicy::mk_pattern_vars(int n)
 Handle ControlPolicy::mk_pattern_var(int i)
 {
 	std::string name = std::string("$pattern-") + std::to_string(i);
-	return an(VARIABLE_NODE, name);
+	return an(VARIABLE_NODE, std::move(name));
 }
 
 double ControlPolicy::get_actual_mean(TruthValuePtr tv) const

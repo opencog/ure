@@ -134,7 +134,7 @@ bool BackwardChainer::termination()
 Handle BackwardChainer::get_results() const
 {
 	HandleSeq results(_results.begin(), _results.end());
-	return _kb_as.add_link(SET_LINK, results);
+	return _kb_as.add_link(SET_LINK, std::move(results));
 }
 
 void BackwardChainer::expand_meta_rules()
