@@ -101,7 +101,7 @@ AndBIT::AndBIT(AtomSpace& bit_as, const Handle& target, Handle vardecl,
 	vardecl = filter_vardecl(vardecl, body); // remove useless vardecl
 	if (vardecl)
 		bl.insert(bl.begin(), vardecl);
-	fcs = bit_as.add_link(BIND_LINK, bl);
+	fcs = bit_as.add_link(BIND_LINK, std::move(bl));
 
 	// Insert the initial BITNode and initialize the AndBIT complexity
 	auto it = insert_bitnode(target, fitness);
@@ -342,7 +342,7 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 	HandleSeq noutgoings({npattern, nrewrite});
 	if (nvardecl)
 		noutgoings.insert(noutgoings.begin(), nvardecl);
-	nfcs = fcs->getAtomSpace()->add_link(BIND_LINK, noutgoings);
+	nfcs = fcs->getAtomSpace()->add_link(BIND_LINK, std::move(noutgoings));
 
 	// Log expansion
 	LAZY_URE_LOG_DEBUG << "Expanded forward chainer strategy:" << std::endl
@@ -486,7 +486,7 @@ Handle AndBIT::expand_fcs_rewrite(const Handle& fcs_rewrite,
 			HandleSeq args = arg->getOutgoingSet();
 			for (size_t i = 1; i < args.size(); i++)
 				args[i] = expand_fcs_rewrite(args[i], rule);
-			arg = as.add_link(LIST_LINK, args);
+			arg = as.add_link(LIST_LINK, std::move(args));
 		}
 		return as.add_link(EXECUTION_OUTPUT_LINK, {gsn, arg});
 	} else if (t == SET_LINK) {
@@ -495,7 +495,7 @@ Handle AndBIT::expand_fcs_rewrite(const Handle& fcs_rewrite,
 		HandleSeq args = fcs_rewrite->getOutgoingSet();
 		for (size_t i = 0; i < args.size(); i++)
 			args[i] = expand_fcs_rewrite(args[i], rule);
-		return as.add_link(SET_LINK, args);
+		return as.add_link(SET_LINK, std::move(args));
 	} else
 		// If none of the conditions apply just leave alone. Indeed,
 		// assuming that the pattern matcher is executing the rewrite
@@ -542,10 +542,10 @@ Handle AndBIT::mk_pattern(HandleSeq prs_clauses, HandleSeq virt_clauses) const
 	// Assemble the body
 	AtomSpace& as = *fcs->getAtomSpace();
 	if (not prs_clauses.empty())
-		virt_clauses.push_back(as.add_link(PRESENT_LINK, prs_clauses));
+		virt_clauses.push_back(as.add_link(PRESENT_LINK, std::move(prs_clauses)));
 	return virt_clauses.empty() ? Handle::UNDEFINED
 		: (virt_clauses.size() == 1 ? virt_clauses.front()
-		   : as.add_link(AND_LINK, virt_clauses));
+		   : as.add_link(AND_LINK, std::move(virt_clauses)));
 }
 
 void AndBIT::remove_redundant(HandleSeq& hs)
