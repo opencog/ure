@@ -58,7 +58,8 @@ class Source : public boost::totally_ordered<Source>
 public:
 	Source(const Handle& body,
 	       const Handle& vardecl=Handle::UNDEFINED,
-	       double complexity=0.0);
+	       double complexity=0.0,
+	       double complexity_factor=1.0);
 
 	/**
 	 * Comparison operators. For operator< compare by complexity, or by
@@ -86,13 +87,17 @@ public:
 	std::string to_string(const std::string& indent=empty_string) const;
 
 	// Body of the source
-	Handle body;
+	const Handle body;
 
 	// Variable declaration, if any, associated to body
-	Handle vardecl;
+	const Handle vardecl;
 
 	// Sum of the complexities of the steps involved in producing it.
-	double complexity;
+	const double complexity;
+
+	// Proxy for the prior probability of the source, taking into
+	// account the complexity penalty.
+	const double complexity_factor;
 
 	// True iff all rules that could expand the source have been tried
 	bool exhausted;

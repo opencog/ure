@@ -29,8 +29,12 @@
 
 namespace opencog {
 
-Source::Source(const Handle& bdy, const Handle& vdcl, double cpx)
-	: body(bdy), vardecl(vdcl), complexity(cpx), exhausted(false)
+Source::Source(const Handle& bdy, const Handle& vdcl, double cpx, double cpx_fctr)
+	: body(bdy),
+	  vardecl(vdcl),
+	  complexity(cpx),
+	  complexity_factor(cpx_fctr),
+	  exhausted(false)
 {
 }
 
@@ -137,11 +141,13 @@ void SourceSet::insert(const HandleSet& products, const Source& src, double prob
 
 	// Calculate the complexity of the new sources
 	double new_cpx = src.expand_complexity(prob);
+	double new_cpx_fctr = exp(-_config.get_complexity_penalty() * new_cpx);
 
 	// Insert all new sources
 	int new_sources = 0;
 	for (const Handle& product : products) {
-		Source* new_src = new Source(product, empty_variable_list, new_cpx);
+		Source* new_src = new Source(product, empty_variable_list,
+		                             new_cpx, new_cpx_fctr);
 
 		// Make sure it isn't already in the sources
 		if (boost::binary_search(sources, *new_src)) {
@@ -188,7 +194,7 @@ double SourceSet::get_weight(const Source& src) const
 
 double SourceSet::complexity_factor(const Source& src) const
 {
-	return exp(-_config.get_complexity_penalty() * src.complexity);
+	return src.complexity_factor;
 }
 
 std::string oc_to_string(const Source& src, const std::string& indent)
