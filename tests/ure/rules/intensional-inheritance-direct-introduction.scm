@@ -113,7 +113,7 @@
     (let* ((at-links (cog-filter 'AttractionLink (cog-incoming-set A)))
            (A-at? (lambda (x) (equal? A (gar x)))))
       (map gar (filter A-at? at-links))))
-    
+
   ;; Given the attraction links of A and B calculate the fuzzy
   ;; intersection between the patterns of A and B, expressed as
   ;;
