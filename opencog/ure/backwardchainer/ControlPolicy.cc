@@ -51,9 +51,9 @@ ControlPolicy::ControlPolicy(const UREConfig& ure_config, const BIT& bit,
 		_default_tvs[rule.get_alias()] = rule.get_tv();
 	}
 	std::stringstream ss;
-	ss << "Default inference rule TVs:" << std::endl;
+	ss << "Default inference rule TVs:";
 	for (const auto& rtv : _default_tvs)
-		ss << rtv.second->to_string() << " " << oc_to_string(rtv.first);
+		ss << std::endl << rtv.second->to_string() << " " << oc_to_string(rtv.first);
 	ure_logger().debug() << ss.str();
 
 	// Fetches expansion control rules from _control_as
