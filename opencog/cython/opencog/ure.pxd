@@ -44,7 +44,7 @@ cdef extern from "opencog/ure/backwardchainer/Fitness.h" namespace "opencog":
 
     cdef cppclass AndBITFitness:
         AndBITFitness(AndBitFitnessType ft,
-                      const set[ContentHash]& tr) execpt +
+                      const set[ContentHash]& tr) except +
 
 
 cdef extern from "opencog/ure/backwardchainer/BackwardChainer.h" namespace "opencog":
