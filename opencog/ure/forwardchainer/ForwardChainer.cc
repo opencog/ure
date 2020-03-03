@@ -137,27 +137,6 @@ void ForwardChainer::do_chain()
 	ure_logger().debug("Finished forward chaining");
 }
 
-void ForwardChainer::do_step_rec()
-{
-	// NEXT TODO: problem is free threads only get reclaimed after
-	// do_step completes.
-	//
-	// Solution: use opencog::pool
-	if (not termination()) {
-		if ((_jobs + 1) < (unsigned)_config.get_jobs()) {
-			auto policy = std::launch::async;
-			_jobs++;
-			auto ft = std::async(policy, [&]() { do_step(0); });
-			do_step_rec();
-			ft.wait();
-			_jobs--;
-		} else {
-			do_step(0);
-			do_step_rec();
-		}
-	}
-}
-
 void ForwardChainer::do_steps()
 {
 	opencog::pool<int> wrkpool;

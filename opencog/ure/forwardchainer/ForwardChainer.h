@@ -94,13 +94,6 @@ public:
 	void do_chain();
 
 	/**
-	 * Recursively call do_step till termination.
-	 *
-	 * NEXT TODO: replace by a worker pool.
-	 */
-	void do_step_rec();
-
-	/**
 	 * run steps until termination criteria are met.
 	 */
 	void do_steps();
