@@ -273,8 +273,8 @@ Source* ForwardChainer::select_source(const std::string& msgprfx)
 				}
 			}
 		}
-		LAZY_URE_LOG_DEBUG  << msgprfx << "Positively weighted sources ("
-		                    << wi << "/" << weights.size() << ")";
+		LAZY_URE_LOG_DEBUG << msgprfx << "Positively weighted sources ("
+		                   << wi << "/" << weights.size() << ")";
 		LAZY_URE_LOG_FINE << wsrc_ss.str();
 	}
 
