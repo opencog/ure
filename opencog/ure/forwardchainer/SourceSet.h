@@ -171,7 +171,8 @@ public:
 	 * applying rule with a given probability of success prob (useful
 	 * for calculating complexity).
 	 */
-	void insert(const HandleSet& products, const Source& src, double prob);
+	void insert(const HandleSet& products, const Source& src,
+	            double prob, const std::string& msgprfx="");
 
 	size_t size() const;
 

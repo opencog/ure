@@ -172,7 +172,8 @@ bool SourceSet::is_exhausted() const
 	return exhausted;
 }
 
-void SourceSet::insert(const HandleSet& products, const Source& src, double prob)
+void SourceSet::insert(const HandleSet& products, const Source& src,
+                       double prob, const std::string& msgprfx)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	const static Handle empty_variable_list = Handle(createVariableList(HandleSeq()));
@@ -189,7 +190,8 @@ void SourceSet::insert(const HandleSet& products, const Source& src, double prob
 
 		// Make sure it isn't already in the sources
 		if (boost::binary_search(sources, *new_src)) {
-			LAZY_URE_LOG_FINE << "The following source is already in the population: "
+			LAZY_URE_LOG_FINE << msgprfx
+			                  << "The following source is already in the population: "
 			                  << new_src->body->id_to_string();
 			delete new_src;
 			continue;
@@ -201,7 +203,8 @@ void SourceSet::insert(const HandleSet& products, const Source& src, double prob
 		sources.insert(boost::lower_bound(sources, new_src, ptr_less), new_src);
 		new_sources++;
 	}
-	LAZY_URE_LOG_DEBUG << products.size() << " results, including "
+	LAZY_URE_LOG_DEBUG << msgprfx
+	                   << products.size() << " results, including "
 	                   << new_sources << " new sources";
 }
 

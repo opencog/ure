@@ -149,7 +149,7 @@ void ForwardChainer::do_steps()
 void ForwardChainer::do_step(int iteration)
 {
 	int lipo = iteration + 1;
-	std::string msgprfx = std::string("[Iteration ") + std::to_string(lipo) + "] ";
+	std::string msgprfx = std::string("[I-") + std::to_string(lipo) + "] ";
 	ure_logger().debug() << msgprfx << "Start iteration (" << lipo
 	                     << "/" << _config.get_maximum_iterations_str() << ")";
 
@@ -186,7 +186,7 @@ void ForwardChainer::do_step(int iteration)
 		                   << oc_to_string(products);
 
 		// Insert the produced sources in the population of sources
-		_sources.insert(products, *source, prob);
+		_sources.insert(products, *source, prob, msgprfx);
 
 		// The rule has been applied, we can set the exhausted flag
 		source->set_rule_exhausted(rule);
@@ -275,7 +275,7 @@ Source* ForwardChainer::select_source(const std::string& msgprfx)
 		}
 		LAZY_URE_LOG_DEBUG << msgprfx << "Positively weighted sources ("
 		                   << wi << "/" << weights.size() << ")";
-		LAZY_URE_LOG_FINE << wsrc_ss.str();
+		LAZY_URE_LOG_FINE << msgprfx << wsrc_ss.str();
 	}
 
 	// Calculate the total weight to be sure it's greater than zero
