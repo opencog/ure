@@ -262,20 +262,25 @@ Source* ForwardChainer::select_source(const std::string& msgprfx)
 	// Debug log
 	if (ure_logger().is_debug_enabled()) {
 		OC_ASSERT(weights.size() == _sources.size());
-		std::stringstream wsrc_ss;
 		size_t wi = 0;
+		// Sort sources according to their weights
+		std::multimap<double, Handle> weighted_sources;
 		for (size_t i = 0; i < weights.size(); i++) {
 			if (0 < weights[i]) {
 				wi++;
 				if (ure_logger().is_fine_enabled()) {
-					wsrc_ss << std::endl << weights[i] << " "
-					        << _sources.sources[i].body->id_to_string();
+					weighted_sources.insert({weights[i], _sources.sources[i].body});
 				}
 			}
 		}
 		LAZY_URE_LOG_DEBUG << msgprfx << "Positively weighted sources ("
 		                   << wi << "/" << weights.size() << ")";
-		LAZY_URE_LOG_FINE << msgprfx << wsrc_ss.str();
+		if (ure_logger().is_fine_enabled()) {
+			std::stringstream ws_ss;
+			for (const auto& wsp : boost::adaptors::reverse(weighted_sources))
+				ws_ss << std::endl << wsp.first << " " << wsp.second->id_to_string();
+			LAZY_URE_LOG_FINE << msgprfx << ws_ss.str();
+		}
 	}
 
 	// Calculate the total weight to be sure it's greater than zero
