@@ -69,14 +69,36 @@ public:
 	bool operator<(const Source& other) const;
 
 	/**
+	 * Insert rule in the rule set to remember it is being
+	 * applied. Return true if insertion is successful (that is if no
+	 * alpha-equivalent rule was already there).
+	 */
+	bool insert_rule(const Rule& rule);
+
+	/**
+	 * Set exhausted flag to true
+	 */
+	void set_exhausted();
+
+	/**
 	 * Set exhausted flag back to false, and erase tried rules
 	 */
 	void reset_exhausted();
 
 	/**
-	 * Check if the given rule is has been tried already
+	 * Get exhausted flag
 	 */
-	bool is_exhausted(const Rule& rule) const;
+	bool is_exhausted() const;
+
+	/**
+	 * Set the exhausted flag of that rule to true
+	 */
+	void set_rule_exhausted(const Rule& rule);
+
+	/**
+	 * Check if the given rule has been tried
+	 */
+	bool is_rule_exhausted(const Rule& rule) const;
 
 	/**
 	 * Return the complexity of new source expanded from this source by
@@ -102,12 +124,12 @@ public:
 	// True iff all rules that could expand the source have been tried
 	bool exhausted;
 
-	// Rules so far applied to that source
+	// Rules so far attempted on that source
 	RuleSet rules;
 
 private:
 	// NEXT TODO: subdivide in smaller and shared mutexes
-	mutable std::mutex _whole_mutex;
+	mutable std::mutex _mutex;
 };
 
 /**
@@ -129,17 +151,28 @@ public:
 	std::vector<double> get_weights() const;
 
 	/**
+	 * Set exhausted flag to true
+	 */
+	void set_exhausted();
+
+	/**
 	 * When new inference rules come in or we get to retry exhausted
 	 * sources, then reset exhausted flags.
 	 */
 	void reset_exhausted();
 
 	/**
+	 * Get exhausted flag
+	 */
+	bool is_exhausted() const;
+
+	/**
 	 * Insert produced sources from src into the population, by
 	 * applying rule with a given probability of success prob (useful
 	 * for calculating complexity).
 	 */
-	void insert(const HandleSet& products, const Source& src, double prob);
+	void insert(const HandleSet& products, const Source& src,
+	            double prob, const std::string& msgprfx="");
 
 	size_t size() const;
 
@@ -166,6 +199,9 @@ private:
 	double complexity_factor(const Source& src) const;
 
 	const UREConfig& _config;
+
+	// NEXT TODO: subdivide in smaller and shared mutexes
+	mutable std::mutex _mutex;
 };
 
 std::string oc_to_string(const Source& source,

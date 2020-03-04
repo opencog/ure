@@ -173,7 +173,7 @@ void UREConfig::fetch_common_parameters(const Handle& rbs)
 		          "Please check rules in /atomspace/examples/ure for example.\n\n",
 		          rule_name->to_short_string().c_str());
 
-		_common_params.rules.emplace(rule_name, rbs);
+		_common_params.rules.insert(Rule(rule_name, rbs));
 	}
 
 	// Fetch maximum number of iterations
@@ -248,7 +248,7 @@ double UREConfig::fetch_num_param(const string& schema_name,
                                   double default_value)
 {
 	Handle param_schema = _as.add_node(SCHEMA_NODE,
-	                             std::move(std::string(schema_name)));
+	                                   std::move(std::string(schema_name)));
 	HandleSeq outputs = fetch_execution_outputs(param_schema, input, NUMBER_NODE);
 
 	if (outputs.size() == 0) {

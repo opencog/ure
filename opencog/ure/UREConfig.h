@@ -257,7 +257,8 @@ private:
 	{
 		ure_logger().debug() << "Rule-base " << rbs_input->get_name()
 		                     << ", set parameter " << param_name
-		                     << " to " << (is_default ? "(default) " : "") << value;
+		                     << " to " << value
+		                     << (is_default ? "[default] " : "");
 	}
 };
 

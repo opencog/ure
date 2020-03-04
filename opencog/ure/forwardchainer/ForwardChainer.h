@@ -24,7 +24,6 @@
 #ifndef _OPENCOG_FORWARDCHAINER_H_
 #define _OPENCOG_FORWARDCHAINER_H_
 
-#include <atomic>
 #include <mutex>
 // #include <shared_mutex>
 
@@ -95,16 +94,15 @@ public:
 	void do_chain();
 
 	/**
-	 * Recursively call do_step till termination.
-	 *
-	 * NEXT TODO: replace by a worker pool.
+	 * run steps until termination criteria are met.
 	 */
-	void do_step_rec();
+	void do_steps();
 
 	/**
-	 * Perform a single forward chaining inference step.
+	 * Perform a single forward chaining inference step on the given
+	 * iteration.
 	 */
-	void do_step();
+	void do_step(int iteration);
 
 	/**
 	 * @return true if the termination criteria have been met.
@@ -128,7 +126,52 @@ private:
 
 	void validate(const Handle& source);
 
-	void expand_meta_rules();
+	/**
+	 * Expand all meta rules into mesa rules.
+	 *
+	 * @param msgprfx is a prefix to prepend before each log message.
+	 */
+	void expand_meta_rules(const std::string& msgprfx);
+
+	/**
+	 * choose next source to expand
+	 *
+	 * @return  A Source to expand
+	 *
+	 * Warning: it is not const because the source is gonna be modified
+	 * by keeping track of the rules applied to it.
+	 */
+	Source* select_source(const std::string& msgprfx);
+
+	/**
+	 * Get rules that unify with the source and that are not exhausted,
+	 * which include rules currently being run.
+	 */
+	RuleSet get_valid_rules(const Source& source);
+
+	/**
+	 * Choose an applicable rules from the rule base by selecting
+	 * rules whose premise structurally matches with the source.
+	 *
+	 * If no rule can be chosen return invalid rule.
+	 *
+	 * @return  A rule that in which @param source could ground.
+	 *
+	 * TODO: move to ControlPolicy
+	 */
+	RuleProbabilityPair select_rule(const Handle& source,
+	                                const std::string& msgprfx="");
+	RuleProbabilityPair select_rule(Source& source,
+	                                const std::string& msgprfx="");
+	RuleProbabilityPair select_rule(const RuleSet&,
+	                                const std::string& msgprfx="");
+
+	/**
+	 * Apply rule.
+	 */
+	HandleSet apply_rule(const Rule& rule);
+
+	RuleSet _rules; /* loaded rules */
 
 	// Knowledge base atomspace
 	AtomSpace& _kb_as;
@@ -146,59 +189,24 @@ private:
 	UREConfig _config;
 
 	// Current iteration
-	std::atomic<int> _iteration;
+	int _iteration;
 
-	std::atomic<bool> _search_focus_set;
+	bool _search_focus_set;
 
-	// NEXT TODO: subdivide in smaller and shared mutexes
+	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _whole_mutex;
 	mutable std::mutex _part_mutex;
+
+	// TODO: use shared mutexes
+	mutable std::mutex _rules_mutex;
 
 	// Population of sources to expand forward
 	SourceSet _sources;
 
 	FCStat _fcstat;
 
-	std::atomic<unsigned> _jobs;
+	unsigned _jobs;
 	unsigned _max_jobs;
-
-protected:
-	/**
-	 * choose next source to expand
-	 *
-	 * @return  A Source to expand
-	 *
-	 * Warning: it is not const because the source is gonna be modified
-	 * by keeping track of the rules applied to it.
-	 */
-	Source* select_source();
-
-	/**
-	 * Get rules that unify with the source
-	 */
-	RuleSet get_valid_rules(const Source& source);
-
-	/**
-	 * Choose an applicable rules from the rule base by selecting
-	 * rules whose premise structurally matches with the source.
-	 *
-	 * If no rule can be chosen return invalid rule.
-	 *
-	 * @return  A rule that in which @param source could ground.
-	 *
-	 * TODO: move to ControlPolicy
-	 */
-	RuleProbabilityPair select_rule(const Handle& source);
-	RuleProbabilityPair select_rule(Source& source);
-	RuleProbabilityPair select_rule(const RuleSet& valid_rules);
-
-	/**
-	 * Apply rule.
-	 */
-	HandleSet apply_rule(const Rule& rule, Source& source);
-	HandleSet apply_rule(const Rule& rule);
-
-	RuleSet _rules; /* loaded rules */
 };
 
 } // ~namespace opencog

@@ -48,19 +48,21 @@ namespace opencog {
 
 void RuleSet::expand_meta_rules(AtomSpace& as)
 {
+	RuleSet new_rules;
 	for (const Rule& rule : *this) {
 		if (rule.is_meta()) {
 			Handle result = rule.apply(as);
 			for (const Handle& produced_h : result->getOutgoingSet()) {
 				Rule produced(rule.get_alias(), produced_h, rule.get_rbs());
-				auto ir = insert(produced);
-				if (ir.second) {
+				bool ir = new_rules.insert(produced);
+				if (ir) {
 					ure_logger().debug() << "New rule produced from meta rule:"
 					                     << std::endl << oc_to_string(produced);
 				}
 			}
 		}
 	}
+	insert(new_rules.begin(), new_rules.end());
 }
 
 HandleSet RuleSet::aliases() const
@@ -71,14 +73,23 @@ HandleSet RuleSet::aliases() const
 	return aliases;
 }
 
+bool RuleSet::insert(const Rule& rule)
+{
+	for (const auto& r : *this)
+		if (rule.is_alpha_equivalent(r))
+			return false;
+	push_back(rule);
+	return true;
+}
+
 std::string RuleSet::to_string(const std::string& indent) const
 {
 	std::stringstream ss;
-	ss << indent << "size = " << size() << std::endl;
+	ss << indent << "size = " << size();
 	size_t i = 0;
 	for (const Rule& rule : *this)
-		ss << indent << "rule[" << i++ << "]:" << std::endl
-		   << oc_to_string(rule, indent + OC_TO_STRING_INDENT) << std::endl;
+		ss << std::endl << indent << "rule[" << i++ << "]:" << std::endl
+		   << oc_to_string(rule, indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
 
@@ -94,22 +105,33 @@ std::string RuleSet::to_short_string(const std::string& indent) const
 }
 
 Rule::Rule()
-	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED) {}
+	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED), _exhausted(false) {}
 
 Rule::Rule(const Handle& rule_member)
-	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED)
+	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED), _exhausted(false)
 {
 	init(rule_member);
 }
 
+Rule::Rule(const Rule& r)
+{
+	premises_as_clauses = r.premises_as_clauses;
+	_rule = r._rule;
+	_rule_alias = r._rule_alias;
+	_name = r._name;
+	_rbs = r._rbs;
+	_tv = r._tv;
+	_exhausted = r._exhausted;
+}
+
 Rule::Rule(const Handle& rule_alias, const Handle& rbs)
-	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED)
+	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED), _exhausted(false)
 {
 	init(rule_alias, rbs);
 }
 
 Rule::Rule(const Handle& rule_alias, const Handle& rule, const Handle& rbs)
-	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED)
+	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED), _exhausted(false)
 {
 	init(rule_alias, rule, rbs);
 }
@@ -175,6 +197,19 @@ bool Rule::verify_rule()
 bool Rule::operator==(const Rule& r) const
 {
 	return content_eq(Handle(_rule), Handle(r._rule));
+}
+
+Rule& Rule::operator=(const Rule& r)
+{
+	premises_as_clauses = r.premises_as_clauses;
+	_rule = r._rule;
+	_rule_alias = r._rule_alias;
+	_name = r._name;
+	_rbs = r._rbs;
+	_tv = r._tv;
+	_exhausted = r._exhausted;
+
+	return *this;
 }
 
 bool Rule::operator<(const Rule& r) const
@@ -452,8 +487,11 @@ RuleTypedSubstitutionMap Rule::unify_source(const Handle& source,
 			// For each typed substitution produce a new rule by
 			// substituting all variables by their associated
 			// values.
-			for (const auto& ts : tss)
-				unified_rules.insert({alpha_rule.substituted(ts, queried_as), ts});
+			for (const auto& ts : tss) {
+				Rule sed_rule = alpha_rule.substituted(ts, queried_as);
+				RuleTypedSubstitutionPair rtsp{sed_rule, ts};
+				unified_rules.insert(rtsp);
+			}
 		}
 	}
 
@@ -487,7 +525,9 @@ RuleTypedSubstitutionMap Rule::unify_target(const Handle& target,
 			// substituting all variables by their associated
 			// values.
 			for (const auto& ts : tss) {
-				unified_rules.insert({alpha_rule.substituted(ts, queried_as), ts});
+				Rule sed_rule = alpha_rule.substituted(ts, queried_as);
+				RuleTypedSubstitutionPair rtsp{sed_rule, ts};
+				unified_rules.insert(rtsp);
 			}
 		}
 	}
@@ -509,11 +549,31 @@ Handle Rule::apply(AtomSpace& as) const
 	return HandleCast(_rule->execute(&as));
 }
 
+void Rule::set_exhausted()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	_exhausted = true;
+}
+
+void Rule::reset_exhausted()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	_exhausted = false;
+}
+
+bool Rule::is_exhausted() const
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	return _exhausted;
+}
+
 std::string Rule::to_string(const std::string& indent) const
 {
 	std::stringstream ss;
 	ss << indent << "name: " << _name << std::endl
+	   << indent << "rbs: " << _rbs->to_short_string() << std::endl
 	   << indent << "tv: " << _tv->to_string() << std::endl
+	   << indent << "exhausted: " << is_exhausted() << std::endl
 	   << indent << "rule:" << std::endl
 	   << _rule->to_string(indent + OC_TO_STRING_INDENT);
 	return ss.str();
@@ -529,7 +589,7 @@ std::string Rule::to_short_string(const std::string& indent) const
 Rule Rule::rand_alpha_converted() const
 {
 	// Clone the rule
-	Rule result = *this;
+	Rule result(*this);
 
 	// Alpha convert the rule
 	result.set_rule(_rule->alpha_convert());
@@ -595,20 +655,18 @@ std::string oc_to_string(const RuleTypedSubstitutionPair& rule_ts,
 	   << oc_to_string(rule_ts.first, indent + OC_TO_STRING_INDENT)
 	   << std::endl;
 	ss << indent << "typed substitutions:" << std::endl
-	   << oc_to_string(rule_ts.second, indent + OC_TO_STRING_INDENT)
-	   << std::endl;
+	   << oc_to_string(rule_ts.second, indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
 std::string oc_to_string(const RuleTypedSubstitutionMap& rules,
                          const std::string& indent)
 {
 	std::stringstream ss;
-	ss << indent << "size = " << rules.size() << std::endl;
+	ss << indent << "size = " << rules.size();
 	size_t i = 0;
 	for (const RuleTypedSubstitutionPair& rule : rules)
-		ss << indent << "rule[" << i++ << "]:" << std::endl
-		   << oc_to_string(rule, indent + OC_TO_STRING_INDENT)
-		   << std::endl;
+		ss << std::endl << indent << "rule[" << i++ << "]:" << std::endl
+		   << oc_to_string(rule, indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
 

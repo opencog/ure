@@ -43,10 +43,6 @@ struct InferenceRecord
 
 class FCStat
 {
-private:
-	std::vector<InferenceRecord> _inf_rec;
-	AtomSpace* _trace_as;
-
 public:
 	FCStat(AtomSpace* trace_as) : _trace_as(trace_as) {}
 
@@ -70,6 +66,14 @@ public:
 	void add_inference_record(unsigned iteration, Handle source,
 	                          const Rule& rule, const HandleSet& product);
 	HandleSet get_all_products() const;
+	HandleSet get_all_products();
+
+private:
+	std::vector<InferenceRecord> _inf_rec;
+	AtomSpace* _trace_as;
+
+	// NEXT TODO: subdivide in smaller and shared mutexes
+	mutable std::mutex _whole_mutex;
 };
 
 }

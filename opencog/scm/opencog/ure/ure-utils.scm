@@ -129,9 +129,9 @@
       to go outside of [-10, 10].
 
   jb: [optional, default=1] Number of jobs to run in parallel. Can
-      speed up reasoning, note that this may alter the results, especially
+      speed up reasoning. Note that this may alter the results, especially
       for the forward chainer as the output of a rule application may depend
-      on the output of the other rules.
+      on the output of other rules.
 
   res: [optional, default=#f] Whether exhausted sources should be
        retried. A source is exhausted if all its valid rules (so that at

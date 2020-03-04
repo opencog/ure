@@ -221,7 +221,8 @@ void BackwardChainer::expand_bit(AndBIT& andbit)
 	// bodies for future use.
 	Handle andbit_fcs = andbit.fcs;
 	Handle bitleaf_body = bitleaf->body;
-	_last_expansion_andbit = _bit.expand(andbit, *bitleaf, {rule, ts}, prob);
+	RuleTypedSubstitutionPair rtsp{rule, ts};
+	_last_expansion_andbit = _bit.expand(andbit, *bitleaf, rtsp, prob);
 
 	// Record the expansion in the trace atomspace
 	if (_last_expansion_andbit) {

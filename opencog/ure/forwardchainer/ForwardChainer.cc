@@ -24,6 +24,7 @@
 #include <future>
 
 #include <opencog/util/random.h>
+#include <opencog/util/pool.h>
 #include <opencog/atoms/core/VariableList.h>
 #include <opencog/atoms/core/FindUtils.h>
 #include <opencog/atoms/pattern/BindLink.h>
@@ -31,7 +32,6 @@
 #include <opencog/ure/Rule.h>
 
 #include "ForwardChainer.h"
-#include "FocusSetPMCB.h"
 #include "../URELogger.h"
 #include "../backwardchainer/ControlPolicy.h"
 #include "../ThompsonSampling.h"
@@ -112,7 +112,7 @@ const UREConfig& ForwardChainer::get_config() const
 
 void ForwardChainer::do_chain()
 {
-	ure_logger().debug("Start Forward Chaining");
+	ure_logger().debug("Start forward chaining");
 	LAZY_URE_LOG_DEBUG << "With rule set:" << std::endl << oc_to_string(_rules);
 
 	// Relex2Logic uses this. TODO make a separate class to handle
@@ -123,77 +123,82 @@ void ForwardChainer::do_chain()
 		return;
 	}
 
+	// Set log thread ID if multi-threaded
+	bool prev_thread_id = ure_logger().get_thread_id_flag();
 	if (1 < (unsigned)_config.get_jobs())
 		ure_logger().set_thread_id_flag(true);
 
 	// Call do_step till termination
-	do_step_rec();
+	do_steps();
 
-	ure_logger().debug("Finished Forward Chaining");
+	// Restore logging thread ID flag
+	ure_logger().set_thread_id_flag(prev_thread_id);
+
+	ure_logger().debug("Finished forward chaining");
 }
 
-void ForwardChainer::do_step_rec()
+void ForwardChainer::do_steps()
 {
-	// NEXT TODO: problem is free threads only get reclaimed after
-	// do_step completes.
-	//
-	// Solution: use opencog::pool
-	if (not termination()) {
-		if ((_jobs + 1) < (unsigned)_config.get_jobs()) {
-			auto policy = std::launch::async;
-			_jobs++;
-			auto ft = std::async(policy, [&]() { do_step(); });
-			do_step_rec();
-			ft.wait();
-			_jobs--;
-		} else {
-			do_step();
-			do_step_rec();
-		}
+	opencog::pool<int> wrkpool;
+
+	while (not termination()) {
+		do_step(_iteration++);
 	}
 }
 
-void ForwardChainer::do_step()
+void ForwardChainer::do_step(int iteration)
 {
-	int local_iteration = _iteration++;
-	ure_logger().debug() << "Iteration " << (local_iteration + 1)
-	                     << "/" << _config.get_maximum_iterations_str();
+	int lipo = iteration + 1;
+	std::string msgprfx = std::string("[I-") + std::to_string(lipo) + "] ";
+	ure_logger().debug() << msgprfx << "Start iteration (" << lipo
+	                     << "/" << _config.get_maximum_iterations_str() << ")";
 
 	// Expand meta rules. This should probably be done on-the-fly in
 	// the select_rule method, but for now it's here
-	expand_meta_rules();
+	expand_meta_rules(msgprfx);
 
 	// Select source
-	Source* source = select_source();
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	Source* source = select_source(msgprfx);
 	if (source) {
-		LAZY_URE_LOG_DEBUG << "Selected source:" << std::endl
+		LAZY_URE_LOG_DEBUG << msgprfx << "Selected source:" << std::endl
 		                   << source->to_string();
 	} else {
-		LAZY_URE_LOG_DEBUG << "No source selected, abort iteration";
+		LAZY_URE_LOG_DEBUG << msgprfx << "No source selected, abort iteration";
 		return;
 	}
 
 	// Select rule
-	RuleProbabilityPair rule_prob = select_rule(*source);
+	RuleProbabilityPair rule_prob = select_rule(*source, msgprfx);
 	const Rule& rule = rule_prob.first;
 	double prob(rule_prob.second);
 	if (not rule.is_valid()) {
-		ure_logger().debug("No selected rule, abort iteration");
+		ure_logger().debug() << msgprfx << "No selected rule, abort iteration";
 		return;
 	} else {
-		LAZY_URE_LOG_DEBUG << "Selected rule, with probability " << prob
+		LAZY_URE_LOG_DEBUG << msgprfx << "Selected rule, with probability " << prob
 		                   << " of success:" << std::endl << rule.to_string();
 	}
 
-	// Apply rule on source
-	HandleSet products = apply_rule(rule, *source);
+	if (source->insert_rule(rule)) {
+		// Apply rule on source
+		HandleSet products = apply_rule(rule);
+		LAZY_URE_LOG_DEBUG << msgprfx << "Results:" << std::endl
+		                   << oc_to_string(products);
 
-	// Insert the produced sources in the population of sources
-	_sources.insert(products, *source, prob);
+		// Insert the produced sources in the population of sources
+		_sources.insert(products, *source, prob, msgprfx);
 
-	// Save trace and results
-	_fcstat.add_inference_record(local_iteration, source->body, rule, products);
+		// The rule has been applied, we can set the exhausted flag
+		source->set_rule_exhausted(rule);
+
+		// Save trace and results
+		_fcstat.add_inference_record(iteration, source->body, rule, products);
+	} else {
+		LAZY_URE_LOG_DEBUG << msgprfx << "Rule " << rule.to_short_string()
+		                   << " is probably being applied on source "
+		                   << source->body->id_to_string()
+		                   << " in another thread. Abort iteration.";
+	}
 }
 
 bool ForwardChainer::termination()
@@ -202,7 +207,7 @@ bool ForwardChainer::termination()
 	std::string msg;
 
 	// Terminate if all sources have been tried
-	if (_sources.exhausted) {
+	if (_sources.is_exhausted()) {
 		msg = "all sources have been exhausted";
 		terminate = true;
 	}
@@ -221,8 +226,6 @@ bool ForwardChainer::termination()
 
 /**
  * Applies all rules in the rule base.
- *
- * @param search_focus_set flag for searching focus set.
  */
 void ForwardChainer::apply_all_rules()
 {
@@ -249,8 +252,9 @@ HandleSet ForwardChainer::get_results_set() const
 	return _fcstat.get_all_products();
 }
 
-Source* ForwardChainer::select_source()
+Source* ForwardChainer::select_source(const std::string& msgprfx)
 {
+	// TODO: refine mutex
 	std::unique_lock<std::mutex> lock(_part_mutex);
 
 	std::vector<double> weights = _sources.get_weights();
@@ -269,24 +273,25 @@ Source* ForwardChainer::select_source()
 				}
 			}
 		}
-		LAZY_URE_LOG_DEBUG << "Positively weighted sources ("
+		LAZY_URE_LOG_DEBUG << msgprfx << "Positively weighted sources ("
 		                   << wi << "/" << weights.size() << ")";
-		LAZY_URE_LOG_FINE << wsrc_ss.str();
+		LAZY_URE_LOG_FINE << msgprfx << wsrc_ss.str();
 	}
 
 	// Calculate the total weight to be sure it's greater than zero
 	double total = boost::accumulate(weights, 0.0);
 
 	if (total == 0.0) {
-		ure_logger().debug() << "All sources have been exhausted";
+		ure_logger().debug() << msgprfx << "All sources have been exhausted";
 		if (_config.get_retry_exhausted_sources()) {
-			ure_logger().debug() << "Reset all exhausted flags to retry them";
+			ure_logger().debug() << msgprfx
+			                     << "Reset all exhausted flags to retry them";
 			_sources.reset_exhausted();
 			// Try again
 			lock.unlock();
-			return select_source();
+			return select_source(msgprfx);
 		} else {
-			_sources.exhausted = true;
+			_sources.set_exhausted();
 			return nullptr;
 		}
 	}
@@ -298,6 +303,8 @@ Source* ForwardChainer::select_source()
 
 RuleSet ForwardChainer::get_valid_rules(const Source& source)
 {
+	std::lock_guard<std::mutex> lock(_rules_mutex); // TODO: refine
+
 	// Generate all valid rules
 	RuleSet valid_rules;
 	for (const Rule& rule : _rules) {
@@ -317,13 +324,13 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 			// Insert the unaltered rule, which will have the effect of
 			// applying to all sources, not just this one. Convenient for
 			// quickly achieving inference closure albeit expensive.
-			if (not unified_rules.empty() and not source.is_exhausted(rule)) {
+			if (not unified_rules.empty() and not source.is_rule_exhausted(rule)) {
 				une_rules.insert(rule);
 			}
 		} else {
 			// Insert all specializations obtained from the unificiation
 			for (const auto& ur : unified_rules) {
-				if (not source.is_exhausted(ur)) {
+				if (not source.is_rule_exhausted(ur)) {
 					une_rules.insert(ur);
 				}
 			}
@@ -334,38 +341,39 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 	return valid_rules;
 }
 
-RuleProbabilityPair ForwardChainer::select_rule(const Handle& h)
+RuleProbabilityPair ForwardChainer::select_rule(const Handle& h,
+                                                const std::string& msgprfx)
 {
 	Source src(h);
-	return select_rule(src);
+	return select_rule(src, msgprfx);
 }
 
-RuleProbabilityPair ForwardChainer::select_rule(Source& source)
+RuleProbabilityPair ForwardChainer::select_rule(Source& source,
+                                                const std::string& msgprfx)
 {
-	std::lock_guard<std::mutex> lock(_part_mutex);
-
 	const RuleSet valid_rules = get_valid_rules(source);
 
 	// Log valid rules
 	if (ure_logger().is_debug_enabled()) {
 		std::stringstream ss;
 		if (valid_rules.empty())
-			ss << "No valid rule";
+			ss << msgprfx << "No valid rule";
 		else
-			ss << "The following rules are valid:" << std::endl
+			ss << msgprfx << "The following rules are valid:" << std::endl
 			   << valid_rules.to_short_string();
 		LAZY_URE_LOG_DEBUG << ss.str();
 	}
 
 	if (valid_rules.empty()) {
-		source.exhausted = true;
-		return {Rule(), 0.0};
+		source.set_exhausted();
+		return RuleProbabilityPair{Rule(), 0.0};
 	}
 
-	return select_rule(valid_rules);
+	return select_rule(valid_rules, msgprfx);
 };
 
-RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules)
+RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules,
+                                                const std::string& msgprfx)
 {
 	// Build vector of all valid truth values
 	TruthValueSeq tvs;
@@ -378,10 +386,10 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules)
 	// Log the distribution
 	if (ure_logger().is_debug_enabled()) {
 		std::stringstream ss;
-		ss << "Rule weights:" << std::endl;
+		ss << msgprfx << "Rule weights:";
 		size_t i = 0;
 		for (const Rule& rule : valid_rules) {
-			ss << weights[i] << " " << rule.get_name() << std::endl;
+			ss << std::endl << weights[i] << " " << rule.get_name();
 			i++;
 		}
 		ure_logger().debug() << ss.str();
@@ -395,16 +403,7 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules)
 	// the objective (required to calculate its complexity)
 	double prob = BetaDistribution(selected_rule.get_tv()).mean();
 
-	return {selected_rule, prob};
-}
-
-HandleSet ForwardChainer::apply_rule(const Rule& rule, Source& source)
-{
-	std::lock_guard<std::mutex> lock(_part_mutex);
-
-	// Keep track of rule application to not do it again, and apply rule
-	source.rules.insert(rule);
-	return apply_rule(rule);
+	return RuleProbabilityPair{selected_rule, prob};
 }
 
 HandleSet ForwardChainer::apply_rule(const Rule& rule)
@@ -435,7 +434,6 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 		AtomSpace derived_rule_as(&ref_as);
 		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
 
-
 		// Make Sure that all constant clauses appear in the AtomSpace
 		// as unification might have created constant clauses which aren't
 		HandleSeq clauses = rule.get_clauses();
@@ -445,31 +443,10 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 				if (ref_as.get_atom(clause) == Handle::UNDEFINED)
 					return results;
 
-		if (_search_focus_set) {
-			// rule.get_rule() may introduce a new atom that satisfies
-			// condition for the output. In order to prevent this
-			// undesirable effect, lets store rule.get_rule() in a
-			// child atomspace of parent focus_set_as so that PM will
-			// never be able to find this new undesired atom created
-			// from partial grounding.
-			BindLinkPtr bl = BindLinkCast(rhcpy);
-			FocusSetPMCB fs_pmcb(&derived_rule_as, &_kb_as);
-			fs_pmcb.implicand = bl->get_implicand();
-			bl->satisfy(fs_pmcb);
-			HandleSeq rslts;
-			for (const ValuePtr& v: fs_pmcb.get_result_set())
-				rslts.push_back(HandleCast(v));
-			add_results(_focus_set_as, rslts);
-		}
-		// Search the whole atomspace.
-		else {
-			Handle h = HandleCast(rhcpy->execute(&_kb_as));
-			add_results(_kb_as, h->getOutgoingSet());
-		}
+		Handle h = HandleCast(rhcpy->execute(&_kb_as));
+		add_results(_kb_as, h->getOutgoingSet());
 	}
 	catch (...) {}
-
-	LAZY_URE_LOG_FINE << "Results:" << std::endl << oc_to_string(results);
 
 	return results;
 }
@@ -480,16 +457,16 @@ void ForwardChainer::validate(const Handle& source)
 		throw RuntimeException(TRACE_INFO, "ForwardChainer - Invalid source.");
 }
 
-void ForwardChainer::expand_meta_rules()
+void ForwardChainer::expand_meta_rules(const std::string& msgprfx)
 {
-	std::lock_guard<std::mutex> lock(_part_mutex);
+	std::lock_guard<std::mutex> lock(_rules_mutex);
 	// This is kinda of hack before meta rules are fully supported by
 	// the Rule class.
 	size_t rules_size = _rules.size();
 	_rules.expand_meta_rules(_kb_as);
 
 	if (rules_size != _rules.size()) {
-		ure_logger().debug() << "The rule set has gone from "
+		ure_logger().debug() << msgprfx << "The rule set has gone from "
 		                     << rules_size << " rules to " << _rules.size();
 	}
 }

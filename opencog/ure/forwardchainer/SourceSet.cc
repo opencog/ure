@@ -40,49 +40,66 @@ Source::Source(const Handle& bdy, const Handle& vdcl, double cpx, double cpx_fct
 
 bool Source::operator==(const Source& other) const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
 	return body == other.body && vardecl == other.vardecl;
 }
 
 bool Source::operator<(const Source& other) const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
-	// Sort by complexity to so that simpler sources come first. Then
-	// by content. Makes it easier to prune by complexity. It should
-	// also make sampling a bit faster. And finally the user probabably
-	// want that.
-	return (complexity < other.complexity)
-		or (complexity == other.complexity
-		    and (content_based_handle_less()(body, other.body)
-		         or (body == other.body
-		             and content_based_handle_less()(vardecl, other.vardecl))));
+	// Sort by content of body, or if equal of vardecl.
+	return (body < other.body)
+		or (content_eq(body, other.body) and vardecl < other.vardecl);
+}
+
+bool Source::insert_rule(const Rule& rule)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	return rules.insert(rule);
+}
+
+void Source::set_exhausted()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	exhausted = true;
 }
 
 void Source::reset_exhausted()
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	exhausted = false;
 	rules.clear();
 }
 
-bool Source::is_exhausted(const Rule& pos_rule) const
+bool Source::is_exhausted() const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
-	for (const Rule& rule : rules)
-		if (pos_rule.is_alpha_equivalent(rule))
+	std::lock_guard<std::mutex> lock(_mutex);
+	return exhausted;
+}
+
+void Source::set_rule_exhausted(const Rule& rule)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	for (Rule& r : rules)
+		if (rule.is_alpha_equivalent(r))
+			r.set_exhausted();
+}
+
+bool Source::is_rule_exhausted(const Rule& rule) const
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	for (const Rule& r : rules)
+		if (rule.is_alpha_equivalent(r) and r.is_exhausted())
 			return true;
 	return false;
 }
 
 double Source::expand_complexity(double prob) const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
 	return complexity - log2(prob);
 }
 
 std::string Source::to_string(const std::string& indent) const
 {
-	std::lock_guard<std::mutex> lock(_whole_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	std::stringstream ss;
 	ss << indent << "body:" << std::endl
 	   << oc_to_string(body, indent + oc_to_string_indent) << std::endl
@@ -117,14 +134,22 @@ SourceSet::SourceSet(const UREConfig& config,
 
 std::vector<double> SourceSet::get_weights() const
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	std::vector<double> results;
 	for (const Source& src : sources)
 		results.push_back(get_weight(src));
 	return results;
 }
 
+void SourceSet::set_exhausted()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	exhausted = true;
+}
+
 void SourceSet::reset_exhausted()
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	if (sources.empty()) {
 		exhausted = true;
 		return;
@@ -135,8 +160,16 @@ void SourceSet::reset_exhausted()
 	exhausted = false;
 }
 
-void SourceSet::insert(const HandleSet& products, const Source& src, double prob)
+bool SourceSet::is_exhausted() const
 {
+	std::lock_guard<std::mutex> lock(_mutex);
+	return exhausted;
+}
+
+void SourceSet::insert(const HandleSet& products, const Source& src,
+                       double prob, const std::string& msgprfx)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
 	const static Handle empty_variable_list = Handle(createVariableList(HandleSeq()));
 
 	// Calculate the complexity of the new sources
@@ -151,7 +184,8 @@ void SourceSet::insert(const HandleSet& products, const Source& src, double prob
 
 		// Make sure it isn't already in the sources
 		if (boost::binary_search(sources, *new_src)) {
-			LAZY_URE_LOG_FINE << "The following source is already in the population: "
+			LAZY_URE_LOG_FINE << msgprfx
+			                  << "The following source is already in the population: "
 			                  << new_src->body->id_to_string();
 			delete new_src;
 			continue;
@@ -159,26 +193,30 @@ void SourceSet::insert(const HandleSet& products, const Source& src, double prob
 
 		// Otherwise, insert it while preserving the order
 		auto ptr_less = [](const Source& ls, const Source* rs) {
-			                return ls < *rs; };
+			return ls < *rs; };
 		sources.insert(boost::lower_bound(sources, new_src, ptr_less), new_src);
 		new_sources++;
 	}
-	LAZY_URE_LOG_DEBUG << products.size() << " results, including "
+	LAZY_URE_LOG_DEBUG << msgprfx
+	                   << products.size() << " results, including "
 	                   << new_sources << " new sources";
 }
 
 size_t SourceSet::size() const
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	return sources.size();
 }
 
 bool SourceSet::empty() const
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	return sources.empty();
 }
 
 std::string SourceSet::to_string(const std::string& indent) const
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	return oc_to_string(sources, indent);
 }
 
@@ -189,7 +227,7 @@ double SourceSet::get_weight(const Source& src) const
 	// factor in the confidence of the source, as the higher the
 	// confidence of the source, the higher the confidence of the
 	// conclusion.
-	return src.exhausted ? 0.0 : complexity_factor(src);
+	return src.is_exhausted() ? 0.0 : complexity_factor(src);
 }
 
 double SourceSet::complexity_factor(const Source& src) const

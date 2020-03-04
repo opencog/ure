@@ -30,7 +30,10 @@ void FCStat::add_inference_record(unsigned iteration, Handle source,
                                   const Rule& rule,
                                   const HandleSet& product)
 {
-	_inf_rec.emplace_back(source, rule, product);
+	{
+		std::lock_guard<std::mutex> lock(_whole_mutex);
+		_inf_rec.emplace_back(source, rule, product);
+	}
 
 	if (_trace_as)
 		for (const Handle& p : product)
@@ -42,6 +45,7 @@ void FCStat::add_inference_record(unsigned iteration, Handle source,
 
 HandleSet FCStat::get_all_products() const
 {
+	std::lock_guard<std::mutex> lock(_whole_mutex);
 	HandleSet all;
 	for(const auto& ir : _inf_rec)
 		all.insert(ir.product.begin(),ir.product.end());
