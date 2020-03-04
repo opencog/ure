@@ -45,15 +45,9 @@ bool Source::operator==(const Source& other) const
 
 bool Source::operator<(const Source& other) const
 {
-	// Sort by complexity to so that simpler sources come first. Then
-	// by content. Makes it easier to prune by complexity. It should
-	// also make sampling a bit faster. And finally the user probabably
-	// want that.
-	return (complexity < other.complexity)
-		or (complexity == other.complexity
-		    and (content_based_handle_less()(body, other.body)
-		         or (body == other.body
-		             and content_based_handle_less()(vardecl, other.vardecl))));
+	// Sort by content of body, or if equal of vardecl.
+	return (body < other.body)
+		or (content_eq(body, other.body) and vardecl < other.vardecl);
 }
 
 bool Source::insert_rule(const Rule& rule)
@@ -199,7 +193,7 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
 
 		// Otherwise, insert it while preserving the order
 		auto ptr_less = [](const Source& ls, const Source* rs) {
-			                return ls < *rs; };
+			return ls < *rs; };
 		sources.insert(boost::lower_bound(sources, new_src, ptr_less), new_src);
 		new_sources++;
 	}
