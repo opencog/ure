@@ -106,6 +106,12 @@ public:
 	 */
 	double expand_complexity(double prob) const;
 
+	/**
+	 * Return the weight (probability estimate up to a normalizing
+	 * factor) of expanding src.
+	 */
+	double get_weight() const;
+
 	std::string to_string(const std::string& indent=empty_string) const;
 
 	// Body of the source
@@ -120,6 +126,10 @@ public:
 	// Proxy for the prior probability of the source, taking into
 	// account the complexity penalty.
 	const double complexity_factor;
+
+	// Weight, akin to the unormalized probability of selecting that
+	// source.
+	const double weight;
 
 	// True iff all rules that could expand the source have been tried
 	bool exhausted;
@@ -191,13 +201,6 @@ public:
 	bool exhausted;
 
 private:
-	/**
-	 * Calculate the weight (probability estimate up to a normalizing
-	 * factor) of expanding src.
-	 */
-	double get_weight(const Source& src) const;
-	double complexity_factor(const Source& src) const;
-
 	const UREConfig& _config;
 
 	// NEXT TODO: subdivide in smaller and shared mutexes

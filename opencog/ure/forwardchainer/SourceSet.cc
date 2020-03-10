@@ -26,14 +26,29 @@
 #include <boost/range/algorithm/lower_bound.hpp>
 
 #include <opencog/util/numeric.h>
+#include <opencog/atoms/core/VariableSet.h>
 
 namespace opencog {
+
+double calculate_weight(const Handle& bdy, double cpx_fctr)
+{
+	// Calculate weight, for now only one fitness function is hard
+	// coded
+	//
+	// complexity_factor * strength * confidence
+	//
+	// The minimum value is 1e-16 to not ignore completely the source
+	// when the it is a default TV.
+	TruthValuePtr tv = bdy->getTruthValue();
+	return std::max(1e-16, cpx_fctr * tv->get_mean() * tv->get_confidence());
+}
 
 Source::Source(const Handle& bdy, const Handle& vdcl, double cpx, double cpx_fctr)
 	: body(bdy),
 	  vardecl(vdcl),
 	  complexity(cpx),
 	  complexity_factor(cpx_fctr),
+	  weight(calculate_weight(bdy, cpx_fctr)),
 	  exhausted(false)
 {
 }
@@ -97,6 +112,13 @@ double Source::expand_complexity(double prob) const
 	return complexity - log2(prob);
 }
 
+double Source::get_weight() const
+{
+	if (is_exhausted())
+		return 0.0;
+	return weight;
+}
+
 std::string Source::to_string(const std::string& indent) const
 {
 	std::lock_guard<std::mutex> lock(_mutex);
@@ -124,8 +146,12 @@ SourceSet::SourceSet(const UREConfig& config,
 		if (init_sources.empty()) {
 			exhausted = true;
 		} else {
-			for (const Handle& src : init_sources)
-				sources.push_back(new Source(src, init_vardecl));
+			for (const Handle& src : init_sources) {
+				auto ptr_less = [](const Source& ls, const Source* rs) {
+					return ls < *rs; };
+				Source* new_src = new Source(src, init_vardecl);
+				sources.insert(boost::lower_bound(sources, new_src, ptr_less), new_src);
+			}
 		}
 	} else {
 		exhausted = true;
@@ -137,7 +163,7 @@ std::vector<double> SourceSet::get_weights() const
 	std::lock_guard<std::mutex> lock(_mutex);
 	std::vector<double> results;
 	for (const Source& src : sources)
-		results.push_back(get_weight(src));
+		results.push_back(src.get_weight());
 	return results;
 }
 
@@ -170,7 +196,7 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
                        double prob, const std::string& msgprfx)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
-	const static Handle empty_variable_list = Handle(createVariableList(HandleSeq()));
+	const static Handle empty_variable_set = Handle(createVariableSet(HandleSeq()));
 
 	// Calculate the complexity of the new sources
 	double new_cpx = src.expand_complexity(prob);
@@ -179,7 +205,7 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
 	// Insert all new sources
 	int new_sources = 0;
 	for (const Handle& product : products) {
-		Source* new_src = new Source(product, empty_variable_list,
+		Source* new_src = new Source(product, empty_variable_set,
 		                             new_cpx, new_cpx_fctr);
 
 		// Make sure it isn't already in the sources
@@ -218,21 +244,6 @@ std::string SourceSet::to_string(const std::string& indent) const
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	return oc_to_string(sources, indent);
-}
-
-double SourceSet::get_weight(const Source& src) const
-{
-	// TODO: we could take into account some sort of fitness. For
-	// instance if the fitness is maximize confidence, then we could
-	// factor in the confidence of the source, as the higher the
-	// confidence of the source, the higher the confidence of the
-	// conclusion.
-	return src.is_exhausted() ? 0.0 : complexity_factor(src);
-}
-
-double SourceSet::complexity_factor(const Source& src) const
-{
-	return src.complexity_factor;
 }
 
 std::string oc_to_string(const Source& src, const std::string& indent)

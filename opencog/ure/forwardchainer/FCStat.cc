@@ -35,12 +35,14 @@ void FCStat::add_inference_record(unsigned iteration, Handle source,
 		_inf_rec.emplace_back(source, rule, product);
 	}
 
-	if (_trace_as)
-		for (const Handle& p : product)
-			_trace_as->add_link(EXECUTION_LINK,
-			                    rule.get_alias(),
-			                    HandleCast(createNumberNode(iteration)),
-			                    source, p);
+	if (_trace_as and not product.empty()) {
+		Handle schema = rule.get_alias();
+		Handle i = _trace_as->add_node(NUMBER_NODE, std::to_string(iteration + 1));
+		Handle inputs = _trace_as->add_link(LIST_LINK, source, i);
+		for (const Handle& output : product) {
+			_trace_as->add_link(EXECUTION_LINK, schema, inputs, output);
+		}
+	}
 }
 
 HandleSet FCStat::get_all_products() const
