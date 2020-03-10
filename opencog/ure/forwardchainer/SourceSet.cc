@@ -196,7 +196,7 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
                        double prob, const std::string& msgprfx)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
-	const static Handle empty_variable_list = Handle(createVariableList(HandleSeq()));
+	const static Handle empty_variable_set = Handle(createVariableSet(HandleSeq()));
 
 	// Calculate the complexity of the new sources
 	double new_cpx = src.expand_complexity(prob);
@@ -205,7 +205,7 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
 	// Insert all new sources
 	int new_sources = 0;
 	for (const Handle& product : products) {
-		Source* new_src = new Source(product, empty_variable_list,
+		Source* new_src = new Source(product, empty_variable_set,
 		                             new_cpx, new_cpx_fctr);
 
 		// Make sure it isn't already in the sources
