@@ -52,14 +52,15 @@ public:
 	 *
 	 * ExecutionLink
 	 *    <rule>
-	 *    <step>
-	 *    <source>
+	 *    List
+	 *      <step>
+	 *      <source>
 	 *    <product>
 	 *
 	 * where
 	 *
 	 * 1. <rule> is DefinedSchemaNode <rule-name>
-	 * 2. <rule> is NumberNode <#iteration>
+	 * 2. <step> is NumberNode <#iteration>
 	 * 3. <source> is the source
 	 * 4. <product> is a SetLink <p1> ... <pn> where pi are the products
 	 */
