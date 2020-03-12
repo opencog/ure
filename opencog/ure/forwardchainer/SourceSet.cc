@@ -202,8 +202,8 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
 	double new_cpx = src.expand_complexity(prob);
 	double new_cpx_fctr = exp(-_config.get_complexity_penalty() * new_cpx);
 
-	// Insert all new sources
-	int new_sources = 0;
+	// Keep all new sources
+	std::vector<Source*> new_srcs;
 	for (const Handle& product : products) {
 		Source* new_src = new Source(product, empty_variable_set,
 		                             new_cpx, new_cpx_fctr);
@@ -214,18 +214,30 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
 			                  << "The following source is already in the population: "
 			                  << new_src->body->id_to_string();
 			delete new_src;
-			continue;
+		} else {
+			new_srcs.push_back(new_src);
 		}
+	}
 
-		// Otherwise, insert it while preserving the order
+	// Insert all new sources
+	for (Source* new_src : new_srcs) {
+		// Insert it while preserving the order
 		auto ptr_less = [](const Source& ls, const Source* rs) {
 			return ls < *rs; };
 		sources.insert(boost::lower_bound(sources, new_src, ptr_less), new_src);
-		new_sources++;
 	}
-	LAZY_URE_LOG_DEBUG << msgprfx
-	                   << products.size() << " results, including "
-	                   << new_sources << " new sources";
+
+	// Log the new sources
+	if (ure_logger().is_debug_enabled()) {
+		LAZY_URE_LOG_DEBUG << msgprfx
+		                   << products.size() << " results, including "
+		                   << new_srcs.size() << " new";
+		HandleSeq new_src_bodies;
+		for (const Source* new_src : new_srcs)
+			new_src_bodies.push_back(new_src->body);
+		LAZY_URE_LOG_DEBUG << msgprfx << "New sources:"
+		                    << std::endl << new_src_bodies;
+	}
 }
 
 size_t SourceSet::size() const

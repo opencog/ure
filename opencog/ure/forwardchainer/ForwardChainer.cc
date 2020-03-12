@@ -184,8 +184,6 @@ void ForwardChainer::do_step(int iteration)
 	if (source->insert_rule(rule)) {
 		// Apply rule on source
 		HandleSet products = apply_rule(rule);
-		LAZY_URE_LOG_FINE << msgprfx << "Results:" << std::endl
-		                  << oc_to_string(products);
 
 		// Insert the produced sources in the population of sources
 		_sources.insert(products, *source, prob, msgprfx);
