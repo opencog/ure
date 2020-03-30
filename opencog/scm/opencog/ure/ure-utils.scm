@@ -733,24 +733,149 @@
 ;; URE Logger ;;
 ;;;;;;;;;;;;;;;;
 
-(define (ure-logger-set-level! l) (cog-logger-set-level! (cog-ure-logger) l))
-(define (ure-logger-get-level) (cog-logger-get-level (cog-ure-logger)))
-(define (ure-logger-set-filename! filename) (cog-logger-set-filename! (cog-ure-logger) filename))
-(define (ure-logger-get-filename) (cog-logger-get-filename (cog-ure-logger)))
-(define (ure-logger-set-stdout! enable) (cog-logger-set-stdout! (cog-ure-logger) enable))
-(define (ure-logger-set-sync! enable) (cog-logger-set-sync! (cog-ure-logger) enable))
-(define (ure-logger-set-timestamp! enable) (cog-logger-set-timestamp! (cog-ure-logger) enable))
-(define (ure-logger-error-enabled?) (cog-logger-error-enabled? (cog-ure-logger)))
-(define (ure-logger-warn-enabled?) (cog-logger-warn-enabled? (cog-ure-logger)))
-(define (ure-logger-info-enabled?) (cog-logger-info-enabled? (cog-ure-logger)))
-(define (ure-logger-debug-enabled?) (cog-logger-debug-enabled? (cog-ure-logger)))
-(define (ure-logger-fine-enabled?) (cog-logger-fine-enabled? (cog-ure-logger)))
-(define (ure-logger-error . args) (apply cog-logger-error (cons (cog-ure-logger) args)))
-(define (ure-logger-warn . args) (apply cog-logger-warn (cons (cog-ure-logger) args)))
-(define (ure-logger-info . args) (apply cog-logger-info (cons (cog-ure-logger) args)))
-(define (ure-logger-debug . args) (apply cog-logger-debug (cons (cog-ure-logger) args)))
-(define (ure-logger-fine . args) (apply cog-logger-fine (cons (cog-ure-logger) args)))
-(define (ure-logger-flush) (cog-logger-flush (cog-ure-logger)))
+(define (ure-logger-set-level! l)
+"
+  Wrapper around cog-logger-set-level! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-level!) for more info.
+"
+  (cog-logger-set-level! (cog-ure-logger) l))
+
+(define (ure-logger-get-level)
+"
+  Wrapper around cog-logger-set-level! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-level!) for more info.
+"
+  (cog-logger-get-level (cog-ure-logger)))
+
+(define (ure-logger-set-filename! filename)
+"
+  Wrapper around cog-logger-set-filename! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-filename!) for more info.
+"
+  (cog-logger-set-filename! (cog-ure-logger) filename))
+
+(define (ure-logger-get-filename)
+"
+  Wrapper around cog-logger-get-filename using (cog-ure-logger) as logger.
+
+  See (help cog-logger-get-filename) for more info.
+"
+  (cog-logger-get-filename (cog-ure-logger)))
+
+(define (ure-logger-set-stdout! enable)
+"
+  Wrapper around cog-logger-set-stdout! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-stdout!) for more info.
+"
+  (cog-logger-set-stdout! (cog-ure-logger) enable))
+
+(define (ure-logger-set-sync! enable)
+"
+  Wrapper around cog-logger-set-sync! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-sync!) for more info.
+"
+  (cog-logger-set-sync! (cog-ure-logger) enable))
+
+(define (ure-logger-set-timestamp! enable)
+"
+  Wrapper around cog-logger-set-timestamp! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-timestamp!) for more info.
+"
+  (cog-logger-set-timestamp! (cog-ure-logger) enable))
+
+(define (ure-logger-error-enabled?)
+"
+  Wrapper around cog-logger-error-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-error-enabled?) for more info.
+"
+  (cog-logger-error-enabled? (cog-ure-logger)))
+
+(define (ure-logger-warn-enabled?)
+"
+  Wrapper around cog-logger-warn-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-warn-enabled?) for more info.
+"
+  (cog-logger-warn-enabled? (cog-ure-logger)))
+
+(define (ure-logger-info-enabled?)
+"
+  Wrapper around cog-logger-info-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-info-enabled?) for more info.
+"
+  (cog-logger-info-enabled? (cog-ure-logger)))
+
+(define (ure-logger-debug-enabled?)
+"
+  Wrapper around cog-logger-debug-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-debug-enabled?) for more info.
+"
+  (cog-logger-debug-enabled? (cog-ure-logger)))
+
+(define (ure-logger-fine-enabled?)
+"
+  Wrapper around cog-logger-fine-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-fine-enabled?) for more info.
+"
+  (cog-logger-fine-enabled? (cog-ure-logger)))
+
+(define (ure-logger-error . args)
+"
+  Wrapper around cog-logger-error using (cog-ure-logger) as logger.
+
+  See (help cog-logger-error) for more info.
+"
+  (apply cog-logger-error (cons (cog-ure-logger) args)))
+
+(define (ure-logger-warn . args)
+"
+  Wrapper around cog-logger-warn using (cog-ure-logger) as logger.
+
+  See (help cog-logger-warn) for more info.
+"
+  (apply cog-logger-warn (cons (cog-ure-logger) args)))
+
+(define (ure-logger-info . args)
+"
+  Wrapper around cog-logger-info using (cog-ure-logger) as logger.
+
+  See (help cog-logger-info) for more info.
+"
+  (apply cog-logger-info (cons (cog-ure-logger) args)))
+
+(define (ure-logger-debug . args)
+"
+  Wrapper around cog-logger-debug using (cog-ure-logger) as logger.
+
+  See (help cog-logger-debug) for more info.
+"
+  (apply cog-logger-debug (cons (cog-ure-logger) args)))
+
+(define (ure-logger-fine . args)
+"
+  Wrapper around cog-logger-fine using (cog-ure-logger) as logger.
+
+  See (help cog-logger-fine) for more info.
+"
+  (apply cog-logger-fine (cons (cog-ure-logger) args)))
+
+(define (ure-logger-flush)
+"
+  Wrapper around cog-logger-flush using (cog-ure-logger) as logger.
+
+  See (help cog-logger-flush) for more info.
+"
+  (cog-logger-flush (cog-ure-logger)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers for Implementing URE Rules ;;
