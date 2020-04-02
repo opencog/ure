@@ -231,7 +231,7 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
 	if (ure_logger().is_debug_enabled()) {
 		LAZY_URE_LOG_DEBUG << msgprfx
 		                   << products.size() << " results, including "
-		                   << new_srcs.size() << " new";
+		                   << new_srcs.size() << " new sources";
 		HandleSeq new_src_bodies;
 		for (const Source* new_src : new_srcs)
 			new_src_bodies.push_back(new_src->body);

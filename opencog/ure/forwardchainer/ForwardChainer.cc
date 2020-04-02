@@ -22,6 +22,8 @@
  */
 
 #include <future>
+#include <thread>
+#include <chrono>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -50,6 +52,7 @@ ForwardChainer::ForwardChainer(AtomSpace& kb_as,
 	: _kb_as(kb_as),
 	  _rb_as(rb_as),
 	  _config(rb_as, rbs),
+	  _thread_count(0),
 	  _sources(_config, source, vardecl),
 	  _fcstat(trace_as)
 {
@@ -95,11 +98,8 @@ void ForwardChainer::init(const Handle& source,
 	for (const Rule& rule : _rules)
 		rule.premises_as_clauses = true; // can be modify as mutable
 
-	// Reset the iteration count and max count
+	// Reset the iteration count
 	_iteration = 0;
-
-	// Multithreading params
-	_jobs = 0;
 }
 
 UREConfig& ForwardChainer::get_config()
@@ -125,27 +125,65 @@ void ForwardChainer::do_chain()
 		return;
 	}
 
-	// Set log thread ID if multi-threaded
-	bool prev_thread_id = ure_logger().get_thread_id_flag();
-	if (1 < (unsigned)_config.get_jobs())
+	if (_config.get_jobs() <= 1)
+	{
+		// Do steps single-threadedly till termination
+		do_steps_singlethread();
+	} else
+	{
+		// Set log thread ID if multi-threaded
+		bool prev_thread_id = ure_logger().get_thread_id_flag();
 		ure_logger().set_thread_id_flag(true);
 
-	// Call do_step till termination
-	do_steps();
+		// Do steps multi-threadedly till termination
+		do_steps_multithread();
 
-	// Restore logging thread ID flag
-	ure_logger().set_thread_id_flag(prev_thread_id);
+		// Restore logging thread ID flag
+		ure_logger().set_thread_id_flag(prev_thread_id);
+	}
 
-	ure_logger().debug("Finished forward chaining");
+	// Log termination messages
+	termination_log();
+	LAZY_URE_LOG_DEBUG << "Finished forward chaining with results:"
+	                   << std::endl << oc_to_string(get_results_set());
 }
 
-void ForwardChainer::do_steps()
+void ForwardChainer::do_steps_singlethread()
 {
-	opencog::pool<int> wrkpool;
+	while (not termination()) do_step(_iteration++);
+}
 
-	while (not termination()) {
-		do_step(_iteration++);
+// TODO: if creating/destroying threads is too expensive, use a thread
+// pool (see boost::asio::thread_pool).
+void ForwardChainer::do_steps_multithread()
+{
+	// Create a pool of iterations
+	opencog::pool<int> itrpool;
+
+	// Run steps in parallel
+	while (not termination())
+	{
+		if (_thread_count < _config.get_jobs())
+			itrpool.give_back(_iteration++);
+
+		int local_iteration = itrpool.borrow();
+		if (local_iteration < 0)
+			// A negative iteration resource is freed to unstuck the main
+			// thread and indicates that the process has terminated.
+			break;
+
+		_thread_count++;
+		auto do_step_manage = [=,&itrpool]() {
+			do_step(local_iteration);
+			itrpool.give_back(termination() ? -1 : _iteration++);
+			_thread_count--; };
+		auto thrd = std::thread(do_step_manage);
+		thrd.detach();
 	}
+
+	// Wait for the remaining threads to terminate
+	using namespace std::chrono_literals;
+	while (0 < _thread_count) std::this_thread::sleep_for(1ms);
 }
 
 void ForwardChainer::do_step(int iteration)
@@ -204,24 +242,35 @@ void ForwardChainer::do_step(int iteration)
 bool ForwardChainer::termination()
 {
 	bool terminate = false;
-	std::string msg;
 
 	// Terminate if all sources have been tried
 	if (_sources.is_exhausted()) {
-		msg = "all sources have been exhausted";
 		terminate = true;
 	}
 	// Terminate if max iterations has been reached
 	else if (0 <= _config.get_maximum_iterations() and
 	         _config.get_maximum_iterations() <= _iteration) {
-		msg = "reach maximum number of iterations";
 		terminate = true;
 	}
 
-	if (terminate)
-		ure_logger().debug() << "Terminate: " << msg;
-
 	return terminate;
+}
+
+void ForwardChainer::termination_log()
+{
+	std::string msg;
+
+	// Terminate if all sources have been tried
+	if (_sources.is_exhausted()) {
+		msg = "all sources have been exhausted";
+	}
+	// Terminate if max iterations has been reached
+	else if (0 <= _config.get_maximum_iterations() and
+	         _config.get_maximum_iterations() <= _iteration) {
+		msg = "reach maximum number of iterations";
+	}
+
+	ure_logger().debug() << "Terminate: " << msg;
 }
 
 /**

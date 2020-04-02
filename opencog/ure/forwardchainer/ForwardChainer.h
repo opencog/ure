@@ -94,9 +94,11 @@ public:
 	void do_chain();
 
 	/**
-	 * run steps until termination criteria are met.
+	 * run steps (single or multi threaded) until termination criteria
+	 * are met.
 	 */
-	void do_steps();
+	void do_steps_singlethread();
+	void do_steps_multithread();
 
 	/**
 	 * Perform a single forward chaining inference step on the given
@@ -108,6 +110,11 @@ public:
 	 * @return true if the termination criteria have been met.
 	 */
 	bool termination();
+
+	/**
+	 * Log the cause of termination
+	 */
+	void termination_log();
 
 	/**
 	 * @return all results in their order of inference.
@@ -189,7 +196,7 @@ private:
 	UREConfig _config;
 
 	// Current iteration
-	int _iteration;
+	std::atomic<int> _iteration;
 
 	bool _search_focus_set;
 
@@ -200,13 +207,13 @@ private:
 	// TODO: use shared mutexes
 	mutable std::mutex _rules_mutex;
 
+	// Keep track of the number of threads to make sure
+	std::atomic<int> _thread_count;
+
 	// Population of sources to expand forward
 	SourceSet _sources;
 
 	FCStat _fcstat;
-
-	unsigned _jobs;
-	unsigned _max_jobs;
 };
 
 } // ~namespace opencog
