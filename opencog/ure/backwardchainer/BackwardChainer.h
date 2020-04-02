@@ -169,6 +169,7 @@ public:
 	 * all inferred atoms matching the target.
 	 */
 	Handle get_results() const;
+	const HandleSet& get_results_set() const;
 
 private:
 	void expand_meta_rules();

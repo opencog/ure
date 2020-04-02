@@ -144,7 +144,8 @@ void ForwardChainer::do_chain()
 
 	// Log termination messages
 	termination_log();
-	ure_logger().debug("Finished forward chaining");
+	LAZY_URE_LOG_DEBUG << "Finished forward chaining with results:"
+	                   << std::endl << oc_to_string(get_results_set());
 }
 
 void ForwardChainer::do_steps_singlethread()
