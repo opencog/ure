@@ -55,7 +55,7 @@ Source::Source(const Handle& bdy, const Handle& vdcl, double cpx, double cpx_fct
 
 bool Source::operator==(const Source& other) const
 {
-	return body == other.body && vardecl == other.vardecl;
+	return content_eq(body, other.body) and content_eq(vardecl, other.vardecl);
 }
 
 bool Source::operator<(const Source& other) const
@@ -277,7 +277,7 @@ std::string oc_to_string(const SourceSet::Sources& sources, const std::string& i
 	ss << indent << "size = " << sources.size() << std::endl;
 	size_t i = 0;
 	for (const Source& src : sources) {
-		ss << indent << "Source[" << i << "]:" << std::endl
+		ss << indent << "source[" << i << "]:" << std::endl
 		   << src.to_string(indent + oc_to_string_indent);
 		i++;
 	}
