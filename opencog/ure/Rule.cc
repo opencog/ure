@@ -48,21 +48,26 @@ namespace opencog {
 
 void RuleSet::expand_meta_rules(AtomSpace& as)
 {
-	RuleSet new_rules;
+	// TODO: could certainly be optimized by not systematically
+	// recollecting and re-instantiating meta-rules.
+	RuleSet meta_rules;
 	for (const Rule& rule : *this) {
 		if (rule.is_meta()) {
-			Handle result = rule.apply(as);
-			for (const Handle& produced_h : result->getOutgoingSet()) {
-				Rule produced(rule.get_alias(), produced_h, rule.get_rbs());
-				bool ir = new_rules.insert(produced);
-				if (ir) {
-					ure_logger().debug() << "New rule produced from meta rule:"
-					                     << std::endl << oc_to_string(produced);
-				}
+			meta_rules.insert(rule);
+		}
+	}
+
+	for (const Rule& rule : meta_rules) {
+		Handle result = rule.apply(as);
+		for (const Handle& produced_h : result->getOutgoingSet()) {
+			Rule produced(rule.get_alias(), produced_h, rule.get_rbs());
+			auto [_, ir] = insert(produced);
+			if (ir) {
+				ure_logger().debug() << "New rule instantiated from a meta rule:"
+											<< std::endl << oc_to_string(produced);
 			}
 		}
 	}
-	insert(new_rules.begin(), new_rules.end());
 }
 
 HandleSet RuleSet::aliases() const
