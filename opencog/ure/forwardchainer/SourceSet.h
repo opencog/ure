@@ -75,7 +75,7 @@ public:
 	 * applied. Return true if insertion is successful (that is if no
 	 * alpha-equivalent rule was already there).
 	 */
-	bool insert_rule(const Rule& rule);
+	std::pair<RuleSet::iterator, bool> insert_rule(const Rule& rule);
 
 	/**
 	 * Set exhausted flag to true

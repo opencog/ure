@@ -65,7 +65,7 @@ bool Source::operator<(const Source& other) const
 		or (content_eq(body, other.body) and vardecl < other.vardecl);
 }
 
-bool Source::insert_rule(const Rule& rule)
+std::pair<RuleSet::iterator, bool> Source::insert_rule(const Rule& rule)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	return rules.insert(rule);

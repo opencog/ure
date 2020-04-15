@@ -63,9 +63,9 @@ public:
 	 * Insert rule in the rule set if no other alpha-equivalent rule is
 	 * in it.
 	 *
-	 * Return true iff rule has been successfully inserted.
+	 * Return a pair (iterator, true) iff rule has been successfully inserted.
 	 */
-	bool insert(const Rule& rule);
+	std::pair<RuleSet::iterator, bool> insert(const Rule& rule);
 
 	/**
 	 * Insert a range of rules

@@ -221,7 +221,8 @@ void ForwardChainer::do_step(int iteration)
 		                   << " of success:" << std::endl << rule.to_string();
 	}
 
-	if (source->insert_rule(rule)) {
+	auto [_, success] = source->insert_rule(rule);
+	if (success) {
 		// Apply rule on source
 		HandleSet products = apply_rule(rule);
 

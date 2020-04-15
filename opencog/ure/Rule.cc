@@ -78,13 +78,15 @@ HandleSet RuleSet::aliases() const
 	return aliases;
 }
 
-bool RuleSet::insert(const Rule& rule)
+std::pair<RuleSet::iterator, bool> RuleSet::insert(const Rule& rule)
 {
-	for (const auto& r : *this)
-		if (rule.is_alpha_equivalent(r))
-			return false;
-	push_back(rule);
-	return true;
+	// TODO: optimize for logarithmic time insertion
+	RuleSet::iterator it = begin();
+	for (; it != end(); ++it)
+		if (rule.is_alpha_equivalent(*it))
+			return {it, false};
+	it = super::insert(it, rule);
+	return {it, true};
 }
 
 std::string RuleSet::to_string(const std::string& indent) const
