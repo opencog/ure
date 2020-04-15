@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2018 SingularityNET Foundation
  *
- * Author: Nil Geisweiller
+ * Author: Nil Geisweiller <ngeiswei@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -62,8 +62,10 @@ public:
 	       double complexity_factor=1.0);
 
 	/**
-	 * Comparison operators. For operator< compare by complexity, or by
-	 * handle value if they are of the same size.
+	 * Comparison operators. Only body and vardecl are used for
+	 * comparison, not the weight or complexity, because such
+	 * quantities depend on the inference path leading to the source,
+	 * thus would fail to capture confluence.
 	 */
 	bool operator==(const Source& other) const;
 	bool operator<(const Source& other) const;
@@ -134,16 +136,16 @@ public:
 	// True iff all rules that could expand the source have been tried
 	bool exhausted;
 
-	// Rules so far attempted on that source
+	// Rules so far attempted on that source. Primary owner.
 	RuleSet rules;
 
 private:
-	// NEXT TODO: subdivide in smaller and shared mutexes
+	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _mutex;
 };
 
 /**
- * Population of sources to forwardly expand.
+ * Population of sources to forwardly expand. Primary owner.
  */
 // TODO: this class has things in common with BIT, maybe their common
 // things could be placed in a parent class.
@@ -194,6 +196,9 @@ public:
 	// because the source being expanded is modified (it keeps track of
 	// its expansion rules). Alternatively we could use a set and
 	// define Sources::rules as mutable.
+	//
+	// A boost::ptr_vector is used because it is the main owner of
+	// sources, and such sources get deallocated upon destruction.
 	typedef boost::ptr_vector<Source> Sources;
 	Sources sources;
 
@@ -203,7 +208,7 @@ public:
 private:
 	const UREConfig& _config;
 
-	// NEXT TODO: subdivide in smaller and shared mutexes
+	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _mutex;
 };
 

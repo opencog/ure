@@ -344,7 +344,7 @@ private:
 	// True if the rule has already been applied.
 	bool _exhausted;
 
-	// NEXT TODO: subdivide in smaller and shared mutexes
+	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _mutex;
 
 	// Return a copy of the rule with the variables alpha-converted

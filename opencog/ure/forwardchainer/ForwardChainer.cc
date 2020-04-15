@@ -2,8 +2,10 @@
  * ForwardChainer.cc
  *
  * Copyright (C) 2014,2015 OpenCog Foundation
+ * Copyright (C) 2019,2020 SingularityNET Foundation
  *
- * Author: Misgana Bayetta <misgana.bayetta@gmail.com>
+ * Authors: Misgana Bayetta <misgana.bayetta@gmail.com>
+ *          Nil Geisweiller <ngeiswei@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -203,7 +205,7 @@ void ForwardChainer::do_step(int iteration)
 		LAZY_URE_LOG_DEBUG << msgprfx << "Selected source:" << std::endl
 		                   << source->to_string();
 	} else {
-		LAZY_URE_LOG_DEBUG << msgprfx << "No source selected, abort iteration";
+		LAZY_URE_LOG_DEBUG << msgprfx << "No selected source, abort iteration";
 		return;
 	}
 
@@ -340,6 +342,9 @@ Source* ForwardChainer::select_source(const std::string& msgprfx)
 		if (_config.get_retry_exhausted_sources()) {
 			ure_logger().debug() << msgprfx
 			                     << "Reset all exhausted flags to retry them";
+			// TODO: This has the effect of deallocating the rules, which
+			// might cause a memory corruption if another thread is
+			// attempting to apply that rule at the same time.
 			_sources.reset_exhausted();
 			// Try again
 			lock.unlock();
@@ -362,8 +367,8 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 	// Generate all valid rules
 	RuleSet valid_rules;
 	for (const Rule& rule : _rules) {
-		// For now ignore meta rules as they are forwardly applied in
-		// expand_bit()
+		// For now ignore meta rules as they are instantiated in
+		// do_step()
 		if (rule.is_meta())
 			continue;
 
@@ -377,12 +382,12 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 		if (_config.get_full_rule_application()) {
 			// Insert the unaltered rule, which will have the effect of
 			// applying to all sources, not just this one. Convenient for
-			// quickly achieving inference closure albeit expensive.
+			// quickly achieving inference closure, albeit expensive.
 			if (not unified_rules.empty() and not source.is_rule_exhausted(rule)) {
 				une_rules.insert(rule);
 			}
 		} else {
-			// Insert all specializations obtained from the unificiation
+			// Insert all specializations obtained from unification
 			for (const auto& ur : unified_rules) {
 				if (not source.is_rule_exhausted(ur)) {
 					une_rules.insert(ur);
@@ -521,6 +526,6 @@ void ForwardChainer::expand_meta_rules(const std::string& msgprfx)
 
 	if (rules_size != _rules.size()) {
 		ure_logger().debug() << msgprfx << "The rule set has gone from "
-		                     << rules_size << " rules to " << _rules.size();
+		                     << rules_size << " to " << _rules.size() << " rules";
 	}
 }

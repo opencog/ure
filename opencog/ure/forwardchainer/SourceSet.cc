@@ -102,6 +102,14 @@ bool Source::is_rule_exhausted(const Rule& rule) const
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	for (const Rule& r : rules)
+		// Note that the presence of an alpha-equivalent rule in the
+		// source is not enough to being considered exhausted, the
+		// exhausted flag of the rule must also be explicited set to
+		// true. That is in order to possibly make the distinction
+		// between a rule that is being tried and a rule that has
+		// already been tried. It's not clear though whether we need
+		// this distinction, and if we do we probably should make it
+		// explicit in the Source or Rule API.
 		if (rule.is_alpha_equivalent(r) and r.is_exhausted())
 			return true;
 	return false;
