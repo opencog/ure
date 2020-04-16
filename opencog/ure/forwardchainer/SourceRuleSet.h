@@ -111,10 +111,10 @@ private:
 };
 
 std::string oc_to_string(const SourceRule& sr,
-								 const std::string& indent=empty_string);
+                         const std::string& indent=empty_string);
 std::string oc_to_string(const SourceRuleSet& srs,
-								 const std::string& indent=empty_string);
-	
+                         const std::string& indent=empty_string);
+
 } // ~namespace opencog
 
 #endif /* _OPENCOG_SOURCERULESET_H_ */

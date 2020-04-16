@@ -53,12 +53,12 @@ bool SourceRule::is_valid() const
 {
 	return source != nullptr and rule != nullptr;
 }
-	
+
 SourceRuleSet::SourceRuleSet()
 	: _thompson_smp(tvs)
 {
 }
-	
+
 bool SourceRuleSet::insert(const SourceRule& sr, TruthValuePtr tv)
 {
 	auto it = boost::lower_bound(source_rule_seq, sr);
@@ -95,9 +95,9 @@ std::string oc_to_string(const SourceRule& sr, const std::string& indent)
 	std::stringstream ss;
 	// Only print hash because not the master container
 	ss << indent << "source: "
-		<< (sr.source ? sr.source->body->id_to_string() : nullstr)
-		<< std::endl << indent << "rule: "
-		<< (sr.rule ? sr.rule->to_short_string() : nullstr);
+	   << (sr.source ? sr.source->body->id_to_string() : nullstr)
+	   << std::endl << indent << "rule: "
+	   << (sr.rule ? sr.rule->to_short_string() : nullstr);
 	return ss.str();
 }
 
@@ -109,7 +109,7 @@ std::string oc_to_string(const SourceRuleSet& srs, const std::string& indent)
 	size_t i = 0;
 	for (const SourceRule& sr : srs.source_rule_seq) {
 		ss << std::endl << indent << "source,rule[" << i << "]:"
-			<< std::endl << oc_to_string(sr, indent2);
+		   << std::endl << oc_to_string(sr, indent2);
 		i++;
 	}
 	return ss.str();

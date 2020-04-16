@@ -449,10 +449,10 @@ SourceRule ForwardChainer::select_source_rule(const std::string& msgprfx)
 	if (not success)
 		return nullptr;
 	source->set_rule_exhausted(*rule_it); // TODO: We might want to do
-													  // that after application, to
-													  // avoid memory corruption
-													  // from calling too early
-													  // SourceSet::reset_exhausted()
+	                                      // that after application, to
+	                                      // avoid memory corruption
+	                                      // from calling too early
+	                                      // SourceSet::reset_exhausted()
 	return SourceRule(source, &*rule_it);
 }
 
