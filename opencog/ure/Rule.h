@@ -46,6 +46,8 @@ class Rule;
  */
 class RuleSet : public std::vector<Rule>
 {
+	typedef std::vector<Rule> super;
+
 public:
 	/**
 	 * Run all meta rules over as and insert the resulting rules back

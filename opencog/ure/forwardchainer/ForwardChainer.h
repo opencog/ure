@@ -29,6 +29,7 @@
 
 #include "../UREConfig.h"
 #include "SourceSet.h"
+#include "SourceRuleSet.h"
 #include "FCStat.h"
 
 class ForwardChainerUTest;
@@ -101,10 +102,20 @@ public:
 	void do_steps_multithread();
 
 	/**
+	 * Source rule producer implementation of do_steps.
+	 */
+	void do_steps_srpi();
+
+	/**
 	 * Perform a single forward chaining inference step on the given
 	 * iteration.
 	 */
 	void do_step(int iteration);
+
+	/**
+	 * Source rule producer implementation of do_step.
+	 */
+	void do_step_srpi(int iteration);
 
 	/**
 	 * @return true if the termination criteria have been met.
@@ -151,6 +162,16 @@ private:
 	Source* select_source(const std::string& msgprfx);
 
 	/**
+	 * Build a source rule pair for application trial.
+	 */
+	SourceRule select_source_rule(const std::string& msgprfx);
+
+	/**
+	 * Populate the source rule set with pairs
+	 */
+	void populate_source_rule_set(const std::string& msgprfx);
+
+	/**
 	 * Get rules that unify with the source and that are not exhausted,
 	 * which include rules currently being run.
 	 */
@@ -177,6 +198,7 @@ private:
 	 * Apply rule.
 	 */
 	HandleSet apply_rule(const Rule& rule);
+	HandleSet apply_rule(const SourceRule& sr);
 
 	RuleSet _rules; /* loaded rules */
 
@@ -214,6 +236,14 @@ private:
 	SourceSet _sources;
 
 	FCStat _fcstat;
+
+	// Enable alternative implementation using (source, rule) producer,
+	// srpi stands for Source Rule Producer Implementation. This flag
+	// is here, likely temporarily, to compare old and new way.
+	const bool _srpi;
+
+	// Set of weighted pairs (source, rule).
+	SourceRuleSet _source_rule_set;
 };
 
 } // ~namespace opencog

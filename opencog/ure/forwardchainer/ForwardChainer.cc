@@ -35,6 +35,7 @@
 #include <opencog/atoms/core/FindUtils.h>
 #include <opencog/atoms/pattern/BindLink.h>
 #include <opencog/atoms/pattern/PatternUtils.h>
+#include <opencog/atoms/truthvalue/TruthValue.h>
 #include <opencog/ure/Rule.h>
 
 #include "ForwardChainer.h"
@@ -56,7 +57,8 @@ ForwardChainer::ForwardChainer(AtomSpace& kb_as,
 	  _config(rb_as, rbs),
 	  _thread_count(0),
 	  _sources(_config, source, vardecl),
-	  _fcstat(trace_as)
+	  _fcstat(trace_as),
+	  _srpi(true)
 {
 	init(source, vardecl, focus_set);
 }
@@ -127,7 +129,11 @@ void ForwardChainer::do_chain()
 		return;
 	}
 
-	if (_config.get_jobs() <= 1)
+	if (_srpi)
+	{
+		do_steps_srpi();
+	}
+	else if (_config.get_jobs() <= 1)
 	{
 		// Do steps single-threadedly till termination
 		do_steps_singlethread();
@@ -188,6 +194,11 @@ void ForwardChainer::do_steps_multithread()
 	while (0 < _thread_count) std::this_thread::sleep_for(1ms);
 }
 
+void ForwardChainer::do_steps_srpi()
+{
+	while (not termination()) do_step_srpi(_iteration++);
+}
+
 void ForwardChainer::do_step(int iteration)
 {
 	int lipo = iteration + 1;
@@ -239,6 +250,49 @@ void ForwardChainer::do_step(int iteration)
 		                   << " is probably being applied on source "
 		                   << source->body->id_to_string()
 		                   << " in another thread, abort iteration";
+	}
+}
+
+void ForwardChainer::do_step_srpi(int iteration)
+{
+	int lipo = iteration + 1;
+	std::string msgprfx = std::string("[I-") + std::to_string(lipo) + "] ";
+	ure_logger().debug() << msgprfx << "Start iteration (" << lipo
+	                     << "/" << _config.get_maximum_iterations_str() << ")";
+
+	// Expand meta rules. This should probably be done on-the-fly in
+	// the select_rule method, but for now it's here.
+	expand_meta_rules(msgprfx);
+
+	// Populate the source rule set
+	populate_source_rule_set(msgprfx);
+
+	// Select source rule pair for application
+	SourceRule slc_sr = _source_rule_set.thompson_select();
+	if (slc_sr.is_valid()) {
+		LAZY_URE_LOG_DEBUG << msgprfx
+		                   << "Selected source rule pair with probability "
+								 << 0 /* NEXT TODO */ << " of success:" << std::endl
+		                   << oc_to_string(slc_sr);
+
+		// Apply selected source rule pair
+		HandleSet products = apply_rule(slc_sr);
+
+		// Insert the produced sources in the population of sources
+		_sources.insert(products, *slc_sr.source, 0.5/* NEXT TODO */, msgprfx);
+
+		// The rule has been applied, we can set the exhausted flag
+		slc_sr.source->set_rule_exhausted(*slc_sr.rule);
+
+		// Save trace and results
+		_fcstat.add_inference_record(iteration,
+											  slc_sr.source->body,
+											  *slc_sr.rule,
+											  products);
+	} else {
+		LAZY_URE_LOG_DEBUG << msgprfx
+		                   << "Failed to select a source rule pair, "
+		                   << "abort iteration";
 	}
 }
 
@@ -359,6 +413,67 @@ Source* ForwardChainer::select_source(const std::string& msgprfx)
 	// Sample sources according to this distribution
 	std::discrete_distribution<size_t> dist(weights.begin(), weights.end());
 	return &*std::next(_sources.sources.begin(), dist(randGen()));
+}
+
+SourceRule ForwardChainer::select_source_rule(const std::string& msgprfx)
+{
+	Source* source = select_source(msgprfx);
+	if (source) {
+		LAZY_URE_LOG_DEBUG << msgprfx << "Selected source:" << std::endl
+		                   << source->to_string();
+	} else {
+		LAZY_URE_LOG_DEBUG << msgprfx << "No source selected";
+		return SourceRule();
+	}
+
+	const RuleSet valid_rules = get_valid_rules(*source);
+
+	// Log valid rules
+	if (ure_logger().is_debug_enabled()) {
+		std::stringstream ss;
+		if (valid_rules.empty())
+			ss << msgprfx << "No valid rule";
+		else
+			ss << msgprfx << "The following rules are valid:" << std::endl
+			   << valid_rules.to_short_string();
+		LAZY_URE_LOG_DEBUG << ss.str();
+	}
+
+	if (valid_rules.empty()) {
+		source->set_exhausted();
+		return SourceRule();
+	}
+
+	const Rule& slc_rule = rand_element(valid_rules);
+	auto [rule_it, success] = source->insert_rule(slc_rule);
+	if (not success)
+		return nullptr;
+	source->set_rule_exhausted(*rule_it); // TODO: We might want to do
+													  // that after application, to
+													  // avoid memory corruption
+													  // from calling too early
+													  // SourceSet::reset_exhausted()
+	return SourceRule(source, &*rule_it);
+}
+
+void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
+{
+	// Build (source, rule) pair for application trial
+	SourceRule sr = select_source_rule(msgprfx);
+	if (not sr.is_valid()) {
+		LAZY_URE_LOG_DEBUG << msgprfx
+		                   << "Failed to build a source rule pair, "
+		                   << "abort populating source rule set";
+		return;
+	}
+
+	// Insert this source rule pair to the source rule set
+	bool success = _source_rule_set.insert(sr, TruthValue::DEFAULT_TV() /* NEXT TODO */);
+	if (not success) {
+		LAZY_URE_LOG_DEBUG << "Source rule pair:" << std::endl
+		                   << oc_to_string(sr) << std::endl
+		                   << "already in the source rule set";
+	}
 }
 
 RuleSet ForwardChainer::get_valid_rules(const Source& source)
@@ -509,6 +624,11 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 	catch (...) {}
 
 	return results;
+}
+
+HandleSet ForwardChainer::apply_rule(const SourceRule& sr)
+{
+	return apply_rule(*sr.rule);
 }
 
 void ForwardChainer::validate(const Handle& source)
