@@ -238,7 +238,7 @@ void ForwardChainer::do_step(int iteration)
 		LAZY_URE_LOG_DEBUG << msgprfx << "Rule " << rule.to_short_string()
 		                   << " is probably being applied on source "
 		                   << source->body->id_to_string()
-		                   << " in another thread. Abort iteration.";
+		                   << " in another thread, abort iteration";
 	}
 }
 
