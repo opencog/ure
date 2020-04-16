@@ -458,21 +458,24 @@ SourceRule ForwardChainer::select_source_rule(const std::string& msgprfx)
 
 void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 {
-	// Build (source, rule) pair for application trial
-	SourceRule sr = select_source_rule(msgprfx);
-	if (not sr.is_valid()) {
-		LAZY_URE_LOG_DEBUG << msgprfx
-		                   << "Failed to build a source rule pair, "
-		                   << "abort populating source rule set";
-		return;
-	}
+	int par = std::max((int)_config.get_production_application_ratio(), 1);
+	for (int i = 0; i < par; i++) {
+		// Build (source, rule) pair for application trial
+		SourceRule sr = select_source_rule(msgprfx);
+		if (not sr.is_valid()) {
+			LAZY_URE_LOG_DEBUG << msgprfx
+			                   << "Failed to build a source rule pair, "
+			                   << "abort populating source rule set";
+			return;
+		}
 
-	// Insert this source rule pair to the source rule set
-	bool success = _source_rule_set.insert(sr, TruthValue::DEFAULT_TV() /* NEXT TODO */);
-	if (not success) {
-		LAZY_URE_LOG_DEBUG << "Source rule pair:" << std::endl
-		                   << oc_to_string(sr) << std::endl
-		                   << "already in the source rule set";
+		// Insert it to the source rule set
+		bool success = _source_rule_set.insert(sr, TruthValue::DEFAULT_TV() /* NEXT TODO */);
+		if (not success) {
+			LAZY_URE_LOG_DEBUG << "Source rule pair:" << std::endl
+			                   << oc_to_string(sr) << std::endl
+			                   << "already in the source rule set";
+		}
 	}
 }
 

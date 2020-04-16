@@ -24,6 +24,7 @@
 ;; -- ure-set-maximum-iterations -- Set the URE:maximum-iterations parameter
 ;; -- ure-set-complexity-penalty -- Set the URE:complexity-penalty parameter
 ;; -- ure-set-jobs -- Set the URE:jobs parameter
+;; -- ure-set-production-application-ratio -- Set the URE:production-application-ratio parameter
 ;; -- ure-set-fc-retry-exhausted-sources -- Set the URE:FC:retry-exhausted-sources parameter
 ;; -- ure-set-fc-full-rule-application -- Set the URE:FC:full-rule-application parameter
 ;; -- ure-set-bc-maximum-bit-size -- Set the URE:BC:maximum-bit-size
@@ -88,6 +89,7 @@
                  (maximum-iterations *unspecified*)
                  (complexity-penalty *unspecified*)
                  (jobs *unspecified*)
+                 (production-application-ratio *unspecified*)
                  (fc-retry-exhausted-sources *unspecified*)
                  (fc-full-rule-application *unspecified*))
 "
@@ -101,6 +103,7 @@
                  #:maximum-iterations mi
                  #:complexity-penalty cp
                  #:jobs jb
+                 #:production-application-ratio par
                  #:fc-retry-exhausted-sources res
                  #:fc-full-rule-application fra)
 
@@ -128,10 +131,13 @@
       Possible range is (-inf, +inf) but it's rarely necessary in practice
       to go outside of [-10, 10].
 
-  jb: [optional, default=1] Number of jobs to run in parallel. Can
-      speed up reasoning. Note that this may alter the results, especially
-      for the forward chainer as the output of a rule application may depend
-      on the output of other rules.
+  jb: [optional, default=1] Number of jobs to run in parallel.
+
+  par: [optional, default=1] This parameter controls how many tuples
+       -- (source, rule) for forward chainer or (inference, premise, rule)
+       for backward chainer -- are produced in average before an application
+       takes place. The higher the more tuples to choose from, which can lead
+       to better inference control.
 
   res: [optional, default=#f] Whether exhausted sources should be
        retried. A source is exhausted if all its valid rules (so that at
@@ -160,6 +166,8 @@
       (ure-set-complexity-penalty rbs complexity-penalty))
   (if (not (unspecified? jobs))
       (ure-set-jobs rbs jobs))
+  (if (not (unspecified? production-application-ratio))
+      (ure-set-production-application-ratio rbs production-application-ratio))
   (if (not (unspecified? fc-retry-exhausted-sources))
       (ure-set-fc-retry-exhausted-sources rbs fc-retry-exhausted-sources))
   (if (not (unspecified? fc-full-rule-application))
@@ -180,6 +188,7 @@
                  (maximum-iterations *unspecified*)
                  (complexity-penalty *unspecified*)
                  (jobs *unspecified*)
+                 (production-application-ratio *unspecified*)
                  (bc-maximum-bit-size *unspecified*)
                  (bc-mm-complexity-penalty *unspecified*)
                  (bc-mm-compressiveness *unspecified*))
@@ -194,6 +203,8 @@
                  #:attention-allocation aa
                  #:maximum-iterations mi
                  #:complexity-penalty cp
+                 #:jobs jb
+                 #:production-application-ratio par
                  #:bc-maximum-bit-size mbs
                  #:bc-mm-complexity-penalty mcp
                  #:bc-mm-compressiveness mc)
@@ -223,10 +234,13 @@
       depth.  Possible range is (-inf, +inf) but it's rarely necessary in
       practice to go outside of [-10, 10].
 
-  jb: [optional, default=1] Number of jobs to run in parallel. Can
-      speed up reasoning, note that this may alter the results, especially
-      for the forward chainer as the output of a rule application may depend
-      on the output of the other rules.
+  jb: [optional, default=1] Number of jobs to run in parallel.
+
+  par: [optional, default=1] This parameter controls how many tuples
+       -- (source, rule) for forward chainer or (inference, premise, rule)
+       for backward chainer -- are produced in average before an application
+       takes place. The higher the more tuples to choose from, which can lead
+       to better inference control.
 
   mbs: [optional, default=-1] Maximum size of the inference tree pool
        to evolve. Negative means unlimited.
@@ -254,6 +268,8 @@
       (ure-set-complexity-penalty rbs complexity-penalty))
   (if (not (unspecified? jobs))
       (ure-set-jobs rbs jobs))
+  (if (not (unspecified? production-application-ratio))
+      (ure-set-production-application-ratio rbs production-application-ratio))
   (if (not (unspecified? bc-maximum-bit-size))
       (ure-set-bc-maximum-bit-size rbs bc-maximum-bit-size))
   (if (not (unspecified? bc-mm-complexity-penalty))
@@ -646,6 +662,19 @@
   Delete any previous one if exists.
 "
   (ure-set-num-parameter rbs "URE:jobs" value))
+
+(define (ure-set-production-application-ratio rbs value)
+"
+  Set the URE:production-application-ratio parameter of a given RBS
+
+  ExecutionLink
+    SchemaNode \"URE:production-application-ratio\"
+    rbs
+    NumberNode value
+
+  Delete any previous one if exists.
+"
+  (ure-set-num-parameter rbs "URE:production-application-ratio" value))
 
 (define (ure-set-fc-retry-exhausted-sources rbs value)
 "
@@ -1094,6 +1123,7 @@
           ure-set-maximum-iterations
           ure-set-complexity-penalty
           ure-set-jobs
+          ure-set-production-application-ratio
           ure-set-fc-retry-exhausted-sources
           ure-set-fc-full-rule-application
           ure-set-bc-maximum-bit-size
