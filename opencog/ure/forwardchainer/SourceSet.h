@@ -127,10 +127,18 @@ public:
 
 	// Proxy for the prior probability of the source, taking into
 	// account the complexity penalty.
+	//
+	// Note that in case the complexity penalty is negative (which can
+	// be used for depth-first search) then the complexity factor can
+	// be greater than 1.0.
 	const double complexity_factor;
 
 	// Weight, akin to the unormalized probability of selecting that
 	// source.
+	//
+	// Note that in case the complexity penalty is negative (which can
+	// be used for depth-first search) then the weight can be greater
+	// than 1.0.
 	const double weight;
 
 	// True iff all rules that could expand the source have been tried
