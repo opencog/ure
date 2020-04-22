@@ -117,7 +117,7 @@ bool Source::is_rule_exhausted(const Rule& rule) const
 
 double Source::expand_complexity(double prob) const
 {
-	return complexity - log2(prob);
+	return complexity - std::log2(prob);
 }
 
 double Source::get_weight() const
@@ -208,7 +208,7 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
 
 	// Calculate the complexity of the new sources
 	double new_cpx = src.expand_complexity(prob);
-	double new_cpx_fctr = exp(-_config.get_complexity_penalty() * new_cpx);
+	double new_cpx_fctr = std::exp2(-_config.get_complexity_penalty() * new_cpx);
 
 	// Keep all new sources
 	std::vector<Source*> new_srcs;
