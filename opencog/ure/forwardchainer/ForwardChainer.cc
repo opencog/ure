@@ -268,27 +268,35 @@ void ForwardChainer::do_step_srpi(int iteration)
 	populate_source_rule_set(msgprfx);
 
 	// Select source rule pair for application
-	SourceRule slc_sr = _source_rule_set.thompson_select();
+	auto [slc_sr, slc_tv] = _source_rule_set.thompson_select();
 	if (slc_sr.is_valid()) {
+		double success_plty = BetaDistribution(slc_tv).mean();
 		LAZY_URE_LOG_DEBUG << msgprfx
 		                   << "Selected source rule pair with probability "
-								 << 0 /* NEXT TODO */ << " of success:" << std::endl
+								 << success_plty << " of success:" << std::endl
 		                   << oc_to_string(slc_sr);
 
 		// Apply selected source rule pair
 		HandleSet products = apply_rule(slc_sr);
 
 		// Insert the produced sources in the population of sources
-		_sources.insert(products, *slc_sr.source, 0.5/* NEXT TODO */, msgprfx);
+		//
+		// The probability of success is renormalized by the weight
+		// before being passed to the new source constructor, as this
+		// one will take it into account.
+		//
+		// TODO: This can be simplified but is let here until do_step is
+		// replaced by do_step_srpi.
+		double weight = std::min(1.0, slc_sr.source->weight);
+		double prob = success_plty / weight;
+		_sources.insert(products, *slc_sr.source, prob, msgprfx);
 
 		// The rule has been applied, we can set the exhausted flag
 		slc_sr.source->set_rule_exhausted(*slc_sr.rule);
 
 		// Save trace and results
-		_fcstat.add_inference_record(iteration,
-											  slc_sr.source->body,
-											  *slc_sr.rule,
-											  products);
+		_fcstat.add_inference_record(iteration, slc_sr.source->body,
+		                             *slc_sr.rule, products);
 	} else {
 		LAZY_URE_LOG_DEBUG << msgprfx
 		                   << "Failed to select a source rule pair, "
@@ -458,8 +466,8 @@ SourceRule ForwardChainer::select_source_rule(const std::string& msgprfx)
 
 void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 {
-	int par = std::max((int)_config.get_production_application_ratio(), 1);
-	for (int i = 0; i < par; i++) {
+	int ratio = std::max((int)_config.get_production_application_ratio(), 1);
+	for (int i = 0; i < ratio; i++) {
 		// Build (source, rule) pair for application trial
 		SourceRule sr = select_source_rule(msgprfx);
 		if (not sr.is_valid()) {
@@ -470,13 +478,25 @@ void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 		}
 
 		// Insert it to the source rule set
-		bool success = _source_rule_set.insert(sr, TruthValue::DEFAULT_TV() /* NEXT TODO */);
+		TruthValuePtr tv = calculate_source_rule_tv(sr);
+		bool success = _source_rule_set.insert(sr, tv);
 		if (not success) {
 			LAZY_URE_LOG_DEBUG << "Source rule pair:" << std::endl
 			                   << oc_to_string(sr) << std::endl
 			                   << "already in the source rule set";
 		}
 	}
+}
+
+TruthValuePtr ForwardChainer::calculate_source_rule_tv(const SourceRule& sr)
+{
+	double weight = std::min(1.0, sr.source->weight);
+	TruthValuePtr tv = sr.rule->get_tv();
+	BetaDistribution beta_dstr(tv);
+	// Mean and standard deviation directly scale with the weight
+	double scaled_mean = weight * beta_dstr.mean();
+	double scaled_variance = sq(weight) * beta_dstr.variance();
+	return mk_stv(scaled_mean, scaled_variance);
 }
 
 RuleSet ForwardChainer::get_valid_rules(const Source& source)

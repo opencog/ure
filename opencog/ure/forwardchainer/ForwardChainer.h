@@ -172,6 +172,11 @@ private:
 	void populate_source_rule_set(const std::string& msgprfx);
 
 	/**
+	 * Given a source rule pair, calculate its truth value of success.
+	 */
+	TruthValuePtr calculate_source_rule_tv(const SourceRule& sr);
+
+	/**
 	 * Get rules that unify with the source and that are not exhausted,
 	 * which include rules currently being run.
 	 */

@@ -55,7 +55,7 @@ bool SourceRule::is_valid() const
 }
 
 SourceRuleSet::SourceRuleSet()
-	: _thompson_smp(tvs)
+	: _thompson_smp(tv_seq)
 {
 }
 
@@ -65,28 +65,29 @@ bool SourceRuleSet::insert(const SourceRule& sr, TruthValuePtr tv)
 	if (it == source_rule_seq.end() or *it != sr) {
 		it = source_rule_seq.insert(it, sr);
 		size_t idx = std::distance(source_rule_seq.begin(), it);
-		tvs.insert(std::next(tvs.begin(), idx), tv);
+		tv_seq.insert(std::next(tv_seq.begin(), idx), tv);
 		return true;
 	}
 	// The pair is already in the source rule set
 	return false;
 }
 
-SourceRule SourceRuleSet::thompson_select()
+std::pair<SourceRule, TruthValuePtr> SourceRuleSet::thompson_select()
 {
-	if (tvs.empty())
-		return SourceRule();
+	if (tv_seq.empty())
+		return {SourceRule(), nullptr};
 
 	// Select the next source rule pair to apply
 	size_t rnd_idx = _thompson_smp();
 	SourceRule slc_sr = source_rule_seq[rnd_idx];
+	TruthValuePtr slc_tv = tv_seq[rnd_idx];
 
 	// Remove it from the container to not be selected again
 	source_rule_seq.erase(std::next(source_rule_seq.begin(), rnd_idx));
-	tvs.erase(std::next(tvs.begin(), rnd_idx));
+	tv_seq.erase(std::next(tv_seq.begin(), rnd_idx));
 
 	// Return the selected source rule pair
-	return slc_sr;
+	return {slc_sr, slc_tv};
 }
 
 std::string oc_to_string(const SourceRule& sr, const std::string& indent)

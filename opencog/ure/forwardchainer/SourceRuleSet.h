@@ -85,12 +85,11 @@ public:
 	bool insert(const SourceRule& sr, TruthValuePtr tv);
 
 	/**
-	 * Select a pair according to Thompson sampling. The most
-	 * expansive, but also the most accurate way to select. Then set
-	 * the weight of the selected pair to null in order not to select
-	 * it again.
+	 * Select a pair according to Thompson sampling and remove it from
+	 * the set. Return the empty source rule pair, and the nullptr
+	 * truth value if the set is empty.
 	 */
-	SourceRule thompson_select();
+	std::pair<SourceRule, TruthValuePtr> thompson_select();
 
 	// TODO: implement tournament selection as well, as a cheaper
 	// alternative to Thompson sampling.
@@ -98,13 +97,14 @@ public:
 	// Ordered sequence of source rule pairs.
 	std::vector<SourceRule> source_rule_seq;
 
-	// Ordered sequence of tvs, representing the second order weights
-	// of each source rule pair. In the same order as source_rule_seq.
+	// Ordered sequence of Truth Values, representing the second order
+	// weights of each source rule pair. In the same order as
+	// source_rule_seq.
 	//
 	// It's easier here to have a sequence of TVs as opposed to having
 	// having weighted pairs because Thompson sampling takes in a
 	// sequence of TVs.
-	TruthValueSeq tvs;
+	TruthValueSeq tv_seq;
 
 private:
 	ThompsonSampling _thompson_smp;
