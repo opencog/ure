@@ -245,7 +245,7 @@ public:
 	HandlePairSeq get_conclusions() const;
 
 	/**
-	 * Get the default TruthValue associated with the rule.
+	 * Get the TruthValue associated with the rule.
 	 */
 	TruthValuePtr get_tv() const;
 
