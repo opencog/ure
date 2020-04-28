@@ -303,7 +303,7 @@
     ;; Switch to rbs atomspace
     (define current-as (cog-set-atomspace! (cog-as rbs)))
 
-    (define (mk-member alias tv) (if (null? tv)
+    (define (mk-member alias tv) (if (nil? tv)
                                      (MemberLink alias rbs)
                                      (MemberLink tv alias rbs)))
 
@@ -333,7 +333,7 @@
   adds a rule to a rulebase and sets its tv.
 
 "
-  (if (null? tv)
+  (if (nil? tv)
       (MemberLink rule-alias rbs)
       (MemberLink (car tv) rule-alias rbs)))
 
