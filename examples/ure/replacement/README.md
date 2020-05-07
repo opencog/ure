@@ -57,8 +57,9 @@ T[A/B]
 ```
 
 There is an implicit recursion in this notation that we need to
-unwrap. The most generic rule we have found, given the current
-limitations of Atomese, is
+unwrap. The most generic rule we have, given the current limitations
+of Atomese (EDIT: since then a new atom type has been introduced for
+that https://wiki.opencog.org/w/JoinLink), is
 
 ```
 (synonymous A B)
