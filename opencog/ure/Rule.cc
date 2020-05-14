@@ -28,6 +28,8 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
+#include <boost/range/algorithm/binary_search.hpp>
+#include <boost/range/algorithm/lower_bound.hpp>
 
 #include <opencog/util/oc_assert.h>
 #include <opencog/atoms/base/Link.h>
@@ -86,11 +88,10 @@ HandleSet RuleSet::aliases() const
 
 std::pair<RuleSet::iterator, bool> RuleSet::insert(RulePtr rule)
 {
-	// NEXT: optimize for logarithmic time insertion
-	RuleSet::iterator it = begin();
-	for (; it != end(); ++it)
-		if (rule->is_alpha_equivalent(**it))
-			return {it, false};
+	if (boost::binary_search(*this, rule, rule_ptr_less()))
+		return {end(), false};
+
+	RuleSet::iterator it = boost::lower_bound(*this, rule, rule_ptr_less());
 	it = super::insert(it, rule);
 	return {it, true};
 }
