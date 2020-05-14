@@ -102,7 +102,7 @@ bool RuleSet::operator==(const RuleSet& other) const
 
 	size_t i = 0;
 	for (; i < size(); i++)
-		if (at(i) != other.at(i))
+		if (*at(i) != *other.at(i))
 			return false;
 	return true;
 }
