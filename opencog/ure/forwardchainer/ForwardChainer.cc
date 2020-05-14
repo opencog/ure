@@ -481,7 +481,8 @@ void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 		TruthValuePtr tv = calculate_source_rule_tv(sr);
 		bool success = _source_rule_set.insert(sr, tv);
 		if (not success) {
-			LAZY_URE_LOG_DEBUG << "Source rule pair:" << std::endl
+			LAZY_URE_LOG_DEBUG << msgprfx
+			                   << "Source rule pair:" << std::endl
 			                   << oc_to_string(sr) << std::endl
 			                   << "already in the source rule set";
 		}

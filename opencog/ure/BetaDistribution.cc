@@ -154,7 +154,12 @@ TruthValuePtr mk_stv(double mean, double variance,
 	if (alpha < 1 and beta < 1)
 		mode = mean;
 
-	LAZY_URE_LOG_FINE << "mk_stv alpha alpha = " << alpha
+	LAZY_URE_LOG_FINE << "mk_stv(mean=" << mean
+	                  << ", variance=" << variance
+	                  << ", prior_alpha=" << prior_alpha
+	                  << ", prior_beta=" << prior_beta
+	                  << ")" << std::endl
+	                  << "with alpha = " << alpha
 	                  << ", beta = " << beta << ", count = " << count
 	                  << ", confidence = " << confidence << ", mode = " << mode;
 
