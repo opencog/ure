@@ -39,7 +39,7 @@ namespace opencog
 class SourceRule : public boost::totally_ordered<SourceRule>
 {
 public:
-	SourceRule(Source* src=nullptr, Rule* rule=nullptr);
+	SourceRule(SourcePtr src=nullptr, RulePtr rule=nullptr);
 	~SourceRule();
 
 	/**
@@ -56,12 +56,18 @@ public:
 	 */
 	bool is_valid() const;
 
+	/**
+	 * Turn the pair into a string representation. Useful for
+	 * debugging.
+	 */
+	std::string to_string(const std::string& indent=empty_string) const;
+
 	// Pointers of source and rule from other master
 	// containers. Although these pointers are never null, we use
 	// pointers instead of references to avoid re-implementing
 	// SourceRule::operator=().
-	Source* source;
-	Rule* rule;
+	SourcePtr source;
+	RulePtr rule;
 };
 
 /**
@@ -93,6 +99,12 @@ public:
 
 	// TODO: implement tournament selection as well, as a cheaper
 	// alternative to Thompson sampling.
+
+	/**
+	 * Turn the source rule pool into a string representation. Useful
+	 * for debugging.
+	 */
+	std::string to_string(const std::string& indent=empty_string) const;
 
 	// Ordered sequence of source rule pairs.
 	std::vector<SourceRule> source_rule_seq;

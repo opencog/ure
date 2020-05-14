@@ -46,25 +46,31 @@
 
 namespace opencog {
 
+bool rule_ptr_less::operator()(const RulePtr& l, const RulePtr& r) const
+{
+	return *l < *r;
+}
+
 void RuleSet::expand_meta_rules(AtomSpace& as)
 {
 	// TODO: could certainly be optimized by not systematically
 	// recollecting and re-instantiating meta-rules.
 	RuleSet meta_rules;
-	for (const Rule& rule : *this) {
-		if (rule.is_meta()) {
+	for (RulePtr rule : *this) {
+		if (rule->is_meta()) {
 			meta_rules.insert(rule);
 		}
 	}
 
-	for (const Rule& rule : meta_rules) {
-		Handle result = rule.apply(as);
+	for (RulePtr rule : meta_rules) {
+		Handle result = rule->apply(as);
 		for (const Handle& produced_h : result->getOutgoingSet()) {
-			Rule produced(rule.get_alias(), produced_h, rule.get_rbs());
+			RulePtr produced =
+				createRule(rule->get_alias(), produced_h, rule->get_rbs());
 			auto [_, ir] = insert(produced);
 			if (ir) {
 				ure_logger().debug() << "New rule instantiated from a meta rule:"
-											<< std::endl << oc_to_string(produced);
+											<< std::endl << oc_to_string(*produced);
 			}
 		}
 	}
@@ -74,19 +80,37 @@ HandleSet RuleSet::aliases() const
 {
 	HandleSet aliases;
 	for (const auto& rule : *this)
-		aliases.insert(rule.get_alias());
+		aliases.insert(rule->get_alias());
 	return aliases;
 }
 
-std::pair<RuleSet::iterator, bool> RuleSet::insert(const Rule& rule)
+std::pair<RuleSet::iterator, bool> RuleSet::insert(RulePtr rule)
 {
-	// TODO: optimize for logarithmic time insertion
+	// NEXT: optimize for logarithmic time insertion
 	RuleSet::iterator it = begin();
 	for (; it != end(); ++it)
-		if (rule.is_alpha_equivalent(*it))
+		if (rule->is_alpha_equivalent(**it))
 			return {it, false};
 	it = super::insert(it, rule);
 	return {it, true};
+}
+
+bool RuleSet::operator==(const RuleSet& other) const
+{
+	if (size() != other.size())
+		return false;
+
+	size_t i = 0;
+	for (; i < size(); i++)
+		if (at(i) != other.at(i))
+			return false;
+	return true;
+}
+
+bool RuleSet::operator<(const RuleSet& other) const
+{
+	OC_ASSERT(false, "RuleSet::operator< not implemented");
+	return false;
 }
 
 std::string RuleSet::to_string(const std::string& indent) const
@@ -94,9 +118,9 @@ std::string RuleSet::to_string(const std::string& indent) const
 	std::stringstream ss;
 	ss << indent << "size = " << size();
 	size_t i = 0;
-	for (const Rule& rule : *this)
+	for (const RulePtr& rule : *this)
 		ss << std::endl << indent << "rule[" << i++ << "]:" << std::endl
-		   << oc_to_string(rule, indent + OC_TO_STRING_INDENT);
+		   << oc_to_string(*rule, indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
 
@@ -107,7 +131,7 @@ std::string RuleSet::to_short_string(const std::string& indent) const
 	size_t i = 0;
 	for (const auto& rule : *this)
 		ss << std::endl << indent << "rule[" << i++ << "]:" << std::endl
-		   << rule.to_short_string(indent + oc_to_string_indent);
+		   << rule->to_short_string(indent + oc_to_string_indent);
 	return ss.str();
 }
 
@@ -542,11 +566,11 @@ RuleTypedSubstitutionMap Rule::unify_target(const Handle& target,
 	return unified_rules;
 }
 
-RuleSet Rule::strip_typed_substitution(const RuleTypedSubstitutionMap& rules)
+RuleSet Rule::strip_typed_substitution(const RuleTypedSubstitutionMap& rtsm)
 {
 	RuleSet rs;
-	for (const auto& r : rules)
-		rs.insert(r.first);
+	for (const auto& r : rtsm)
+		rs.insert(createRule(r.first));
 
 	return rs;
 }

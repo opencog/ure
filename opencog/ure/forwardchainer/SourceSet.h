@@ -75,7 +75,7 @@ public:
 	 * applied. Return true if insertion is successful (that is if no
 	 * alpha-equivalent rule was already there).
 	 */
-	std::pair<RuleSet::iterator, bool> insert_rule(const Rule& rule);
+	bool insert_rule(RulePtr rule);
 
 	/**
 	 * Set exhausted flag to true
@@ -95,12 +95,12 @@ public:
 	/**
 	 * Set the exhausted flag of that rule to true
 	 */
-	void set_rule_exhausted(const Rule& rule);
+	void set_rule_exhausted(const RulePtr& rule);
 
 	/**
 	 * Check if the given rule has been tried
 	 */
-	bool is_rule_exhausted(const Rule& rule) const;
+	bool is_rule_exhausted(const RulePtr& rule) const;
 
 	/**
 	 * Return the complexity of new source expanded from this source by
@@ -150,6 +150,13 @@ public:
 private:
 	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _mutex;
+};
+
+typedef std::shared_ptr<Source> SourcePtr;
+#define createSource std::make_shared<Source>
+struct source_ptr_less
+{
+	bool operator()(const SourcePtr& l, const SourcePtr& r) const;
 };
 
 /**
@@ -204,10 +211,7 @@ public:
 	// because the source being expanded is modified (it keeps track of
 	// its expansion rules). Alternatively we could use a set and
 	// define Sources::rules as mutable.
-	//
-	// A boost::ptr_vector is used because it is the main owner of
-	// sources, and such sources get deallocated upon destruction.
-	typedef boost::ptr_vector<Source> Sources;
+	typedef std::vector<SourcePtr> Sources;
 	Sources sources;
 
 	// True iff all sources have been tried

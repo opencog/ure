@@ -38,15 +38,24 @@
 namespace opencog {
 
 class Rule;
+typedef std::shared_ptr<Rule> RulePtr;
+#define createRule std::make_shared<Rule>
+struct rule_ptr_less
+{
+	bool operator()(const RulePtr& l, const RulePtr& r) const;
+};
 
 /**
  * The rule set is in fact a sorted vector, as to be able to change
  * some features of the rules such as their exhausted flag without
- * having to resort or rebuild the set.
+ * having to resort or rebuild the set. We use rule pointers to make
+ * sure that insertion does not deallocate the rule since its pointer
+ * is passed around.
  */
-class RuleSet : public std::vector<Rule>
+class RuleSet : public std::vector<RulePtr>,
+                public boost::totally_ordered<RuleSet>
 {
-	typedef std::vector<Rule> super;
+	typedef std::vector<RulePtr> super;
 
 public:
 	/**
@@ -67,7 +76,13 @@ public:
 	 *
 	 * Return a pair (iterator, true) iff rule has been successfully inserted.
 	 */
-	std::pair<RuleSet::iterator, bool> insert(const Rule& rule);
+	std::pair<RuleSet::iterator, bool> insert(RulePtr rule);
+
+	/**
+	 * Content based comparison.
+	 */
+	bool operator==(const RuleSet& other) const;
+	bool operator<(const RuleSet& other) const;
 
 	/**
 	 * Insert a range of rules
@@ -288,7 +303,8 @@ public:
 	                                       const AtomSpace* queried_as=nullptr) const;
 
 	/**
-	 * Remove the typed substitutions from the rule typed substitution map.
+	 * Remove the typed substitutions from the rule typed substitution
+	 * map and generate the resulting RuleSet.
 	 */
 	static RuleSet strip_typed_substitution(const RuleTypedSubstitutionMap& rules);
 

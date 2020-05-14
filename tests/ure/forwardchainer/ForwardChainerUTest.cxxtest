@@ -118,7 +118,7 @@ void ForwardChainerUTest::test_select_rule(void)
 
 	// Full unification
 	RuleProbabilityPair rule = fc.select_rule(h);
-	TS_ASSERT(rule.first.is_valid());
+	TS_ASSERT(rule.first->is_valid());
 }
 
 void ForwardChainerUTest::test_deduction()

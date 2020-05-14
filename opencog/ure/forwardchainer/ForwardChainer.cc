@@ -91,16 +91,16 @@ void ForwardChainer::init(const Handle& source,
 	if (_search_focus_set) {
 		for (const Handle& h : focus_set)
 			_focus_set_as.add_atom(h);
-		for (const Source& src : _sources.sources)
-			_focus_set_as.add_atom(src.body);
+		for (const SourcePtr& src : _sources.sources)
+			_focus_set_as.add_atom(src->body);
 	}
 
 	// Set rules.
 	_rules = _config.get_rules();
 	// TODO: For now the FC follows the old standard. We may move to
 	// the new standard when all rules have been ported to the new one.
-	for (const Rule& rule : _rules)
-		rule.premises_as_clauses = true; // can be modify as mutable
+	for (RulePtr rule : _rules)
+		rule->premises_as_clauses = true;
 
 	// Reset the iteration count
 	_iteration = 0;
@@ -211,7 +211,7 @@ void ForwardChainer::do_step(int iteration)
 	expand_meta_rules(msgprfx);
 
 	// Select source
-	Source* source = select_source(msgprfx);
+	SourcePtr source = select_source(msgprfx);
 	if (source) {
 		LAZY_URE_LOG_DEBUG << msgprfx << "Selected source:" << std::endl
 		                   << source->to_string();
@@ -222,20 +222,20 @@ void ForwardChainer::do_step(int iteration)
 
 	// Select rule
 	RuleProbabilityPair rule_prob = select_rule(*source, msgprfx);
-	const Rule& rule = rule_prob.first;
+	RulePtr rule = rule_prob.first;
 	double prob(rule_prob.second);
-	if (not rule.is_valid()) {
+	if (not rule->is_valid()) {
 		ure_logger().debug() << msgprfx << "No selected rule, abort iteration";
 		return;
 	} else {
 		LAZY_URE_LOG_DEBUG << msgprfx << "Selected rule, with probability " << prob
-		                   << " of success:" << std::endl << rule.to_string();
+		                   << " of success:" << std::endl << rule->to_string();
 	}
 
-	auto [_, success] = source->insert_rule(rule);
+	bool success = source->insert_rule(rule);
 	if (success) {
 		// Apply rule on source
-		HandleSet products = apply_rule(rule);
+		HandleSet products = apply_rule(*rule);
 
 		// Insert the produced sources in the population of sources
 		_sources.insert(products, *source, prob, msgprfx);
@@ -244,9 +244,9 @@ void ForwardChainer::do_step(int iteration)
 		source->set_rule_exhausted(rule);
 
 		// Save trace and results
-		_fcstat.add_inference_record(iteration, source->body, rule, products);
+		_fcstat.add_inference_record(iteration, source->body, *rule, products);
 	} else {
-		LAZY_URE_LOG_DEBUG << msgprfx << "Rule " << rule.to_short_string()
+		LAZY_URE_LOG_DEBUG << msgprfx << "Rule " << rule->to_short_string()
 		                   << " is probably being applied on source "
 		                   << source->body->id_to_string()
 		                   << " in another thread, abort iteration";
@@ -268,7 +268,7 @@ void ForwardChainer::do_step_srpi(int iteration)
 	populate_source_rule_set(msgprfx);
 
 	// Select source rule pair for application
-	auto [slc_sr, slc_tv] = _source_rule_set.thompson_select();
+	auto [slc_sr, slc_tv] = select_source_rule(msgprfx);
 	if (slc_sr.is_valid()) {
 		double success_plty = BetaDistribution(slc_tv).mean();
 		LAZY_URE_LOG_DEBUG << msgprfx
@@ -292,7 +292,7 @@ void ForwardChainer::do_step_srpi(int iteration)
 		_sources.insert(products, *slc_sr.source, prob, msgprfx);
 
 		// The rule has been applied, we can set the exhausted flag
-		slc_sr.source->set_rule_exhausted(*slc_sr.rule);
+		slc_sr.source->set_rule_exhausted(slc_sr.rule);
 
 		// Save trace and results
 		_fcstat.add_inference_record(iteration, slc_sr.source->body,
@@ -343,14 +343,14 @@ void ForwardChainer::termination_log()
  */
 void ForwardChainer::apply_all_rules()
 {
-	for (const Rule& rule : _rules) {
-		ure_logger().debug("Apply rule %s", rule.get_name().c_str());
-		HandleSet uhs = apply_rule(rule);
+	for (const RulePtr& rule : _rules) {
+		ure_logger().debug("Apply rule %s", rule->get_name().c_str());
+		HandleSet uhs = apply_rule(*rule);
 
 		// Update
 		_fcstat.add_inference_record(_iteration,
 		                             _kb_as.add_node(CONCEPT_NODE, "dummy-source"),
-		                             rule, uhs);
+		                             *rule, uhs);
 	}
 }
 
@@ -366,7 +366,7 @@ HandleSet ForwardChainer::get_results_set() const
 	return _fcstat.get_all_products();
 }
 
-Source* ForwardChainer::select_source(const std::string& msgprfx)
+SourcePtr ForwardChainer::select_source(const std::string& msgprfx)
 {
 	// TODO: refine mutex
 	std::unique_lock<std::mutex> lock(_part_mutex);
@@ -383,7 +383,7 @@ Source* ForwardChainer::select_source(const std::string& msgprfx)
 			if (0 < weights[i]) {
 				wi++;
 				if (ure_logger().is_fine_enabled()) {
-					weighted_sources.insert({weights[i], _sources.sources[i].body});
+					weighted_sources.insert({weights[i], _sources.sources[i]->body});
 				}
 			}
 		}
@@ -420,12 +420,12 @@ Source* ForwardChainer::select_source(const std::string& msgprfx)
 
 	// Sample sources according to this distribution
 	std::discrete_distribution<size_t> dist(weights.begin(), weights.end());
-	return &*std::next(_sources.sources.begin(), dist(randGen()));
+	return *std::next(_sources.sources.begin(), dist(randGen()));
 }
 
-SourceRule ForwardChainer::select_source_rule(const std::string& msgprfx)
+SourceRule ForwardChainer::mk_source_rule(const std::string& msgprfx)
 {
-	Source* source = select_source(msgprfx);
+	SourcePtr source = select_source(msgprfx);
 	if (source) {
 		LAZY_URE_LOG_DEBUG << msgprfx << "Selected source:" << std::endl
 		                   << source->to_string();
@@ -452,16 +452,18 @@ SourceRule ForwardChainer::select_source_rule(const std::string& msgprfx)
 		return SourceRule();
 	}
 
-	const Rule& slc_rule = rand_element(valid_rules);
-	auto [rule_it, success] = source->insert_rule(slc_rule);
+	RulePtr slc_rule = rand_element(valid_rules);
+	bool success = source->insert_rule(slc_rule);
 	if (not success)
-		return nullptr;
-	source->set_rule_exhausted(*rule_it); // TODO: We might want to do
-	                                      // that after application, to
-	                                      // avoid memory corruption
-	                                      // from calling too early
-	                                      // SourceSet::reset_exhausted()
-	return SourceRule(source, &*rule_it);
+		return SourceRule();
+	source->set_rule_exhausted(slc_rule);
+	SourceRule sr(source, slc_rule);
+
+	LAZY_URE_LOG_FINE << msgprfx
+	                  << "Produced source rule pair:" << std::endl
+	                  << sr.to_string();
+
+	return sr;
 }
 
 void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
@@ -469,11 +471,12 @@ void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 	int ratio = std::max((int)_config.get_production_application_ratio(), 1);
 	for (int i = 0; i < ratio; i++) {
 		// Build (source, rule) pair for application trial
-		SourceRule sr = select_source_rule(msgprfx);
+		SourceRule sr = mk_source_rule(msgprfx);
 		if (not sr.is_valid()) {
 			LAZY_URE_LOG_DEBUG << msgprfx
 			                   << "Failed to build a source rule pair, "
 			                   << "abort populating source rule set";
+			// NEXT probably too strict
 			return;
 		}
 
@@ -487,6 +490,15 @@ void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 			                   << "already in the source rule set";
 		}
 	}
+}
+
+std::pair<SourceRule, TruthValuePtr>
+ForwardChainer::select_source_rule(const std::string& msgprfx)
+{
+	LAZY_URE_LOG_FINE << msgprfx
+	                  << "Select source rule pair from pool:" << std::endl
+	                  << _source_rule_set.to_string();
+	return _source_rule_set.thompson_select();
 }
 
 TruthValuePtr ForwardChainer::calculate_source_rule_tv(const SourceRule& sr)
@@ -506,15 +518,15 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 
 	// Generate all valid rules
 	RuleSet valid_rules;
-	for (const Rule& rule : _rules) {
+	for (const RulePtr& rule : _rules) {
 		// For now ignore meta rules as they are instantiated in
 		// do_step()
-		if (rule.is_meta())
+		if (rule->is_meta())
 			continue;
 
 		const AtomSpace& ref_as(_search_focus_set ? _focus_set_as : _kb_as);
 		RuleTypedSubstitutionMap urm =
-			rule.unify_source(source.body, source.vardecl, &ref_as);
+			rule->unify_source(source.body, source.vardecl, &ref_as);
 		RuleSet unified_rules = Rule::strip_typed_substitution(urm);
 
 		// Only insert unexhausted rules for this source
@@ -528,7 +540,7 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 			}
 		} else {
 			// Insert all specializations obtained from unification
-			for (const auto& ur : unified_rules) {
+			for (RulePtr ur : unified_rules) {
 				if (not source.is_rule_exhausted(ur)) {
 					une_rules.insert(ur);
 				}
@@ -565,7 +577,7 @@ RuleProbabilityPair ForwardChainer::select_rule(Source& source,
 
 	if (valid_rules.empty()) {
 		source.set_exhausted();
-		return RuleProbabilityPair{Rule(), 0.0};
+		return RuleProbabilityPair{nullptr, 0.0};
 	}
 
 	return select_rule(valid_rules, msgprfx);
@@ -576,8 +588,8 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules,
 {
 	// Build vector of all valid truth values
 	TruthValueSeq tvs;
-	for (const Rule& rule : valid_rules)
-		tvs.push_back(rule.get_tv());
+	for (const RulePtr& rule : valid_rules)
+		tvs.push_back(rule->get_tv());
 
 	// Build action selection distribution
 	std::vector<double> weights = ThompsonSampling(tvs).distribution();
@@ -587,8 +599,8 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules,
 		std::stringstream ss;
 		ss << msgprfx << "Rule weights:";
 		size_t i = 0;
-		for (const Rule& rule : valid_rules) {
-			ss << std::endl << weights[i] << " " << rule.get_name();
+		for (const RulePtr& rule : valid_rules) {
+			ss << std::endl << weights[i] << " " << rule->get_name();
 			i++;
 		}
 		ure_logger().debug() << ss.str();
@@ -596,11 +608,11 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules,
 
 	// Sample rules according to the weights
 	std::discrete_distribution<size_t> dist(weights.begin(), weights.end());
-	const Rule& selected_rule = rand_element(valid_rules, dist);
+	RulePtr selected_rule = rand_element(valid_rules, dist);
 
 	// Calculate the probability estimate of having this rule fulfill
 	// the objective (required to calculate its complexity)
-	double prob = BetaDistribution(selected_rule.get_tv()).mean();
+	double prob = BetaDistribution(selected_rule->get_tv()).mean();
 
 	return RuleProbabilityPair{selected_rule, prob};
 }

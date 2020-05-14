@@ -47,8 +47,8 @@ ControlPolicy::ControlPolicy(const UREConfig& ure_config, const BIT& bit,
 {
 	// Fetch default TVs for each inference rule (the TV on the member
 	// link connecting the rule to the rule base)
-	for (const Rule& rule : rules) {
-		_default_tvs[rule.get_alias()] = rule.get_tv();
+	for (RulePtr rule : rules) {
+		_default_tvs[rule->get_alias()] = rule->get_tv();
 	}
 	std::stringstream ss;
 	ss << "Default inference rule TVs:";
@@ -109,10 +109,10 @@ RuleTypedSubstitutionMap ControlPolicy::get_valid_rules(const AndBIT& andbit,
 {
 	// Generate all valid rules
 	RuleTypedSubstitutionMap valid_rules;
-	for (const Rule& rule : rules) {
+	for (RulePtr rule : rules) {
 		// For now ignore meta rules as they are forwardly applied in
 		// expand_bit()
-		if (rule.is_meta())
+		if (rule->is_meta())
 			continue;
 
 		// Get the leaf vardecl from fcs. We don't want to filter it
@@ -124,7 +124,7 @@ RuleTypedSubstitutionMap ControlPolicy::get_valid_rules(const AndBIT& andbit,
 			vardecl = BindLinkCast(andbit.fcs)->get_vardecl();
 
 		RuleTypedSubstitutionMap unified_rules
-			= rule.unify_target(bitleaf.body, vardecl);
+			= rule->unify_target(bitleaf.body, vardecl);
 
 		// Only insert unexplored rules for this leaf
 		RuleTypedSubstitutionMap pos_rules;

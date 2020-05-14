@@ -29,7 +29,7 @@
 
 namespace opencog {
 
-SourceRule::SourceRule(Source* src, Rule* rl)
+SourceRule::SourceRule(SourcePtr src, RulePtr rl)
 	: source(src), rule(rl)
 {
 }
@@ -52,6 +52,18 @@ bool SourceRule::operator<(const SourceRule& other) const
 bool SourceRule::is_valid() const
 {
 	return source != nullptr and rule != nullptr;
+}
+
+std::string SourceRule::to_string(const std::string& indent) const
+{
+	static const std::string nullstr("nullptr");
+	std::stringstream ss;
+	// Only print hash because not the master container
+	ss << indent << "source[" << source << "]: "
+	   << (source ? source->body->id_to_string() : nullstr)
+	   << std::endl << indent << "rule[" << rule << "]: "
+	   << (rule ? rule->to_short_string() : nullstr);
+	return ss.str();
 }
 
 SourceRuleSet::SourceRuleSet()
@@ -90,30 +102,28 @@ std::pair<SourceRule, TruthValuePtr> SourceRuleSet::thompson_select()
 	return {slc_sr, slc_tv};
 }
 
+std::string SourceRuleSet::to_string(const std::string& indent) const
+{
+	std::stringstream ss;
+	std::string indent2 = indent + oc_to_string_indent;
+	ss << indent << "size = " << source_rule_seq.size();
+	size_t i = 0;
+	for (const SourceRule& sr : source_rule_seq) {
+		ss << std::endl << indent << "(source,rule)[" << i << "]:"
+		   << std::endl << sr.to_string(indent2);
+		i++;
+	}
+	return ss.str();
+}
+
 std::string oc_to_string(const SourceRule& sr, const std::string& indent)
 {
-	static const std::string nullstr("nullptr");
-	std::stringstream ss;
-	// Only print hash because not the master container
-	ss << indent << "source: "
-	   << (sr.source ? sr.source->body->id_to_string() : nullstr)
-	   << std::endl << indent << "rule: "
-	   << (sr.rule ? sr.rule->to_short_string() : nullstr);
-	return ss.str();
+	return sr.to_string(indent);
 }
 
 std::string oc_to_string(const SourceRuleSet& srs, const std::string& indent)
 {
-	std::stringstream ss;
-	std::string indent2 = indent + oc_to_string_indent;
-	ss << indent << "size = " << srs.source_rule_seq.size();
-	size_t i = 0;
-	for (const SourceRule& sr : srs.source_rule_seq) {
-		ss << std::endl << indent << "source,rule[" << i << "]:"
-		   << std::endl << oc_to_string(sr, indent2);
-		i++;
-	}
-	return ss.str();
+	return srs.to_string(indent);
 }
 
 } // ~namespace opencog

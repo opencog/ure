@@ -46,7 +46,7 @@ class Rule;
 
 // Pair of Rule and its probability estimate that it fullfils the
 // objective
-typedef std::pair<Rule, double> RuleProbabilityPair;
+typedef std::pair<RulePtr, double> RuleProbabilityPair;
 
 class ForwardChainer
 {
@@ -159,17 +159,23 @@ private:
 	 * Warning: it is not const because the source is gonna be modified
 	 * by keeping track of the rules applied to it.
 	 */
-	Source* select_source(const std::string& msgprfx);
+	SourcePtr select_source(const std::string& msgprfx);
 
 	/**
 	 * Build a source rule pair for application trial.
 	 */
-	SourceRule select_source_rule(const std::string& msgprfx);
+	SourceRule mk_source_rule(const std::string& msgprfx);
 
 	/**
 	 * Populate the source rule set with pairs
 	 */
 	void populate_source_rule_set(const std::string& msgprfx);
+
+	/**
+	 * Select source rule pair
+	 */
+	std::pair<SourceRule, TruthValuePtr>
+	select_source_rule(const std::string& msgprfx);
 
 	/**
 	 * Given a source rule pair, calculate its truth value of success.
