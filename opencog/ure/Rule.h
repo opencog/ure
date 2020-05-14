@@ -76,13 +76,7 @@ public:
 	 *
 	 * Return a pair (iterator, true) iff rule has been successfully inserted.
 	 */
-	std::pair<RuleSet::iterator, bool> insert(RulePtr rule);
-
-	/**
-	 * Content based comparison.
-	 */
-	bool operator==(const RuleSet& other) const;
-	bool operator<(const RuleSet& other) const;
+	std::pair<iterator, bool> insert(RulePtr rule);
 
 	/**
 	 * Insert a range of rules
@@ -93,6 +87,18 @@ public:
 		for (; from != to; ++from)
 			insert(*from);
 	}
+
+	/**
+	 * Content based comparison.
+	 */
+	bool operator==(const RuleSet& other) const;
+	bool operator<(const RuleSet& other) const;
+
+	/**
+	 * Log-time search
+	 */
+	iterator find(const RulePtr& rule);
+	const_iterator find(const RulePtr& rule) const;
 
 	std::string to_string(const std::string& indent=empty_string) const;
 	std::string to_short_string(const std::string& indent=empty_string) const;
@@ -174,17 +180,12 @@ public:
 	 */
 	bool verify_rule();
 	
-	// Comparison
+	// Content-based (including alpha-equivalence) comparison
 	bool operator==(const Rule& r) const;
+	bool operator<(const Rule& r) const;
 
 	// Assignment
 	Rule& operator=(const Rule& r);
-
-	/**
-	 * Order by weight, or if equal by handle value.
-	 */
-	bool operator<(const Rule& r) const;
-	bool is_alpha_equivalent(const Rule&) const;
 
 	// Modifiers
 	void set_rule(const Handle&);

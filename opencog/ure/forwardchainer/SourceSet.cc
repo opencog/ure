@@ -103,26 +103,23 @@ bool Source::is_exhausted() const
 void Source::set_rule_exhausted(const RulePtr& rule)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
-	for (RulePtr r : rules)
-		if (rule->is_alpha_equivalent(*r))
-			r->set_exhausted();
+	auto it = rules.find(rule);
+	if (it != rules.end())
+		(*it)->set_exhausted();
 }
 
 bool Source::is_rule_exhausted(const RulePtr& rule) const
 {
 	std::lock_guard<std::mutex> lock(_mutex);
-	for (RulePtr r : rules)
-		// Note that the presence of an alpha-equivalent rule in the
-		// source is not enough to being considered exhausted, the
-		// exhausted flag of the rule must also be explicited set to
-		// true. That is in order to possibly make the distinction
-		// between a rule that is being tried and a rule that has
-		// already been tried. It's not clear though whether we need
-		// this distinction, and if we do we probably should make it
-		// explicit in the Source or Rule API.
-		if (rule->is_alpha_equivalent(*r) and r->is_exhausted())
-			return true;
-	return false;
+	auto it = rules.find(rule);
+	// Note that the presence of an alpha-equivalent rule in the source
+	// is not enough to being considered exhausted, the exhausted flag
+	// of the rule must also be explicited set to true. That is in
+	// order to possibly make the distinction between a rule that is
+	// being tried and a rule that has already been tried. It's not
+	// clear though whether we need this distinction, and if we do we
+	// probably should make it explicit in the Source or Rule API.
+	return it != rules.end() and (*it)->is_exhausted();
 }
 
 double Source::expand_complexity(double prob) const

@@ -808,10 +808,7 @@ bool BIT::andbits_exhausted() const
 bool BIT::is_in(const RuleTypedSubstitutionPair& rule,
                 const BITNode& bitnode) const
 {
-	for (const auto& bnr : bitnode.rules)
-		if (rule.first.is_alpha_equivalent(bnr.first))
-			return true;
-	return false;
+	return bitnode.rules.find(rule.first) != bitnode.rules.end();
 }
 
 std::string oc_to_string(const BITNode& bitnode, const std::string& indent)

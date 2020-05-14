@@ -114,6 +114,20 @@ bool RuleSet::operator<(const RuleSet& other) const
 	return false;
 }
 
+RuleSet::iterator RuleSet::find(const RulePtr& rule)
+{
+	if (not boost::binary_search(*this, rule, rule_ptr_less()))
+		return end();
+	return boost::lower_bound(*this, rule, rule_ptr_less());
+}
+
+RuleSet::const_iterator RuleSet::find(const RulePtr& rule) const
+{
+	if (not boost::binary_search(*this, rule, rule_ptr_less()))
+		return cend();
+	return boost::lower_bound(*this, rule, rule_ptr_less());
+}
+
 std::string RuleSet::to_string(const std::string& indent) const
 {
 	std::stringstream ss;
@@ -231,6 +245,11 @@ bool Rule::operator==(const Rule& r) const
 	return content_eq(Handle(_rule), Handle(r._rule));
 }
 
+bool Rule::operator<(const Rule& r) const
+{
+	return content_based_handle_less()(Handle(_rule), Handle(r._rule));
+}
+
 Rule& Rule::operator=(const Rule& r)
 {
 	premises_as_clauses = r.premises_as_clauses;
@@ -242,16 +261,6 @@ Rule& Rule::operator=(const Rule& r)
 	_exhausted = r._exhausted;
 
 	return *this;
-}
-
-bool Rule::operator<(const Rule& r) const
-{
-	return content_based_handle_less()(Handle(_rule), Handle(r._rule));
-}
-
-bool Rule::is_alpha_equivalent(const Rule& r) const
-{
-	return _rule->is_equal(Handle(r._rule));
 }
 
 TruthValuePtr Rule::get_tv() const
