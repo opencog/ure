@@ -449,7 +449,8 @@ SourceRule ForwardChainer::mk_source_rule(const std::string& msgprfx)
 
 	if (valid_rules.empty()) {
 		source->set_exhausted();
-		return SourceRule();
+		// Try again, in case another source is available
+		return mk_source_rule(msgprfx);
 	}
 
 	RulePtr slc_rule = rand_element(valid_rules);
@@ -478,7 +479,6 @@ void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 			LAZY_URE_LOG_DEBUG << msgprfx
 			                   << "Failed to build a source rule pair, "
 			                   << "abort populating source rule set";
-			// NEXT probably too strict
 			return;
 		}
 
