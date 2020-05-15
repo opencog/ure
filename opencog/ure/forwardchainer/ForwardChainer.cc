@@ -469,7 +469,8 @@ SourceRule ForwardChainer::mk_source_rule(const std::string& msgprfx)
 
 void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 {
-	LAZY_URE_LOG_DEBUG << msgprfx << "Populate the source rule set";
+	LAZY_URE_LOG_DEBUG << msgprfx << "Populate the source rule set (size="
+	                   << _source_rule_set.size() << ")";
 
 	int ratio = std::max((int)_config.get_production_application_ratio(), 1);
 	for (int i = 0; i < ratio; i++) {
@@ -479,7 +480,7 @@ void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 			LAZY_URE_LOG_DEBUG << msgprfx
 			                   << "Failed to build a source rule pair, "
 			                   << "abort populating source rule set";
-			return;
+			break;
 		}
 
 		// Insert it to the source rule set
@@ -492,14 +493,15 @@ void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 			                   << "already in the source rule set";
 		}
 	}
+
+	LAZY_URE_LOG_DEBUG << msgprfx << "Source rule set after population (size="
+	                   << _source_rule_set.size() << ")";
+	LAZY_URE_LOG_FINE << msgprfx << std::endl << _source_rule_set.to_string();
 }
 
 std::pair<SourceRule, TruthValuePtr>
 ForwardChainer::select_source_rule(const std::string& msgprfx)
 {
-	LAZY_URE_LOG_FINE << msgprfx
-	                  << "Select source rule pair from pool:" << std::endl
-	                  << _source_rule_set.to_string();
 	return _source_rule_set.thompson_select();
 }
 
