@@ -162,7 +162,8 @@ private:
 	SourcePtr select_source(const std::string& msgprfx);
 
 	/**
-	 * Build a source rule pair for application trial.
+	 * Build a source rule pair for application trial. If and only if
+	 * no such pair is available, then return an invalid pair.
 	 */
 	SourceRule mk_source_rule(const std::string& msgprfx);
 

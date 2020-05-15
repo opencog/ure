@@ -440,7 +440,7 @@ SourceRule ForwardChainer::mk_source_rule(const std::string& msgprfx)
 	if (ure_logger().is_debug_enabled()) {
 		std::stringstream ss;
 		if (valid_rules.empty())
-			ss << msgprfx << "No valid rule";
+			ss << msgprfx << "No valid rule for that source. Let's try again";
 		else
 			ss << msgprfx << "The following rules are valid:" << std::endl
 			   << valid_rules.to_short_string();
@@ -468,6 +468,8 @@ SourceRule ForwardChainer::mk_source_rule(const std::string& msgprfx)
 
 void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 {
+	LAZY_URE_LOG_DEBUG << msgprfx << "Populate the source rule set";
+
 	int ratio = std::max((int)_config.get_production_application_ratio(), 1);
 	for (int i = 0; i < ratio; i++) {
 		// Build (source, rule) pair for application trial
