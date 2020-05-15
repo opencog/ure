@@ -101,6 +101,16 @@ public:
 	// alternative to Thompson sampling.
 
 	/**
+	 * Return true iff the pool is empty
+	 */
+	bool empty() const;
+
+	/**
+	 * Return the number of source rule pairs in the container
+	 */
+	size_t size() const;
+
+	/**
 	 * Turn the source rule pool into a string representation. Useful
 	 * for debugging.
 	 */

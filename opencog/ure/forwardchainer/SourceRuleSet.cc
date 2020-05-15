@@ -102,6 +102,16 @@ std::pair<SourceRule, TruthValuePtr> SourceRuleSet::thompson_select()
 	return {slc_sr, slc_tv};
 }
 
+bool SourceRuleSet::empty() const
+{
+	return source_rule_seq.empty();
+}
+
+size_t SourceRuleSet::size() const
+{
+	return source_rule_seq.size();
+}
+
 std::string SourceRuleSet::to_string(const std::string& indent) const
 {
 	std::stringstream ss;

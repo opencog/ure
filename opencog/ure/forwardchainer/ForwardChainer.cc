@@ -308,8 +308,8 @@ bool ForwardChainer::termination()
 {
 	bool terminate = false;
 
-	// Terminate if all sources have been tried
-	if (_sources.is_exhausted()) {
+	// Terminate if all source rule pairs have been tried
+	if (_sources.is_exhausted() and _source_rule_set.empty()) {
 		terminate = true;
 	}
 	// Terminate if max iterations has been reached
@@ -326,8 +326,8 @@ void ForwardChainer::termination_log()
 	std::string msg;
 
 	// Terminate if all sources have been tried
-	if (_sources.is_exhausted()) {
-		msg = "all sources have been exhausted";
+	if (_sources.is_exhausted() and _source_rule_set.empty()) {
+		msg = "all source rule pairs have been exhausted";
 	}
 	// Terminate if max iterations has been reached
 	else if (0 <= _config.get_maximum_iterations() and
