@@ -59,6 +59,7 @@ public:
 	void setUp();
 	void tearDown();
 
+	void test_insert_rule();
 	void test_unify_target_deduction_1();
 	void test_unify_target_deduction_2();
 	void test_unify_target_deduction_3();
@@ -148,6 +149,43 @@ void RuleUTest::setUp()
 void RuleUTest::tearDown()
 {
 	_as.clear();
+}
+
+void RuleUTest::test_insert_rule()
+{
+	// Insert rules to a source make sure that they
+	// 1. do not get disallocated
+	// 2. are content-based sorted
+	// 3. are unique
+
+	Rule deduction_rule(deduction_rule_h);
+	Rule implication_scope_to_implication_rule(implication_scope_to_implication_rule_h);
+
+	RuleSet rules1;
+	auto [di1, ds1] = rules1.insert(createRule(deduction_rule));
+	Rule* dr1 = (*di1).get();
+	auto [_, dup] = rules1.insert(createRule(deduction_rule));
+	auto [ii1, is1] = rules1.insert(createRule(implication_scope_to_implication_rule));
+	Rule* ir1 = (*ii1).get();
+
+	RuleSet rules2;
+	auto [ii2, is2] = rules2.insert(createRule(implication_scope_to_implication_rule));
+	Rule* ir2 = (*ii2).get();
+	auto [di2, ds2] = rules2.insert(createRule(deduction_rule));
+	Rule* dr2 = (*di2).get();
+
+	logger().debug() << "rules1:" << std::endl << rules1.to_short_string("  ");
+	logger().debug() << "rules2:" << std::endl << rules2.to_short_string("  ");
+
+	// Make sure rule pointers are still valid after insertion of other rules
+	TS_ASSERT_EQUALS(*dr1, *dr2);
+	TS_ASSERT_EQUALS(*ir1, *ir2);
+
+	// Make sure rules1 and rules2 are equal are ordered equally
+	TS_ASSERT_EQUALS(rules1, rules2);
+
+	// Check that inserting a duplicate fails
+	TS_ASSERT(not dup);
 }
 
 void RuleUTest::test_unify_target_deduction_1()

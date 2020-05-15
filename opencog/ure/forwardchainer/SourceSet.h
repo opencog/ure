@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2018 SingularityNET Foundation
  *
- * Author: Nil Geisweiller
+ * Author: Nil Geisweiller <ngeiswei@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -62,8 +62,10 @@ public:
 	       double complexity_factor=1.0);
 
 	/**
-	 * Comparison operators. For operator< compare by complexity, or by
-	 * handle value if they are of the same size.
+	 * Comparison operators. Only body and vardecl are used for
+	 * comparison, not the weight or complexity, because such
+	 * quantities depend on the inference path leading to the source,
+	 * thus would fail to capture confluence.
 	 */
 	bool operator==(const Source& other) const;
 	bool operator<(const Source& other) const;
@@ -73,7 +75,7 @@ public:
 	 * applied. Return true if insertion is successful (that is if no
 	 * alpha-equivalent rule was already there).
 	 */
-	bool insert_rule(const Rule& rule);
+	bool insert_rule(RulePtr rule);
 
 	/**
 	 * Set exhausted flag to true
@@ -93,12 +95,12 @@ public:
 	/**
 	 * Set the exhausted flag of that rule to true
 	 */
-	void set_rule_exhausted(const Rule& rule);
+	void set_rule_exhausted(const RulePtr& rule);
 
 	/**
 	 * Check if the given rule has been tried
 	 */
-	bool is_rule_exhausted(const Rule& rule) const;
+	bool is_rule_exhausted(const RulePtr& rule) const;
 
 	/**
 	 * Return the complexity of new source expanded from this source by
@@ -125,25 +127,40 @@ public:
 
 	// Proxy for the prior probability of the source, taking into
 	// account the complexity penalty.
+	//
+	// Note that in case the complexity penalty is negative (which can
+	// be used for depth-first search) then the complexity factor can
+	// be greater than 1.0.
 	const double complexity_factor;
 
 	// Weight, akin to the unormalized probability of selecting that
 	// source.
+	//
+	// Note that in case the complexity penalty is negative (which can
+	// be used for depth-first search) then the weight can be greater
+	// than 1.0.
 	const double weight;
 
 	// True iff all rules that could expand the source have been tried
 	bool exhausted;
 
-	// Rules so far attempted on that source
+	// Rules so far attempted on that source. Primary owner.
 	RuleSet rules;
 
 private:
-	// NEXT TODO: subdivide in smaller and shared mutexes
+	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _mutex;
 };
 
+typedef std::shared_ptr<Source> SourcePtr;
+#define createSource std::make_shared<Source>
+struct source_ptr_less
+{
+	bool operator()(const SourcePtr& l, const SourcePtr& r) const;
+};
+
 /**
- * Population of sources to forwardly expand.
+ * Population of sources to forwardly expand. Primary owner.
  */
 // TODO: this class has things in common with BIT, maybe their common
 // things could be placed in a parent class.
@@ -194,7 +211,7 @@ public:
 	// because the source being expanded is modified (it keeps track of
 	// its expansion rules). Alternatively we could use a set and
 	// define Sources::rules as mutable.
-	typedef boost::ptr_vector<Source> Sources;
+	typedef std::vector<SourcePtr> Sources;
 	Sources sources;
 
 	// True iff all sources have been tried
@@ -203,7 +220,7 @@ public:
 private:
 	const UREConfig& _config;
 
-	// NEXT TODO: subdivide in smaller and shared mutexes
+	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _mutex;
 };
 

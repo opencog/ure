@@ -28,6 +28,8 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
+#include <boost/range/algorithm/binary_search.hpp>
+#include <boost/range/algorithm/lower_bound.hpp>
 
 #include <opencog/util/oc_assert.h>
 #include <opencog/atoms/base/Link.h>
@@ -46,40 +48,84 @@
 
 namespace opencog {
 
+bool rule_ptr_less::operator()(const RulePtr& l, const RulePtr& r) const
+{
+	return *l < *r;
+}
+
 void RuleSet::expand_meta_rules(AtomSpace& as)
 {
-	RuleSet new_rules;
-	for (const Rule& rule : *this) {
-		if (rule.is_meta()) {
-			Handle result = rule.apply(as);
-			for (const Handle& produced_h : result->getOutgoingSet()) {
-				Rule produced(rule.get_alias(), produced_h, rule.get_rbs());
-				bool ir = new_rules.insert(produced);
-				if (ir) {
-					ure_logger().debug() << "New rule produced from meta rule:"
-					                     << std::endl << oc_to_string(produced);
-				}
+	// TODO: could certainly be optimized by not systematically
+	// recollecting and re-instantiating meta-rules.
+	RuleSet meta_rules;
+	for (RulePtr rule : *this) {
+		if (rule->is_meta()) {
+			meta_rules.insert(rule);
+		}
+	}
+
+	for (RulePtr rule : meta_rules) {
+		Handle result = rule->apply(as);
+		for (const Handle& produced_h : result->getOutgoingSet()) {
+			RulePtr produced =
+				createRule(rule->get_alias(), produced_h, rule->get_rbs());
+			auto [_, ir] = insert(produced);
+			if (ir) {
+				ure_logger().debug() << "New rule instantiated from a meta rule:"
+											<< std::endl << oc_to_string(*produced);
 			}
 		}
 	}
-	insert(new_rules.begin(), new_rules.end());
 }
 
 HandleSet RuleSet::aliases() const
 {
 	HandleSet aliases;
 	for (const auto& rule : *this)
-		aliases.insert(rule.get_alias());
+		aliases.insert(rule->get_alias());
 	return aliases;
 }
 
-bool RuleSet::insert(const Rule& rule)
+std::pair<RuleSet::iterator, bool> RuleSet::insert(RulePtr rule)
 {
-	for (const auto& r : *this)
-		if (rule.is_alpha_equivalent(r))
+	if (boost::binary_search(*this, rule, rule_ptr_less()))
+		return {end(), false};
+
+	RuleSet::iterator it = boost::lower_bound(*this, rule, rule_ptr_less());
+	it = super::insert(it, rule);
+	return {it, true};
+}
+
+bool RuleSet::operator==(const RuleSet& other) const
+{
+	if (size() != other.size())
+		return false;
+
+	size_t i = 0;
+	for (; i < size(); i++)
+		if (*at(i) != *other.at(i))
 			return false;
-	push_back(rule);
 	return true;
+}
+
+bool RuleSet::operator<(const RuleSet& other) const
+{
+	OC_ASSERT(false, "RuleSet::operator< not implemented");
+	return false;
+}
+
+RuleSet::iterator RuleSet::find(const RulePtr& rule)
+{
+	if (not boost::binary_search(*this, rule, rule_ptr_less()))
+		return end();
+	return boost::lower_bound(*this, rule, rule_ptr_less());
+}
+
+RuleSet::const_iterator RuleSet::find(const RulePtr& rule) const
+{
+	if (not boost::binary_search(*this, rule, rule_ptr_less()))
+		return cend();
+	return boost::lower_bound(*this, rule, rule_ptr_less());
 }
 
 std::string RuleSet::to_string(const std::string& indent) const
@@ -87,9 +133,9 @@ std::string RuleSet::to_string(const std::string& indent) const
 	std::stringstream ss;
 	ss << indent << "size = " << size();
 	size_t i = 0;
-	for (const Rule& rule : *this)
+	for (const RulePtr& rule : *this)
 		ss << std::endl << indent << "rule[" << i++ << "]:" << std::endl
-		   << oc_to_string(rule, indent + OC_TO_STRING_INDENT);
+		   << oc_to_string(*rule, indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
 
@@ -100,7 +146,7 @@ std::string RuleSet::to_short_string(const std::string& indent) const
 	size_t i = 0;
 	for (const auto& rule : *this)
 		ss << std::endl << indent << "rule[" << i++ << "]:" << std::endl
-		   << rule.to_short_string(indent + oc_to_string_indent);
+		   << rule->to_short_string(indent + oc_to_string_indent);
 	return ss.str();
 }
 
@@ -199,6 +245,11 @@ bool Rule::operator==(const Rule& r) const
 	return content_eq(Handle(_rule), Handle(r._rule));
 }
 
+bool Rule::operator<(const Rule& r) const
+{
+	return content_based_handle_less()(Handle(_rule), Handle(r._rule));
+}
+
 Rule& Rule::operator=(const Rule& r)
 {
 	premises_as_clauses = r.premises_as_clauses;
@@ -210,16 +261,6 @@ Rule& Rule::operator=(const Rule& r)
 	_exhausted = r._exhausted;
 
 	return *this;
-}
-
-bool Rule::operator<(const Rule& r) const
-{
-	return content_based_handle_less()(Handle(_rule), Handle(r._rule));
-}
-
-bool Rule::is_alpha_equivalent(const Rule& r) const
-{
-	return _rule->is_equal(Handle(r._rule));
 }
 
 TruthValuePtr Rule::get_tv() const
@@ -535,11 +576,11 @@ RuleTypedSubstitutionMap Rule::unify_target(const Handle& target,
 	return unified_rules;
 }
 
-RuleSet Rule::strip_typed_substitution(const RuleTypedSubstitutionMap& rules)
+RuleSet Rule::strip_typed_substitution(const RuleTypedSubstitutionMap& rtsm)
 {
 	RuleSet rs;
-	for (const auto& r : rules)
-		rs.insert(r.first);
+	for (const auto& r : rtsm)
+		rs.insert(createRule(r.first));
 
 	return rs;
 }

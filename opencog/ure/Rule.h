@@ -38,14 +38,25 @@
 namespace opencog {
 
 class Rule;
+typedef std::shared_ptr<Rule> RulePtr;
+#define createRule std::make_shared<Rule>
+struct rule_ptr_less
+{
+	bool operator()(const RulePtr& l, const RulePtr& r) const;
+};
 
 /**
  * The rule set is in fact a sorted vector, as to be able to change
  * some features of the rules such as their exhausted flag without
- * having to resort or rebuild the set.
+ * having to resort or rebuild the set. We use rule pointers to make
+ * sure that insertion does not deallocate the rule since its pointer
+ * is passed around.
  */
-class RuleSet : public std::vector<Rule>
+class RuleSet : public std::vector<RulePtr>,
+                public boost::totally_ordered<RuleSet>
 {
+	typedef std::vector<RulePtr> super;
+
 public:
 	/**
 	 * Run all meta rules over as and insert the resulting rules back
@@ -63,9 +74,9 @@ public:
 	 * Insert rule in the rule set if no other alpha-equivalent rule is
 	 * in it.
 	 *
-	 * Return true iff rule has been successfully inserted.
+	 * Return a pair (iterator, true) iff rule has been successfully inserted.
 	 */
-	bool insert(const Rule& rule);
+	std::pair<iterator, bool> insert(RulePtr rule);
 
 	/**
 	 * Insert a range of rules
@@ -76,6 +87,18 @@ public:
 		for (; from != to; ++from)
 			insert(*from);
 	}
+
+	/**
+	 * Content based comparison.
+	 */
+	bool operator==(const RuleSet& other) const;
+	bool operator<(const RuleSet& other) const;
+
+	/**
+	 * Log-time search
+	 */
+	iterator find(const RulePtr& rule);
+	const_iterator find(const RulePtr& rule) const;
 
 	std::string to_string(const std::string& indent=empty_string) const;
 	std::string to_short_string(const std::string& indent=empty_string) const;
@@ -157,17 +180,12 @@ public:
 	 */
 	bool verify_rule();
 	
-	// Comparison
+	// Content-based (including alpha-equivalence) comparison
 	bool operator==(const Rule& r) const;
+	bool operator<(const Rule& r) const;
 
 	// Assignment
 	Rule& operator=(const Rule& r);
-
-	/**
-	 * Order by weight, or if equal by handle value.
-	 */
-	bool operator<(const Rule& r) const;
-	bool is_alpha_equivalent(const Rule&) const;
 
 	// Modifiers
 	void set_rule(const Handle&);
@@ -243,7 +261,7 @@ public:
 	HandlePairSeq get_conclusions() const;
 
 	/**
-	 * Get the default TruthValue associated with the rule.
+	 * Get the TruthValue associated with the rule.
 	 */
 	TruthValuePtr get_tv() const;
 
@@ -286,7 +304,8 @@ public:
 	                                       const AtomSpace* queried_as=nullptr) const;
 
 	/**
-	 * Remove the typed substitutions from the rule typed substitution map.
+	 * Remove the typed substitutions from the rule typed substitution
+	 * map and generate the resulting RuleSet.
 	 */
 	static RuleSet strip_typed_substitution(const RuleTypedSubstitutionMap& rules);
 
@@ -344,7 +363,7 @@ private:
 	// True if the rule has already been applied.
 	bool _exhausted;
 
-	// NEXT TODO: subdivide in smaller and shared mutexes
+	// TODO: subdivide in smaller and shared mutexes
 	mutable std::mutex _mutex;
 
 	// Return a copy of the rule with the variables alpha-converted

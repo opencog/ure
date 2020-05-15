@@ -10,6 +10,7 @@ ADD_LIBRARY(ure
 	forwardchainer/FCStat
 	forwardchainer/ForwardChainer
 	forwardchainer/SourceSet
+	forwardchainer/SourceRuleSet
 	URELogger
 	URESCM
 	Rule

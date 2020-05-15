@@ -29,6 +29,7 @@
 
 #include "../UREConfig.h"
 #include "SourceSet.h"
+#include "SourceRuleSet.h"
 #include "FCStat.h"
 
 class ForwardChainerUTest;
@@ -45,7 +46,7 @@ class Rule;
 
 // Pair of Rule and its probability estimate that it fullfils the
 // objective
-typedef std::pair<Rule, double> RuleProbabilityPair;
+typedef std::pair<RulePtr, double> RuleProbabilityPair;
 
 class ForwardChainer
 {
@@ -101,10 +102,20 @@ public:
 	void do_steps_multithread();
 
 	/**
+	 * Source rule producer implementation of do_steps.
+	 */
+	void do_steps_srpi();
+
+	/**
 	 * Perform a single forward chaining inference step on the given
 	 * iteration.
 	 */
 	void do_step(int iteration);
+
+	/**
+	 * Source rule producer implementation of do_step.
+	 */
+	void do_step_srpi(int iteration);
 
 	/**
 	 * @return true if the termination criteria have been met.
@@ -148,7 +159,29 @@ private:
 	 * Warning: it is not const because the source is gonna be modified
 	 * by keeping track of the rules applied to it.
 	 */
-	Source* select_source(const std::string& msgprfx);
+	SourcePtr select_source(const std::string& msgprfx);
+
+	/**
+	 * Build a source rule pair for application trial. If and only if
+	 * no such pair is available, then return an invalid pair.
+	 */
+	SourceRule mk_source_rule(const std::string& msgprfx);
+
+	/**
+	 * Populate the source rule set with pairs
+	 */
+	void populate_source_rule_set(const std::string& msgprfx);
+
+	/**
+	 * Select source rule pair
+	 */
+	std::pair<SourceRule, TruthValuePtr>
+	select_source_rule(const std::string& msgprfx);
+
+	/**
+	 * Given a source rule pair, calculate its truth value of success.
+	 */
+	TruthValuePtr calculate_source_rule_tv(const SourceRule& sr);
 
 	/**
 	 * Get rules that unify with the source and that are not exhausted,
@@ -177,6 +210,7 @@ private:
 	 * Apply rule.
 	 */
 	HandleSet apply_rule(const Rule& rule);
+	HandleSet apply_rule(const SourceRule& sr);
 
 	RuleSet _rules; /* loaded rules */
 
@@ -214,6 +248,14 @@ private:
 	SourceSet _sources;
 
 	FCStat _fcstat;
+
+	// Enable alternative implementation using (source, rule) producer,
+	// srpi stands for Source Rule Producer Implementation. This flag
+	// is here, likely temporarily, to compare old and new way.
+	const bool _srpi;
+
+	// Set of weighted pairs (source, rule).
+	SourceRuleSet _source_rule_set;
 };
 
 } // ~namespace opencog

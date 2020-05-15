@@ -30,6 +30,11 @@
 
 namespace opencog {
 
+bool source_ptr_less::operator()(const SourcePtr& l, const SourcePtr& r) const
+{
+	return *l < *r;
+}
+
 double calculate_weight(const Handle& bdy, double cpx_fctr)
 {
 	// Calculate weight, for now only one fitness function is hard
@@ -39,8 +44,13 @@ double calculate_weight(const Handle& bdy, double cpx_fctr)
 	//
 	// The minimum value is 1e-16 to not ignore completely the source
 	// when the it is a default TV.
+	//
+	// TODO:
+	// 1. Support more fitness functions
+	// 2. Explicitely turn the fitness into a probability of success
 	TruthValuePtr tv = bdy->getTruthValue();
-	return std::max(1e-16, cpx_fctr * tv->get_mean() * tv->get_confidence());
+	double fitness = tv->get_mean() * tv->get_confidence();
+	return std::max(1e-16, cpx_fctr * fitness);
 }
 
 Source::Source(const Handle& bdy, const Handle& vdcl, double cpx, double cpx_fctr)
@@ -55,7 +65,7 @@ Source::Source(const Handle& bdy, const Handle& vdcl, double cpx, double cpx_fct
 
 bool Source::operator==(const Source& other) const
 {
-	return body == other.body && vardecl == other.vardecl;
+	return content_eq(body, other.body) and content_eq(vardecl, other.vardecl);
 }
 
 bool Source::operator<(const Source& other) const
@@ -65,10 +75,10 @@ bool Source::operator<(const Source& other) const
 		or (content_eq(body, other.body) and vardecl < other.vardecl);
 }
 
-bool Source::insert_rule(const Rule& rule)
+bool Source::insert_rule(RulePtr rule)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
-	return rules.insert(rule);
+	return rules.insert(rule).second;
 }
 
 void Source::set_exhausted()
@@ -90,26 +100,31 @@ bool Source::is_exhausted() const
 	return exhausted;
 }
 
-void Source::set_rule_exhausted(const Rule& rule)
+void Source::set_rule_exhausted(const RulePtr& rule)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
-	for (Rule& r : rules)
-		if (rule.is_alpha_equivalent(r))
-			r.set_exhausted();
+	auto it = rules.find(rule);
+	if (it != rules.end())
+		(*it)->set_exhausted();
 }
 
-bool Source::is_rule_exhausted(const Rule& rule) const
+bool Source::is_rule_exhausted(const RulePtr& rule) const
 {
 	std::lock_guard<std::mutex> lock(_mutex);
-	for (const Rule& r : rules)
-		if (rule.is_alpha_equivalent(r) and r.is_exhausted())
-			return true;
-	return false;
+	auto it = rules.find(rule);
+	// Note that the presence of an alpha-equivalent rule in the source
+	// is not enough to being considered exhausted, the exhausted flag
+	// of the rule must also be explicited set to true. That is in
+	// order to possibly make the distinction between a rule that is
+	// being tried and a rule that has already been tried. It's not
+	// clear though whether we need this distinction, and if we do we
+	// probably should make it explicit in the Source or Rule API.
+	return it != rules.end() and (*it)->is_exhausted();
 }
 
 double Source::expand_complexity(double prob) const
 {
-	return complexity - log2(prob);
+	return complexity - std::log2(prob);
 }
 
 double Source::get_weight() const
@@ -147,10 +162,9 @@ SourceSet::SourceSet(const UREConfig& config,
 			exhausted = true;
 		} else {
 			for (const Handle& src : init_sources) {
-				auto ptr_less = [](const Source& ls, const Source* rs) {
-					return ls < *rs; };
-				Source* new_src = new Source(src, init_vardecl);
-				sources.insert(boost::lower_bound(sources, new_src, ptr_less), new_src);
+				SourcePtr new_src = createSource(src, init_vardecl);
+				auto it = boost::lower_bound(sources, new_src, source_ptr_less());
+				sources.insert(it, new_src);
 			}
 		}
 	} else {
@@ -162,8 +176,8 @@ std::vector<double> SourceSet::get_weights() const
 {
 	std::lock_guard<std::mutex> lock(_mutex);
 	std::vector<double> results;
-	for (const Source& src : sources)
-		results.push_back(src.get_weight());
+	for (const SourcePtr& src : sources)
+		results.push_back(src->get_weight());
 	return results;
 }
 
@@ -181,8 +195,8 @@ void SourceSet::reset_exhausted()
 		return;
 	}
 
-	for (Source& src : sources)
-		src.reset_exhausted();
+	for (SourcePtr& src : sources)
+		src->reset_exhausted();
 	exhausted = false;
 }
 
@@ -200,31 +214,29 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
 
 	// Calculate the complexity of the new sources
 	double new_cpx = src.expand_complexity(prob);
-	double new_cpx_fctr = exp(-_config.get_complexity_penalty() * new_cpx);
+	double new_cpx_fctr = std::exp2(-_config.get_complexity_penalty() * new_cpx);
 
 	// Keep all new sources
-	std::vector<Source*> new_srcs;
+	Sources new_srcs;
 	for (const Handle& product : products) {
-		Source* new_src = new Source(product, empty_variable_set,
-		                             new_cpx, new_cpx_fctr);
+		SourcePtr new_src = createSource(product, empty_variable_set,
+		                                 new_cpx, new_cpx_fctr);
 
 		// Make sure it isn't already in the sources
-		if (boost::binary_search(sources, *new_src)) {
+		if (boost::binary_search(sources, new_src, source_ptr_less())) {
 			LAZY_URE_LOG_FINE << msgprfx
 			                  << "The following source is already in the population: "
 			                  << new_src->body->id_to_string();
-			delete new_src;
 		} else {
 			new_srcs.push_back(new_src);
 		}
 	}
 
 	// Insert all new sources
-	for (Source* new_src : new_srcs) {
+	for (SourcePtr new_src : new_srcs) {
 		// Insert it while preserving the order
-		auto ptr_less = [](const Source& ls, const Source* rs) {
-			return ls < *rs; };
-		sources.insert(boost::lower_bound(sources, new_src, ptr_less), new_src);
+		auto it = boost::lower_bound(sources, new_src, source_ptr_less());
+		sources.insert(it, new_src);
 	}
 
 	// Log the new sources
@@ -233,7 +245,7 @@ void SourceSet::insert(const HandleSet& products, const Source& src,
 		                   << products.size() << " results, including "
 		                   << new_srcs.size() << " new sources";
 		HandleSeq new_src_bodies;
-		for (const Source* new_src : new_srcs)
+		for (const SourcePtr& new_src : new_srcs)
 			new_src_bodies.push_back(new_src->body);
 		LAZY_URE_LOG_DEBUG << msgprfx << "New sources:"
 		                    << std::endl << new_src_bodies;
@@ -268,9 +280,9 @@ std::string oc_to_string(const SourceSet::Sources& sources, const std::string& i
 	std::stringstream ss;
 	ss << indent << "size = " << sources.size() << std::endl;
 	size_t i = 0;
-	for (const Source& src : sources) {
-		ss << indent << "Source[" << i << "]:" << std::endl
-		   << src.to_string(indent + oc_to_string_indent);
+	for (const SourcePtr& src : sources) {
+		ss << indent << "source[" << i << "]:" << std::endl
+		   << src->to_string(indent + oc_to_string_indent);
 		i++;
 	}
 	return ss.str();

@@ -33,14 +33,24 @@ using namespace opencog;
 const std::string UREConfig::top_rbs_name = "URE";
 
 // Parameters
-const std::string UREConfig::max_iter_name = "URE:maximum-iterations";
-const std::string UREConfig::complexity_penalty_name = "URE:complexity-penalty";
-const std::string UREConfig::jobs_name = "URE:jobs";
-const std::string UREConfig::fc_retry_exhausted_sources_name = "URE:FC:retry-exhausted-sources";
-const std::string UREConfig::fc_full_rule_application_name = "URE:FC:full-rule-application";
-const std::string UREConfig::bc_max_bit_size_name = "URE:BC:maximum-bit-size";
-const std::string UREConfig::bc_mm_complexity_penalty_name = "URE:BC:MM:complexity-penalty";
-const std::string UREConfig::bc_mm_compressiveness_name = "URE:BC:MM:compressiveness";
+const std::string UREConfig::max_iter_name =
+	"URE:maximum-iterations";
+const std::string UREConfig::complexity_penalty_name =
+	"URE:complexity-penalty";
+const std::string UREConfig::jobs_name =
+	"URE:jobs";
+const std::string UREConfig::production_application_ratio_name =
+	"URE:production-application-ratio";
+const std::string UREConfig::fc_retry_exhausted_sources_name =
+	"URE:FC:retry-exhausted-sources";
+const std::string UREConfig::fc_full_rule_application_name =
+	"URE:FC:full-rule-application";
+const std::string UREConfig::bc_max_bit_size_name =
+	"URE:BC:maximum-bit-size";
+const std::string UREConfig::bc_mm_complexity_penalty_name =
+	"URE:BC:MM:complexity-penalty";
+const std::string UREConfig::bc_mm_compressiveness_name =
+	"URE:BC:MM:compressiveness";
 
 UREConfig::UREConfig(AtomSpace& as, const Handle& rbs) : _as(as)
 {
@@ -76,6 +86,11 @@ double UREConfig::get_complexity_penalty() const
 int UREConfig::get_jobs() const
 {
 	return _common_params.jobs;
+}
+
+double UREConfig::get_production_application_ratio() const
+{
+	return _common_params.production_application_ratio;
 }
 
 bool UREConfig::get_retry_exhausted_sources() const
@@ -123,6 +138,11 @@ void UREConfig::set_complexity_penalty(double cp)
 void UREConfig::set_jobs(int j)
 {
 	_common_params.jobs = j;
+}
+
+void UREConfig::set_production_application_ratio(double par)
+{
+	_common_params.production_application_ratio = par;
 }
 
 void UREConfig::set_retry_exhausted_sources(bool rs)
@@ -173,7 +193,7 @@ void UREConfig::fetch_common_parameters(const Handle& rbs)
 		          "Please check rules in /atomspace/examples/ure for example.\n\n",
 		          rule_name->to_short_string().c_str());
 
-		_common_params.rules.insert(Rule(rule_name, rbs));
+		_common_params.rules.insert(createRule(rule_name, rbs));
 	}
 
 	// Fetch maximum number of iterations
@@ -185,6 +205,10 @@ void UREConfig::fetch_common_parameters(const Handle& rbs)
 
 	// Fetch number of jobs
 	_common_params.jobs = fetch_num_param(jobs_name, rbs, 1);
+
+	// Fetch production application ratio
+	_common_params.production_application_ratio =
+		fetch_num_param(production_application_ratio_name, rbs, 1);
 }
 
 void UREConfig::fetch_fc_parameters(const Handle& rbs)

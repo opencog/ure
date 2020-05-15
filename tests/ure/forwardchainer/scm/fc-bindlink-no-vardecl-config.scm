@@ -41,5 +41,3 @@
 (ure-add-rules rbs
                (list
                 (cons rule-name (stv 1 1))))
-
-
