@@ -23,6 +23,7 @@
 
 #include <cxxtest/TestSuite.h>
 
+#include <opencog/util/Logger.h>
 #include <opencog/guile/SchemeEval.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/ure/Rule.h>
@@ -44,16 +45,21 @@ private:
 		implication_and_lambda_factorization_rule_h,
 		closed_lambda_introduction_rule_h,
 		conditional_direct_evaluation_implication_scope_rule_h,
+		intensional_inheritance_direct_introduction_rule_h,
 		X, A, V, CT, Typed_X, P_body_var, P, Q, Eval_P, Eval_Q;
 
 public:
 	RuleUTest() : _eval(&_as)
 	{
+		logger().set_level(Logger::INFO);
+		logger().set_timestamp_flag(false);
+		logger().set_print_to_stdout_flag(true);
 	}
 
 	void setUp();
 	void tearDown();
 
+	void test_insert_rule();
 	void test_unify_target_deduction_1();
 	void test_unify_target_deduction_2();
 	void test_unify_target_deduction_3();
@@ -64,6 +70,7 @@ public:
 	void test_unify_target_implication_and_lambda_factorization();
 	void test_unify_target_closed_lambda_introduction_1();
 	void test_unify_target_closed_lambda_introduction_2();
+	void test_unify_target_intensional_inheritance_direct_introduction();
 	void test_cycle();
 };
 
@@ -96,6 +103,7 @@ void RuleUTest::setUp()
 	eval_result = _eval.eval("(load-from-path \"implication-and-lambda-factorization-rule.scm\")");
 	eval_result = _eval.eval("(load-from-path \"closed-lambda-introduction-rule.scm\")");
 	eval_result = _eval.eval("(load-from-path \"conditional-direct-evaluation.scm\")");
+	eval_result = _eval.eval("(load-from-path \"intensional-inheritance-direct-introduction.scm\")");
 
 	deduction_rule_h =
 		_eval.eval_h("(MemberLink (stv 1 1)"
@@ -121,6 +129,10 @@ void RuleUTest::setUp()
 		_eval.eval_h("(MemberLink (stv 1 1)"
 		             "   conditional-direct-evaluation-implication-scope-rule-name"
 		             "   (ConceptNode \"URE\"))");
+	intensional_inheritance_direct_introduction_rule_h =
+		_eval.eval_h("(MemberLink (stv 1 1)"
+		             "   intensional-inheritance-direct-introduction-rule-name"
+		             "   (ConceptNode \"URE\"))");
 
 	X = an(VARIABLE_NODE, "$X");
 	A = an(CONCEPT_NODE, "A");
@@ -137,6 +149,43 @@ void RuleUTest::setUp()
 void RuleUTest::tearDown()
 {
 	_as.clear();
+}
+
+void RuleUTest::test_insert_rule()
+{
+	// Insert rules to a source make sure that they
+	// 1. do not get disallocated
+	// 2. are content-based sorted
+	// 3. are unique
+
+	Rule deduction_rule(deduction_rule_h);
+	Rule implication_scope_to_implication_rule(implication_scope_to_implication_rule_h);
+
+	RuleSet rules1;
+	auto [di1, ds1] = rules1.insert(createRule(deduction_rule));
+	Rule* dr1 = (*di1).get();
+	auto [_, dup] = rules1.insert(createRule(deduction_rule));
+	auto [ii1, is1] = rules1.insert(createRule(implication_scope_to_implication_rule));
+	Rule* ir1 = (*ii1).get();
+
+	RuleSet rules2;
+	auto [ii2, is2] = rules2.insert(createRule(implication_scope_to_implication_rule));
+	Rule* ir2 = (*ii2).get();
+	auto [di2, ds2] = rules2.insert(createRule(deduction_rule));
+	Rule* dr2 = (*di2).get();
+
+	logger().debug() << "rules1:" << std::endl << rules1.to_short_string("  ");
+	logger().debug() << "rules2:" << std::endl << rules2.to_short_string("  ");
+
+	// Make sure rule pointers are still valid after insertion of other rules
+	TS_ASSERT_EQUALS(*dr1, *dr2);
+	TS_ASSERT_EQUALS(*ir1, *ir2);
+
+	// Make sure rules1 and rules2 are equal are ordered equally
+	TS_ASSERT_EQUALS(rules1, rules2);
+
+	// Check that inserting a duplicate fails
+	TS_ASSERT(not dup);
 }
 
 void RuleUTest::test_unify_target_deduction_1()
@@ -168,8 +217,8 @@ void RuleUTest::test_unify_target_deduction_1()
 		             al(LIST_LINK, XA, XV, VA)),
 		expected = al(BIND_LINK, vardecl, body, rewrite);
 
-	std::cout << "rule = " << oc_to_string(rule);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -208,8 +257,8 @@ void RuleUTest::test_unify_target_deduction_2()
 		             al(LIST_LINK, XA, XV, VA)),
 		expected = al(BIND_LINK, vardecl, body, rewrite);
 
-	std::cout << "rule = " << oc_to_string(rule);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -363,8 +412,8 @@ void RuleUTest::test_unify_target_deduction_3()
 		             "            (UnquoteLink"
 		             "              (VariableNode \"$P-25868310\"))))))))");
 
-	std::cout << "rule = " << oc_to_string(rule);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -394,8 +443,8 @@ void RuleUTest::test_unify_target_implication_scope_to_implication_1()
 		             al(LIST_LINK, target, body)),
 		expected = al(BIND_LINK, al(PRESENT_LINK, body), rewrite);
 
-	std::cout << "rule = " << oc_to_string(rule);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -425,10 +474,11 @@ void RuleUTest::test_unify_target_implication_scope_to_implication_2()
 		             al(LIST_LINK, target, body)),
 		expected = al(BIND_LINK, P_body_var, al(PRESENT_LINK, body), rewrite);
 
-	std::cout << "implication_scope_to_implication_rule = " << oc_to_string(implication_scope_to_implication_rule);
-	std::cout << "target = " << oc_to_string(target);
-	std::cout << "rule = " << oc_to_string(rule);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "implication_scope_to_implication_rule = "
+	                 << oc_to_string(implication_scope_to_implication_rule);
+	logger().debug() << "target = " << oc_to_string(target);
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -530,11 +580,11 @@ void RuleUTest::test_unify_target_implication_scope_to_implication_4()
 		             "        (Unquote (VariableNode \"$P-6266d6f2\"))"
 		             "        (Unquote (VariableNode \"$Q-7005b724\")))))))");
 
-	std::cout << "implication_scope_to_implication_rule = "
-	          << oc_to_string(implication_scope_to_implication_rule) << std::endl;
-	std::cout << "target = " << oc_to_string(target) << std::endl;
-	std::cout << "rule = " << oc_to_string(rule) << std::endl;
-	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+	logger().debug() << "implication_scope_to_implication_rule = "
+	                 << oc_to_string(implication_scope_to_implication_rule);
+	logger().debug() << "target = " << oc_to_string(target);
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -596,7 +646,7 @@ void RuleUTest::test_unify_target_implication_and_lambda_factorization()
 	RuleTypedSubstitutionMap rules =
 		implication_and_lambda_factorization_rule.unify_target(target, vardecl);
 
-	std::cout << "rules = " << oc_to_string(rules) << std::endl;
+	logger().debug() << "rules = " << oc_to_string(rules);
 
 	TS_ASSERT_EQUALS(rules.size(), 1);
 
@@ -690,8 +740,8 @@ void RuleUTest::test_unify_target_implication_and_lambda_factorization()
 		             "  )"
 		             ")");
 
-	std::cout << "rule = " << oc_to_string(rule);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -773,8 +823,8 @@ void RuleUTest::test_unify_target_closed_lambda_introduction_1()
 		             "  )"
 		             ")");
 
-	std::cout << "rule = " << oc_to_string(rule);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -846,8 +896,91 @@ void RuleUTest::test_unify_target_closed_lambda_introduction_2()
 		             "          (VariableNode \"$X\")"
 		             "          (ConceptNode \"compound-A\"))))))");
 
-	std::cout << "rule = " << oc_to_string(rule);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
+
+	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
+
+	TS_ASSERT(expected_sc->is_equal(rule));
+}
+
+void RuleUTest::test_unify_target_intensional_inheritance_direct_introduction()
+{
+	Rule intensional_inheritance_direct_introduction_rule
+		(intensional_inheritance_direct_introduction_rule_h);
+	Handle target =
+		_eval.eval_h("(IntensionalInheritanceLink"
+		             "  (VariableNode \"$X\")"
+		             "  (VariableNode \"$Y\"))");
+	Handle vardecl =
+		_eval.eval_h("(VariableSet"
+		             "  (TypedVariableLink"
+		             "    (VariableNode \"$X\")"
+		             "    (TypeNode \"ConceptNode\"))"
+		             "  (TypedVariableLink"
+		             "    (VariableNode \"$Y\")"
+		             "    (TypeNode \"ConceptNode\")))");
+	RuleTypedSubstitutionMap rules =
+		intensional_inheritance_direct_introduction_rule.unify_target(target, vardecl);
+
+	TS_ASSERT_EQUALS(rules.size(), 1);
+
+	Handle rule = rules.begin()->first.get_rule();
+	Handle expected =
+		_eval.eval_h("(BindLink"
+		             "  (VariableSet"
+		             "    (TypedVariableLink"
+		             "      (VariableNode \"$X\")"
+		             "      (TypeNode \"ConceptNode\")"
+		             "    )"
+		             "    (TypedVariableLink"
+		             "      (VariableNode \"$Y\")"
+		             "      (TypeNode \"ConceptNode\")"
+		             "    )"
+		             "  )"
+		             "  (AndLink"
+		             "    (PresentLink"
+		             "      (VariableNode \"$Y\")"
+		             "      (VariableNode \"$X\")"
+		             "    )"
+		             "    (SatisfactionLink"
+		             "      (TypedVariableLink"
+		             "        (VariableNode \"$Z\")"
+		             "        (TypeNode \"ConceptNode\")"
+		             "      )"
+		             "      (PresentLink"
+		             "        (AttractionLink"
+		             "          (VariableNode \"$Y\")"
+		             "          (VariableNode \"$Z\")"
+		             "        )"
+		             "        (AttractionLink"
+		             "          (VariableNode \"$X\")"
+		             "          (VariableNode \"$Z\")"
+		             "        )"
+		             "      )"
+		             "    )"
+		             "    (NotLink"
+		             "      (EqualLink"
+		             "        (VariableNode \"$Y\")"
+		             "        (VariableNode \"$X\")"
+		             "      )"
+		             "    )"
+		             "  )"
+		             "  (ExecutionOutputLink"
+		             "    (GroundedSchemaNode \"scm: intensional-inheritance-direct-introduction\")"
+		             "    (ListLink"
+		             "      (IntensionalInheritanceLink"
+		             "        (VariableNode \"$X\")"
+		             "        (VariableNode \"$Y\")"
+		             "      )"
+		             "      (VariableNode \"$X\")"
+		             "      (VariableNode \"$Y\")"
+		             "    )"
+		             "  )"
+		             ")");
+
+	logger().debug() << "rule = " << oc_to_string(rule);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	ScopeLinkPtr expected_sc = ScopeLinkCast(expected);
 
@@ -858,7 +991,7 @@ void RuleUTest::test_cycle()
 {
 	Rule rule(conditional_direct_evaluation_implication_scope_rule_h);
 
-	std::cout << "rule = " << oc_to_string(rule);
+	logger().debug() << "rule = " << oc_to_string(rule);
 
 	TS_ASSERT(not rule.has_cycle());
 }

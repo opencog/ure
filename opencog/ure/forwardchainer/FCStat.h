@@ -43,12 +43,8 @@ struct InferenceRecord
 
 class FCStat
 {
-private:
-	std::vector<InferenceRecord> _inf_rec;
-	AtomSpace& _as;
-
 public:
-	FCStat(AtomSpace& as) : _as(as) {}
+	FCStat(AtomSpace* trace_as) : _trace_as(trace_as) {}
 
 	/**
 	 * Record the inference step into memory, as well as in the
@@ -56,21 +52,29 @@ public:
 	 *
 	 * ExecutionLink
 	 *    <rule>
-	 *    <step>
-	 *    <source>
+	 *    List
+	 *      <step>
+	 *      <source>
 	 *    <product>
 	 *
 	 * where
 	 *
 	 * 1. <rule> is DefinedSchemaNode <rule-name>
-	 * 2. <rule> is NumberNode <#iteration>
+	 * 2. <step> is NumberNode <#iteration>
 	 * 3. <source> is the source
 	 * 4. <product> is a SetLink <p1> ... <pn> where pi are the products
 	 */
 	void add_inference_record(unsigned iteration, Handle source,
-	                          const Rule& rule,
-	                          const HandleSet& product);
+	                          const Rule& rule, const HandleSet& product);
+	HandleSet get_all_products() const;
 	HandleSet get_all_products();
+
+private:
+	std::vector<InferenceRecord> _inf_rec;
+	AtomSpace* _trace_as;
+
+	// TODO: subdivide in smaller and shared mutexes
+	mutable std::mutex _whole_mutex;
 };
 
 }

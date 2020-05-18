@@ -63,8 +63,10 @@ public:
 	int get_maximum_iterations() const;
 	double get_complexity_penalty() const;
 	int get_jobs() const;
+	double get_production_application_ratio() const;
 	// FC
 	bool get_retry_exhausted_sources() const;
+	bool get_full_rule_application() const;
 	// BC
 	double get_max_bit_size() const;
 	double get_mm_complexity_penalty() const;
@@ -82,8 +84,10 @@ public:
 	void set_maximum_iterations(int);
 	void set_complexity_penalty(double);
 	void set_jobs(int);
+	void set_production_application_ratio(double);
 	// FC
 	void set_retry_exhausted_sources(bool);
+	void set_full_rule_application(bool);
 	// BC
 	void set_mm_complexity_penalty(double);
 	void set_mm_compressiveness(double);
@@ -107,9 +111,17 @@ public:
 	// Name of the jobs parameter
 	static const std::string jobs_name;
 
+	// Name of the production application ratio parameter
+	static const std::string production_application_ratio_name;
+
 	// Name of the PredicateNode outputting whether sources should be
 	// retried after exhaustion
 	static const std::string fc_retry_exhausted_sources_name;
+
+	// Name of the PredicateNode outputting whether a selected rule
+	// should be applied over the entire atomspace or just the selected
+	// source.
+	static const std::string fc_full_rule_application_name;
 
 	// Name of the maximum number of and-BITs in the BIT parameter
 	static const std::string bc_max_bit_size_name;
@@ -139,11 +151,15 @@ private:
 		double complexity_penalty;
 
 		// This parameter controls the number of jobs used during
-		// reasoning. Note that the number of jobs can have an effect on
-		// the results, especially for the forward chainer because the
-		// result of applying a rule may depend on the output of
-		// applying other rules.
+		// reasoning.
 		int jobs;
+
+		// This parameter controls how many tuples -- (source, rule) for
+		// forward chainer or (inference, premise, rule) for backward
+		// chainer -- are produced in average before an application
+		// takes place. The higher the more tuples to choose from, which
+		// can lead to better inference control.
+		double production_application_ratio;
 	};
 	CommonParameters _common_params;
 
@@ -151,7 +167,11 @@ private:
 	struct FCParameters {
 		// Retry all sources even if they have all been tried
 		bool retry_exhausted_sources;
-	};
+
+		// Apply the selected rule over the entire atomspace, not just
+		// the selected source.
+		bool full_rule_application;
+};
 	FCParameters _fc_params;
 
 	// Parameter specific to the backward chainer.
@@ -246,7 +266,8 @@ private:
 	{
 		ure_logger().debug() << "Rule-base " << rbs_input->get_name()
 		                     << ", set parameter " << param_name
-		                     << " to " << (is_default ? "(default) " : "") << value;
+		                     << " to " << value
+		                     << (is_default ? " [default] " : "");
 	}
 };
 

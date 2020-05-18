@@ -47,13 +47,13 @@ ControlPolicy::ControlPolicy(const UREConfig& ure_config, const BIT& bit,
 {
 	// Fetch default TVs for each inference rule (the TV on the member
 	// link connecting the rule to the rule base)
-	for (const Rule& rule : rules) {
-		_default_tvs[rule.get_alias()] = rule.get_tv();
+	for (RulePtr rule : rules) {
+		_default_tvs[rule->get_alias()] = rule->get_tv();
 	}
 	std::stringstream ss;
-	ss << "Default inference rule TVs:" << std::endl;
+	ss << "Default inference rule TVs:";
 	for (const auto& rtv : _default_tvs)
-		ss << rtv.second->to_string() << " " << oc_to_string(rtv.first);
+		ss << std::endl << rtv.second->to_string() << " " << oc_to_string(rtv.first);
 	ure_logger().debug() << ss.str();
 
 	// Fetches expansion control rules from _control_as
@@ -109,10 +109,10 @@ RuleTypedSubstitutionMap ControlPolicy::get_valid_rules(const AndBIT& andbit,
 {
 	// Generate all valid rules
 	RuleTypedSubstitutionMap valid_rules;
-	for (const Rule& rule : rules) {
+	for (RulePtr rule : rules) {
 		// For now ignore meta rules as they are forwardly applied in
 		// expand_bit()
-		if (rule.is_meta())
+		if (rule->is_meta())
 			continue;
 
 		// Get the leaf vardecl from fcs. We don't want to filter it
@@ -124,7 +124,7 @@ RuleTypedSubstitutionMap ControlPolicy::get_valid_rules(const AndBIT& andbit,
 			vardecl = BindLinkCast(andbit.fcs)->get_vardecl();
 
 		RuleTypedSubstitutionMap unified_rules
-			= rule.unify_target(bitleaf.body, vardecl);
+			= rule->unify_target(bitleaf.body, vardecl);
 
 		// Only insert unexplored rules for this leaf
 		RuleTypedSubstitutionMap pos_rules;
@@ -401,7 +401,8 @@ Handle ControlPolicy::mk_expand_exec(const Handle& input_andbit_var,
                                      const Handle& inf_rule,
                                      const Handle& output_andbit_var)
 {
-	Handle expand_schema = an(SCHEMA_NODE, TraceRecorder::expand_andbit_schema_name);
+	Handle expand_schema = an(SCHEMA_NODE,
+		std::move(std::string(TraceRecorder::expand_andbit_schema_name)));
 	return al(EXECUTION_LINK,
 	          expand_schema,
 	          al(LIST_LINK,
@@ -413,7 +414,8 @@ Handle ControlPolicy::mk_expand_exec(const Handle& input_andbit_var,
 
 Handle ControlPolicy::mk_preproof_eval(const Handle& preproof_args_var)
 {
-	Handle preproof_pred = an(PREDICATE_NODE, preproof_predicate_name);
+	Handle preproof_pred = an(PREDICATE_NODE,
+	                          std::move(std::string(preproof_predicate_name)));
 	return al(EVALUATION_LINK,
 	          preproof_pred,
 	          al(UNQUOTE_LINK, preproof_args_var));
@@ -449,7 +451,7 @@ Handle ControlPolicy::mk_expansion_control_rules_query(const Handle& inf_rule,
 	Handle pat_expand_preproof_impl = al(QUOTE_LINK,
 	                                     al(IMPLICATION_SCOPE_LINK,
 	                                        al(UNQUOTE_LINK, vardecl_var),
-	                                        al(AND_LINK, antecedents),
+	                                        al(AND_LINK, std::move(antecedents)),
 	                                        out_preproof_eval));
 
 	// Bind of ImplicationScope with a pattern in its antecedent
@@ -463,7 +465,7 @@ Handle ControlPolicy::mk_expansion_control_rules_query(const Handle& inf_rule,
 	vardecls.insert(vardecls.end(), pattern_vars.begin(), pattern_vars.end());
 
 	Handle pat_expand_preproof_impl_bl = al(BIND_LINK,
-	                                        al(VARIABLE_LIST, vardecls),
+	                                        al(VARIABLE_LIST, std::move(vardecls)),
 	                                        pat_expand_preproof_impl,
 	                                        pat_expand_preproof_impl);
 
@@ -481,7 +483,7 @@ HandleSeq ControlPolicy::mk_pattern_vars(int n)
 Handle ControlPolicy::mk_pattern_var(int i)
 {
 	std::string name = std::string("$pattern-") + std::to_string(i);
-	return an(VARIABLE_NODE, name);
+	return an(VARIABLE_NODE, std::move(name));
 }
 
 double ControlPolicy::get_actual_mean(TruthValuePtr tv) const

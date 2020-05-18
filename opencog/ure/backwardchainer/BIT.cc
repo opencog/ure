@@ -70,7 +70,7 @@ std::string	BITNode::to_string(const std::string& indent) const
 {
 	std::stringstream ss;
 	ss << indent << "body:" << std::endl
-	   << oc_to_string(body, indent + OC_TO_STRING_INDENT)
+	   << oc_to_string(body, indent + OC_TO_STRING_INDENT) << std::endl
 	   << indent << "exhausted: " << exhausted << std::endl
 	   << indent << "rules:" << std::endl
 	   << (indent + oc_to_string_indent) << "size = " << rules.size();
@@ -101,7 +101,7 @@ AndBIT::AndBIT(AtomSpace& bit_as, const Handle& target, Handle vardecl,
 	vardecl = filter_vardecl(vardecl, body); // remove useless vardecl
 	if (vardecl)
 		bl.insert(bl.begin(), vardecl);
-	fcs = bit_as.add_link(BIND_LINK, bl);
+	fcs = bit_as.add_link(BIND_LINK, std::move(bl));
 
 	// Insert the initial BITNode and initialize the AndBIT complexity
 	auto it = insert_bitnode(target, fitness);
@@ -132,7 +132,7 @@ AndBIT AndBIT::expand(const Handle& leaf,
 	}
 
 	// Discard expansion with cycle
-	if (has_cycle(BindLinkCast(new_fcs)->get_implicand())) {
+	if (has_cycle(BindLinkCast(new_fcs)->get_implicand()[0])) {
 		ure_logger().debug() << "The new FCS has some cycle (some conclusion "
 		                     << "has itself has premise, directly or "
 		                     << "indirectly). This expansion has been cancelled.";
@@ -173,7 +173,7 @@ void AndBIT::reset_exhausted()
 
 bool AndBIT::has_cycle() const
 {
-	return has_cycle(BindLinkCast(fcs)->get_implicand());
+	return has_cycle(BindLinkCast(fcs)->get_implicand()[0]);
 }
 
 bool AndBIT::has_cycle(const Handle& h, HandleSet ancestors) const
@@ -240,7 +240,7 @@ std::string AndBIT::to_string(const std::string& indent) const
 
 std::string AndBIT::fcs_to_ascii_art(const Handle& nfcs) const
 {
-	return fcs_rewrite_to_ascii_art(BindLinkCast(nfcs)->get_implicand());
+	return fcs_rewrite_to_ascii_art(BindLinkCast(nfcs)->get_implicand()[0]);
 }
 
 std::string AndBIT::fcs_rewrite_to_ascii_art(const Handle& h) const
@@ -321,7 +321,7 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 	BindLinkPtr nfcs_bl(BindLinkCast(nfcs));
 	Handle nfcs_vardecl = nfcs_bl->get_vardecl();
 	Handle nfcs_pattern = nfcs_bl->get_body();
-	Handle nfcs_rewrite = nfcs_bl->get_implicand();
+	Handle nfcs_rewrite = nfcs_bl->get_implicand()[0]; // assume that there is only one
 	Handle rule_vardecl = rule.first.get_vardecl();
 
 	// Generate new pattern term
@@ -342,7 +342,7 @@ Handle AndBIT::expand_fcs(const Handle& leaf,
 	HandleSeq noutgoings({npattern, nrewrite});
 	if (nvardecl)
 		noutgoings.insert(noutgoings.begin(), nvardecl);
-	nfcs = fcs->getAtomSpace()->add_link(BIND_LINK, noutgoings);
+	nfcs = fcs->getAtomSpace()->add_link(BIND_LINK, std::move(noutgoings));
 
 	// Log expansion
 	LAZY_URE_LOG_DEBUG << "Expanded forward chainer strategy:" << std::endl
@@ -382,7 +382,8 @@ HandleSet AndBIT::get_leaves(const Handle& h) const
 	Type t = h->get_type();
 	if (t == BIND_LINK) {
 		BindLinkPtr hsc = BindLinkCast(h);
-		Handle rewrite = hsc->get_implicand();
+		// Assume there is only one rewrite.
+		Handle rewrite = hsc->get_implicand()[0];
 		return get_leaves(rewrite);
 	} else if (t == EXECUTION_OUTPUT_LINK) {
 		// All arguments except the first one are potential target leaves
@@ -485,7 +486,7 @@ Handle AndBIT::expand_fcs_rewrite(const Handle& fcs_rewrite,
 			HandleSeq args = arg->getOutgoingSet();
 			for (size_t i = 1; i < args.size(); i++)
 				args[i] = expand_fcs_rewrite(args[i], rule);
-			arg = as.add_link(LIST_LINK, args);
+			arg = as.add_link(LIST_LINK, std::move(args));
 		}
 		return as.add_link(EXECUTION_OUTPUT_LINK, {gsn, arg});
 	} else if (t == SET_LINK) {
@@ -494,7 +495,7 @@ Handle AndBIT::expand_fcs_rewrite(const Handle& fcs_rewrite,
 		HandleSeq args = fcs_rewrite->getOutgoingSet();
 		for (size_t i = 0; i < args.size(); i++)
 			args[i] = expand_fcs_rewrite(args[i], rule);
-		return as.add_link(SET_LINK, args);
+		return as.add_link(SET_LINK, std::move(args));
 	} else
 		// If none of the conditions apply just leave alone. Indeed,
 		// assuming that the pattern matcher is executing the rewrite
@@ -541,10 +542,10 @@ Handle AndBIT::mk_pattern(HandleSeq prs_clauses, HandleSeq virt_clauses) const
 	// Assemble the body
 	AtomSpace& as = *fcs->getAtomSpace();
 	if (not prs_clauses.empty())
-		virt_clauses.push_back(as.add_link(PRESENT_LINK, prs_clauses));
+		virt_clauses.push_back(as.add_link(PRESENT_LINK, std::move(prs_clauses)));
 	return virt_clauses.empty() ? Handle::UNDEFINED
 		: (virt_clauses.size() == 1 ? virt_clauses.front()
-		   : as.add_link(AND_LINK, virt_clauses));
+		   : as.add_link(AND_LINK, std::move(virt_clauses)));
 }
 
 void AndBIT::remove_redundant(HandleSeq& hs)
@@ -807,10 +808,7 @@ bool BIT::andbits_exhausted() const
 bool BIT::is_in(const RuleTypedSubstitutionPair& rule,
                 const BITNode& bitnode) const
 {
-	for (const auto& bnr : bitnode.rules)
-		if (rule.first.is_alpha_equivalent(bnr.first))
-			return true;
-	return false;
+	return bitnode.rules.find(rule.first) != bitnode.rules.end();
 }
 
 std::string oc_to_string(const BITNode& bitnode, const std::string& indent)

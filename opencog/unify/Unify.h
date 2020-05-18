@@ -771,6 +771,12 @@ private:
 	bool inherit(const TypeSet& lhs, const TypeSet& rhs) const;
 
 	/**
+	 * Return true if lgm is in rgm.
+	 */
+	bool inherit(const std::pair<double, double> &lgm,
+	             const std::pair<double, double> &rgm) const;
+
+	/**
 	 * Return true iff h (or ch) is a variable that is declared in
 	 * _variables.
 	 */
@@ -808,6 +814,34 @@ private:
 			return res;
 		return fixpoint(fun, res);
 	}
+
+	HandleSeq tail(const HandleSeq &seq) const;
+
+	HandleSeq tail(const HandleSeq &seq, const size_t offset) const;
+
+	/**
+	 * Unify lhs and rhs where at least lhs contains a glob.
+	 *
+	 * For every possible allowed interval of the glob in lhs
+	 * three operations will be undergone:
+	 *
+	 * 1/ pick that many elements from rhs and unify with glob as head_sol.
+	 *    Example: lhs = X[2, 3]Y[0, inf], rhs = ABC
+	 *             2 is the first allowed interval for X
+	 *             head_sol = unify(X, AB) = {{X, List(A, B)}, List(A, B)}
+	 *
+	 * 2/ remove glob from lhs and unified atoms from rhs. Then recurse over
+	 *    the the remaining as tail_sol.
+	 *    Example: ordered_unify(Y[0, inf], C)
+	 *
+	 * 3/ join the head_sol and tail_sol into a complite solution and insert
+	 *    it tosolutions.
+	 */
+	void ordered_unify_glob(const HandleSeq &lhs, const HandleSeq &rhs,
+	                        SolutionSet &sol,
+	                        Context lhs_context=Context(),
+	                        Context rhs_context=Context(),
+	                        bool flip=false) const;
 };
 
 bool unifiable(const Handle& lhs, const Handle& rhs,

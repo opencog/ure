@@ -61,6 +61,7 @@ std::vector<double> ThompsonSampling::distribution()
 
 size_t ThompsonSampling::operator()()
 {
+	OC_ASSERT(not _tvs.empty());
 	std::vector<double> weights = distribution();
 	std::discrete_distribution<size_t> dist(weights.begin(), weights.end());
 	return dist(randGen());

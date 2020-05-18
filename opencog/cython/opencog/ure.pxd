@@ -10,10 +10,11 @@ cdef extern from "opencog/ure/forwardchainer/ForwardChainer.h" namespace "openco
                         const cHandle& rbs,
                         const cHandle& source,
                         const cHandle& vardecl,
+                        cAtomSpace* trace_as,
                         const vector[cHandle]& focus_set) except +
 
-        void do_chain()
-        set[cHandle] get_chaining_result() const
+        void do_chain() except +
+        cHandle get_results() const
 
 
 cdef extern from "opencog/ure/backwardchainer/Fitness.h" namespace "opencog::BITNodeFitness":
@@ -39,11 +40,11 @@ cdef extern from "opencog/ure/backwardchainer/Fitness.h" namespace "opencog":
         pass
 
     cdef cppclass BITNodeFitness:
-        BITNodeFitness(BitNodeFitnessType ft)
+        BITNodeFitness(BitNodeFitnessType ft) except +
 
     cdef cppclass AndBITFitness:
         AndBITFitness(AndBitFitnessType ft,
-                      const set[ContentHash]& tr);
+                      const set[ContentHash]& tr) except +
 
 
 cdef extern from "opencog/ure/backwardchainer/BackwardChainer.h" namespace "opencog":
@@ -66,6 +67,5 @@ cdef extern from "opencog/ure/backwardchainer/BackwardChainer.h" namespace "open
                         cAtomSpace* control_as,
                         const cHandle& focus_set) except +
 
-        void do_chain()
+        void do_chain() except +
         cHandle get_results() const
-

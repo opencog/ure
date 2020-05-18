@@ -49,7 +49,7 @@ public:
 	 * @paran bins Number of bins to discretize the second order
 	 *             distributions associated to each TV.
 	 */
-	ThompsonSampling(const std::vector<TruthValuePtr>& tvs, unsigned bins=100);
+	ThompsonSampling(const TruthValueSeq& tvs, unsigned bins=100);
 
 	/**
 	 * Return the index distribution, a probability for each index to

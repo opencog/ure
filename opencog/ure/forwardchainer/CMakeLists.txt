@@ -1,7 +1,7 @@
 INSTALL (FILES
 	FCStat.h
-	FocusSetPMCB.h
 	ForwardChainer.h
-        SourceSet.h
+	SourceSet.h
+	SourceRuleSet.h
 	DESTINATION "include/opencog/ure/forwardchainer"
 )

@@ -32,7 +32,3 @@
 
 ; Termination criteria parameters
 (ure-set-num-parameter fc-rbs "URE:maximum-iterations" 20)
-
-; Attention allocation (set the TV strength to 0 to disable it, 1 to
-; enable it)
-(ure-set-fuzzy-bool-parameter fc-rbs "URE:attention-allocation" 0)

@@ -27,8 +27,4 @@
 (ure-add-rules fc-deduction-rbs (list fc-deduction-rule-name))
 
 ;; Termination criteria parameters
-(ure-set-num-parameter fc-deduction-rbs "URE:maximum-iterations" 20)
-
-;; Attention allocation (set the TV strength to 0 to disable it, 1 to
-;; enable it)
-(ure-set-fuzzy-bool-parameter fc-deduction-rbs "URE:attention-allocation" 0)
+(ure-set-maximum-iterations fc-deduction-rbs 20)

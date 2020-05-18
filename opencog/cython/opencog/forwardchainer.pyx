@@ -11,10 +11,12 @@ from ure cimport cForwardChainer
 cdef class ForwardChainer:
     cdef cForwardChainer * chainer
     cdef AtomSpace _as
+    cdef AtomSpace _trace_as
     def __cinit__(self, AtomSpace _as,
                   Atom rbs,
                   Atom source,
                   Atom vardecl=None,
+                  AtomSpace trace_as=None,
                   focus_set=[]):
         cdef cHandle c_vardecl
         if vardecl is None:
@@ -32,24 +34,20 @@ cdef class ForwardChainer:
                                         deref(rbs.handle),
                                         deref(source.handle),
                                         c_vardecl,
+                                        <cAtomSpace*> (NULL if trace_as is None else trace_as.atomspace),
                                         handle_vector)
         self._as = _as
+        self._trace_as = trace_as
 
     def do_chain(self):
         return self.chainer.do_chain()
 
     def get_results(self):
-        cdef set[cHandle] res_handle_set = self.chainer.get_chaining_result()
-        list = []
-        cdef set[cHandle].iterator it = res_handle_set.begin()
-        while it != res_handle_set.end():
-            handle = deref(it)
-            list.append(Atom.createAtom(handle))
-            inc(it)
-
-        result_set = self._as.add_link(types.SetLink, list)
-        return result_set
+        cdef cHandle res_handle = self.chainer.get_results()
+        cdef Atom result = Atom.createAtom(res_handle)
+        return result
 
     def __dealloc__(self):
         del self.chainer
+        self._trace_as = None
         self._as = None
