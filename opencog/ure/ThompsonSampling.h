@@ -66,7 +66,7 @@ public:
 	 * See Section Inference Rule Selection in the README.md of the
 	 * pln inference-control-learning for more explanations.
 	 */
-	std::vector<double> distribution();
+	std::vector<double> distribution() const;
 
 	/**
 	 * Perform random action selection according to the action

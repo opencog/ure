@@ -34,7 +34,7 @@ namespace opencog {
 ThompsonSampling::ThompsonSampling(const TruthValueSeq& tvs, unsigned bins)
 	: _tvs(tvs), _bins(bins) {}
 
-std::vector<double> ThompsonSampling::distribution()
+std::vector<double> ThompsonSampling::distribution() const
 {
 	std::vector<double> probs(_tvs.size());
 
