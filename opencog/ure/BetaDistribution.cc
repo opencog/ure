@@ -38,6 +38,11 @@ BetaDistribution::BetaDistribution(double pos_count, double count,
                                    double p_alpha, double p_beta)
 	: _beta_distribution(p_alpha + pos_count, p_beta + count - pos_count) {}
 
+double BetaDistribution::operator()(RandGen& rng) const
+{
+	return boost::math::ibeta_inv(alpha(), beta(), rng.randdouble());
+}
+
 double BetaDistribution::alpha() const
 {
 	return _beta_distribution.alpha();

@@ -100,6 +100,13 @@ public:
 	iterator find(const RulePtr& rule);
 	const_iterator find(const RulePtr& rule) const;
 
+	/**
+	 * Get all rule truth values, ordered according to the rules. This
+	 * can be useful to build distributions for subsequential
+	 * selection.
+	 */
+	TruthValueSeq get_tvs() const;
+
 	std::string to_string(const std::string& indent=empty_string) const;
 	std::string to_short_string(const std::string& indent=empty_string) const;
 };

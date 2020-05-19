@@ -25,6 +25,7 @@
 
 #include <boost/math/distributions/beta.hpp>
 
+#include <opencog/util/mt19937ar.h>
 #include <opencog/util/empty_string.h>
 #include <opencog/atoms/truthvalue/TruthValue.h>
 
@@ -47,6 +48,11 @@ public:
 	                 double prior_alpha=1.0, double prior_beta=1.0);
 	BetaDistribution(double pos_count, double count,
 	                 double prior_alpha=1.0, double prior_beta=1.0);
+
+	/**
+	 * Return a random number drawn from that beta distribution
+	 */
+	double operator()(RandGen& rng=randGen()) const;
 
 	/**
 	 * Return the alpha parameter of the distribution
