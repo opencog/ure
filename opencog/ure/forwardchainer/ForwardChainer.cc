@@ -453,7 +453,9 @@ SourceRule ForwardChainer::mk_source_rule(const std::string& msgprfx)
 		return mk_source_rule(msgprfx);
 	}
 
-	RulePtr slc_rule = rand_element(valid_rules);
+	// Thompson sample according to rule tvs
+	TruthValueSeq tvs = valid_rules.get_tvs();
+	RulePtr slc_rule = valid_rules[ThompsonSampling(tvs)()];
 	bool success = source->insert_rule(slc_rule);
 	if (not success)
 		return SourceRule();
@@ -591,9 +593,7 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules,
                                                 const std::string& msgprfx)
 {
 	// Build vector of all valid truth values
-	TruthValueSeq tvs;
-	for (const RulePtr& rule : valid_rules)
-		tvs.push_back(rule->get_tv());
+	TruthValueSeq tvs = valid_rules.get_tvs();
 
 	// Build action selection distribution
 	std::vector<double> weights = ThompsonSampling(tvs).distribution();
