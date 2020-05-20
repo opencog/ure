@@ -63,7 +63,7 @@ public:
 	int get_maximum_iterations() const;
 	double get_complexity_penalty() const;
 	int get_jobs() const;
-	double get_production_application_ratio() const;
+	int get_expansion_pool_size() const;
 	// FC
 	bool get_retry_exhausted_sources() const;
 	bool get_full_rule_application() const;
@@ -84,7 +84,7 @@ public:
 	void set_maximum_iterations(int);
 	void set_complexity_penalty(double);
 	void set_jobs(int);
-	void set_production_application_ratio(double);
+	void set_expansion_pool_size(int);
 	// FC
 	void set_retry_exhausted_sources(bool);
 	void set_full_rule_application(bool);
@@ -112,7 +112,7 @@ public:
 	static const std::string jobs_name;
 
 	// Name of the production application ratio parameter
-	static const std::string production_application_ratio_name;
+	static const std::string expansion_pool_size_name;
 
 	// Name of the PredicateNode outputting whether sources should be
 	// retried after exhaustion
@@ -154,12 +154,12 @@ private:
 		// reasoning.
 		int jobs;
 
-		// This parameter controls how many tuples -- (source, rule) for
-		// forward chainer or (inference, premise, rule) for backward
-		// chainer -- are produced in average before an application
-		// takes place. The higher the more tuples to choose from, which
-		// can lead to better inference control.
-		double production_application_ratio;
+		// This parameter controls how much the expension pool is
+		// supposed to grow. The larger, the more choices available to
+		// select the next expansion (application in the case of the
+		// iterative forward chainer), but also then the selection is
+		// more costly. Negative means unlimited.
+		int expansion_pool_size;
 	};
 	CommonParameters _common_params;
 

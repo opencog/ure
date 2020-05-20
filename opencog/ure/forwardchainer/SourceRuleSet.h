@@ -77,6 +77,8 @@ public:
  * probabilities of success into first order probabilities of action
  * via Thompson sampling ideally, or less ideally but possibly more
  * efficiently tournament selection.
+ *
+ * This container is also called the Expansion Pool.
  */
 class SourceRuleSet
 {
