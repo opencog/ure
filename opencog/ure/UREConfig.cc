@@ -39,8 +39,8 @@ const std::string UREConfig::complexity_penalty_name =
 	"URE:complexity-penalty";
 const std::string UREConfig::jobs_name =
 	"URE:jobs";
-const std::string UREConfig::production_application_ratio_name =
-	"URE:production-application-ratio";
+const std::string UREConfig::expansion_pool_size_name =
+	"URE:expansion-pool-size";
 const std::string UREConfig::fc_retry_exhausted_sources_name =
 	"URE:FC:retry-exhausted-sources";
 const std::string UREConfig::fc_full_rule_application_name =
@@ -88,9 +88,9 @@ int UREConfig::get_jobs() const
 	return _common_params.jobs;
 }
 
-double UREConfig::get_production_application_ratio() const
+int UREConfig::get_expansion_pool_size() const
 {
-	return _common_params.production_application_ratio;
+	return _common_params.expansion_pool_size;
 }
 
 bool UREConfig::get_retry_exhausted_sources() const
@@ -140,9 +140,9 @@ void UREConfig::set_jobs(int j)
 	_common_params.jobs = j;
 }
 
-void UREConfig::set_production_application_ratio(double par)
+void UREConfig::set_expansion_pool_size(int eps)
 {
-	_common_params.production_application_ratio = par;
+	_common_params.expansion_pool_size = eps;
 }
 
 void UREConfig::set_retry_exhausted_sources(bool rs)
@@ -207,8 +207,8 @@ void UREConfig::fetch_common_parameters(const Handle& rbs)
 	_common_params.jobs = fetch_num_param(jobs_name, rbs, 1);
 
 	// Fetch production application ratio
-	_common_params.production_application_ratio =
-		fetch_num_param(production_application_ratio_name, rbs, 1);
+	_common_params.expansion_pool_size =
+		fetch_num_param(expansion_pool_size_name, rbs, 1);
 }
 
 void UREConfig::fetch_fc_parameters(const Handle& rbs)

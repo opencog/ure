@@ -473,9 +473,8 @@ void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 {
 	LAZY_URE_LOG_DEBUG << msgprfx << "Populate the source rule set (size="
 	                   << _source_rule_set.size() << ")";
-
-	int ratio = std::max((int)_config.get_production_application_ratio(), 1);
-	for (int i = 0; i < ratio; i++) {
+	int eps = _config.get_expansion_pool_size();
+	while (eps <= 0 or (int)_source_rule_set.size() < eps) {
 		// Build (source, rule) pair for application trial
 		SourceRule sr = mk_source_rule(msgprfx);
 		if (not sr.is_valid()) {
