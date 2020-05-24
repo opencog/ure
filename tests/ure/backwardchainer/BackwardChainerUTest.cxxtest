@@ -46,14 +46,11 @@ public:
 	void test_deduction_tv_query();
 	void test_modus_ponens_tv_query();
 	void test_conjunction_fuzzy_evaluation_tv_query();
-	// TODO: re-enable when opencog/atomspace#2630 is fixed.
 	void test_conditional_instantiation_1();
 	void test_conditional_instantiation_2();
 	void test_conditional_instantiation_tv_query();
 	void test_conditional_partial_instantiation();
-	// TODO: re-enable when opencog/atomspace#2630 is fixed.
 	void test_impossible_criminal();
-	// TODO: re-enable when opencog/atomspace#2630 is fixed.
 	void test_criminal();
 	void test_no_exec_output();
 	// TODO: re-enable when GlobNode is supported
