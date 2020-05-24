@@ -46,12 +46,15 @@ public:
 	void test_deduction_tv_query();
 	void test_modus_ponens_tv_query();
 	void test_conjunction_fuzzy_evaluation_tv_query();
-	void test_conditional_instantiation_1();
+	// TODO: re-enable when opencog/atomspace#2630 is fixed.
+	void xtest_conditional_instantiation_1();
 	void test_conditional_instantiation_2();
 	void test_conditional_instantiation_tv_query();
 	void test_conditional_partial_instantiation();
-	void test_impossible_criminal();
-	void test_criminal();
+	// TODO: re-enable when opencog/atomspace#2630 is fixed.
+	void xtest_impossible_criminal();
+	// TODO: re-enable when opencog/atomspace#2630 is fixed.
+	void xtest_criminal();
 	void test_no_exec_output();
 	// TODO: re-enable when GlobNode is supported
 	void xtest_green_balls();
@@ -289,7 +292,7 @@ void BackwardChainerUTest::test_conjunction_fuzzy_evaluation_tv_query()
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 0.2, 1e-6);
 }
 
-void BackwardChainerUTest::test_conditional_instantiation_1()
+void BackwardChainerUTest::xtest_conditional_instantiation_1()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -478,7 +481,7 @@ void BackwardChainerUTest::test_conditional_partial_instantiation()
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
 }
 
-void BackwardChainerUTest::test_impossible_criminal()
+void BackwardChainerUTest::xtest_impossible_criminal()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -514,7 +517,7 @@ void BackwardChainerUTest::test_impossible_criminal()
 	TS_ASSERT_EQUALS(results, expected);
 }
 
-void BackwardChainerUTest::test_criminal()
+void BackwardChainerUTest::xtest_criminal()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
