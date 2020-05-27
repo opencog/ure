@@ -128,6 +128,14 @@ RuleSet::const_iterator RuleSet::find(const RulePtr& rule) const
 	return boost::lower_bound(*this, rule, rule_ptr_less());
 }
 
+TruthValueSeq RuleSet::get_tvs() const
+{
+	TruthValueSeq tvs;
+	for (const RulePtr& rule : *this)
+		tvs.push_back(rule->get_tv());
+	return tvs;
+}
+
 std::string RuleSet::to_string(const std::string& indent) const
 {
 	std::stringstream ss;

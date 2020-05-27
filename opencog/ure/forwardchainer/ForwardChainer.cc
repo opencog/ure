@@ -453,7 +453,9 @@ SourceRule ForwardChainer::mk_source_rule(const std::string& msgprfx)
 		return mk_source_rule(msgprfx);
 	}
 
-	RulePtr slc_rule = rand_element(valid_rules);
+	// Thompson sample according to rule tvs
+	TruthValueSeq tvs = valid_rules.get_tvs();
+	RulePtr slc_rule = valid_rules[ThompsonSampling(tvs)()];
 	bool success = source->insert_rule(slc_rule);
 	if (not success)
 		return SourceRule();
@@ -471,9 +473,8 @@ void ForwardChainer::populate_source_rule_set(const std::string& msgprfx)
 {
 	LAZY_URE_LOG_DEBUG << msgprfx << "Populate the source rule set (size="
 	                   << _source_rule_set.size() << ")";
-
-	int ratio = std::max((int)_config.get_production_application_ratio(), 1);
-	for (int i = 0; i < ratio; i++) {
+	int eps = _config.get_expansion_pool_size();
+	while (eps <= 0 or (int)_source_rule_set.size() < eps) {
 		// Build (source, rule) pair for application trial
 		SourceRule sr = mk_source_rule(msgprfx);
 		if (not sr.is_valid()) {
@@ -591,9 +592,7 @@ RuleProbabilityPair ForwardChainer::select_rule(const RuleSet& valid_rules,
                                                 const std::string& msgprfx)
 {
 	// Build vector of all valid truth values
-	TruthValueSeq tvs;
-	for (const RulePtr& rule : valid_rules)
-		tvs.push_back(rule->get_tv());
+	TruthValueSeq tvs = valid_rules.get_tvs();
 
 	// Build action selection distribution
 	std::vector<double> weights = ThompsonSampling(tvs).distribution();

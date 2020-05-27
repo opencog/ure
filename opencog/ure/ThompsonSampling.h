@@ -23,6 +23,7 @@
 #ifndef _OPENCOG_THOMPSON_SAMPLING_H_
 #define _OPENCOG_THOMPSON_SAMPLING_H_
 
+#include <opencog/util/mt19937ar.h>
 #include <opencog/util/empty_string.h>
 #include <opencog/atoms/truthvalue/TruthValue.h>
 
@@ -52,10 +53,11 @@ public:
 	ThompsonSampling(const TruthValueSeq& tvs, unsigned bins=100);
 
 	/**
-	 * Return the index distribution, a probability for each index to
-	 * be used as sampling distribution. The distribution attempts to
-	 * reflect the optimal balance between exploration and exploitation
-	 * (Thompson sampling).
+	 * Return the index distribution (a.k.a. action distribution),
+	 * a probability for each index to be used as sampling distribution.
+	 *
+	 * The distribution attempts to reflect the optimal balance between
+	 * exploration and exploitation (Thompson sampling).
 	 *
 	 * Pi = I_0^1 pdfi(x) Prod_j!=i cdfj(x) dx / nt
 	 *
@@ -66,7 +68,7 @@ public:
 	 * See Section Inference Rule Selection in the README.md of the
 	 * pln inference-control-learning for more explanations.
 	 */
-	std::vector<double> distribution();
+	std::vector<double> distribution() const;
 
 	/**
 	 * Perform random action selection according to the action
@@ -76,7 +78,7 @@ public:
 	 * select the index accordingly. This could be greatly optimized by
 	 * sampling on the fly without building it.
 	 */
-	size_t operator()();
+	size_t operator()(RandGen& rng=randGen()) const;
 
 	std::string to_string(const std::string& indent=empty_string) const;
 

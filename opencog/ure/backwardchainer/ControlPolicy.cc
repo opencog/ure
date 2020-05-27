@@ -324,7 +324,7 @@ bool ControlPolicy::match(const Handle& pattern, const Handle& term,
 		tmp_term = tmp_as.add_atom(term),
 		result = HandleCast(MapLink(impl, tmp_term).execute(&tmp_as, false));
 
-	return (bool)result;
+	return (SET_LINK != result->get_type()) or (result->get_arity() != 0);
 }
 
 Handle ControlPolicy::get_antecedent_preproof(const Handle& ctrl_rule) const
