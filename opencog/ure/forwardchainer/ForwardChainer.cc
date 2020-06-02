@@ -657,8 +657,8 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 				if (ref_as.get_atom(clause) == Handle::UNDEFINED)
 					return results;
 
-		Handle h = HandleCast(rhcpy->execute(&_kb_as));
-		add_results(_kb_as, h->getOutgoingSet());
+		Handle h = HandleCast(rhcpy->execute(&ref_as));
+		add_results(ref_as, h->getOutgoingSet());
 	}
 	catch (...) {}
 

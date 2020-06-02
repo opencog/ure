@@ -77,6 +77,7 @@ public:
 	// Test forward chainer
 	void test_deduction();
 	void test_deduction_neg_max_iter();
+	void test_deduction_focus_set();
 	void test_fritz_green();
 	void test_tweety_not_green();
 	void test_fritz_green_alt();
@@ -185,6 +186,46 @@ void ForwardChainerUTest::test_deduction_neg_max_iter()
 	ForwardChainer fc(_as, rbs, AB);
 	fc.get_config().set_jobs(4);
 	fc.get_config().set_maximum_iterations(-1);
+	// Run forward chainer
+	fc.do_chain();
+
+	// Collect the results
+	HandleSet results = fc.get_results_set();
+
+	// Check that AC is in the results
+	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
+	TS_ASSERT_DIFFERS(results.find(AC), results.end());
+}
+
+// Like test_deduction() but operate on the focus set
+void ForwardChainerUTest::test_deduction_focus_set()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	// Test simple deduction
+	//
+	//   InheritanceLink A B
+	//   InheritanceLink B C
+	//   |-
+	//   InheritanceLink A C
+	//
+	Handle A = _eval.eval_h("(ConceptNode \"A\" (stv 1 1))"),
+	       B = _eval.eval_h("(ConceptNode \"B\")"),
+	       C = _eval.eval_h("(ConceptNode \"C\")"),
+	       AB = _eval.eval_h("(InheritanceLink (stv 1 1)"
+	                         "   (ConceptNode \"A\")"
+	                         "   (ConceptNode \"B\"))"),
+	       BC = _eval.eval_h("(InheritanceLink (stv 1 1)"
+	                         "   (ConceptNode \"B\")"
+	                         "   (ConceptNode \"C\"))");
+
+	// Get the ConceptNode corresponding to the rule-based system to test
+	Handle rbs = an(CONCEPT_NODE, "fc-deduction-rule-base");
+	AtomSpace empty_kb_as;
+	Handle vardecl = Handle::UNDEFINED;
+	AtomSpace* trace_as = nullptr;
+	HandleSeq focus_set{AB, BC};
+	ForwardChainer fc(empty_kb_as, _as, rbs, AB, vardecl, trace_as, focus_set);
 	// Run forward chainer
 	fc.do_chain();
 
