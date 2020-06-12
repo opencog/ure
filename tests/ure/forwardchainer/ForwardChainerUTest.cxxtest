@@ -77,10 +77,10 @@ public:
 	// Test forward chainer
 	void test_deduction();
 	void test_deduction_neg_max_iter();
+	void test_deduction_focus_set();
 	void test_fritz_green();
 	void test_tweety_not_green();
 	void test_fritz_green_alt();
-	// TODO: enable once https://github.com/opencog/ure/issues/33 is fixed
 	void test_tweety_not_green_alt();
 	void test_unsatisfied_premise();
 	void test_negation_conflict();
@@ -119,7 +119,7 @@ void ForwardChainerUTest::test_select_rule(void)
 
 	// Full unification
 	RuleProbabilityPair rule = fc.select_rule(h);
-	TS_ASSERT(rule.first.is_valid());
+	TS_ASSERT(rule.first->is_valid());
 }
 
 void ForwardChainerUTest::test_deduction()
@@ -151,7 +151,7 @@ void ForwardChainerUTest::test_deduction()
 	fc.do_chain();
 
 	// Collect the results
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 
 	// Check that AC is in the results
 	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
@@ -190,7 +190,47 @@ void ForwardChainerUTest::test_deduction_neg_max_iter()
 	fc.do_chain();
 
 	// Collect the results
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
+
+	// Check that AC is in the results
+	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
+	TS_ASSERT_DIFFERS(results.find(AC), results.end());
+}
+
+// Like test_deduction() but operate on the focus set
+void ForwardChainerUTest::test_deduction_focus_set()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	// Test simple deduction
+	//
+	//   InheritanceLink A B
+	//   InheritanceLink B C
+	//   |-
+	//   InheritanceLink A C
+	//
+	Handle A = _eval.eval_h("(ConceptNode \"A\" (stv 1 1))"),
+	       B = _eval.eval_h("(ConceptNode \"B\")"),
+	       C = _eval.eval_h("(ConceptNode \"C\")"),
+	       AB = _eval.eval_h("(InheritanceLink (stv 1 1)"
+	                         "   (ConceptNode \"A\")"
+	                         "   (ConceptNode \"B\"))"),
+	       BC = _eval.eval_h("(InheritanceLink (stv 1 1)"
+	                         "   (ConceptNode \"B\")"
+	                         "   (ConceptNode \"C\"))");
+
+	// Get the ConceptNode corresponding to the rule-based system to test
+	Handle rbs = an(CONCEPT_NODE, "fc-deduction-rule-base");
+	AtomSpace empty_kb_as;
+	Handle vardecl = Handle::UNDEFINED;
+	AtomSpace* trace_as = nullptr;
+	HandleSeq focus_set{AB, BC};
+	ForwardChainer fc(empty_kb_as, _as, rbs, AB, vardecl, trace_as, focus_set);
+	// Run forward chainer
+	fc.do_chain();
+
+	// Collect the results
+	HandleSet results = fc.get_results_set();
 
 	// Check that AC is in the results
 	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
@@ -207,7 +247,8 @@ void ForwardChainerUTest::test_fritz_green()
 	_eval.eval("(load-from-path \"animals.scm\")");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE, UREConfig::top_rbs_name);
+	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle Fritz = an(CONCEPT_NODE, "Fritz"),
 		croaks = an(PREDICATE_NODE, "croaks"),
@@ -219,7 +260,7 @@ void ForwardChainerUTest::test_fritz_green()
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	Handle Fritz_green = al(INHERITANCE_LINK, Fritz, green);
 
 	logger().debug() << "results = " << oc_to_string(results);
@@ -239,7 +280,8 @@ void ForwardChainerUTest::test_tweety_not_green()
 	_eval.eval("(load-from-path \"animals.scm\")");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE, UREConfig::top_rbs_name);
+	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle Tweety = an(CONCEPT_NODE, "Tweety"),
 		eats_flies = an(PREDICATE_NODE, "croaks"),
@@ -252,7 +294,7 @@ void ForwardChainerUTest::test_tweety_not_green()
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	Handle Tweety_green = al(INHERITANCE_LINK, Tweety, green);
 
 	logger().debug() << "results = " << oc_to_string(results);
@@ -273,7 +315,8 @@ void ForwardChainerUTest::test_fritz_green_alt()
 	_eval.eval("(load-from-path \"animals.scm\")");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE, UREConfig::top_rbs_name);
+	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle Fritz = an(CONCEPT_NODE, "Fritz"),
 		croaks = an(PREDICATE_NODE, "croaks"),
@@ -285,7 +328,7 @@ void ForwardChainerUTest::test_fritz_green_alt()
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	Handle Fritz_green = al(INHERITANCE_LINK, Fritz, green);
 
 	logger().debug() << "results = " << oc_to_string(results);
@@ -306,7 +349,8 @@ void ForwardChainerUTest::test_tweety_not_green_alt()
 	_eval.eval("(load-from-path \"animals.scm\")");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE, UREConfig::top_rbs_name);
+	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle Tweety = an(CONCEPT_NODE, "Tweety"),
 		eats_flies = an(PREDICATE_NODE, "eats_flies"),
@@ -319,7 +363,7 @@ void ForwardChainerUTest::test_tweety_not_green_alt()
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	Handle Tweety_green = al(INHERITANCE_LINK, Tweety, green);
 
 	logger().debug() << "results = " << oc_to_string(results);
@@ -348,7 +392,7 @@ void ForwardChainerUTest::test_unsatisfied_premise(void)
 	fc.get_config().set_maximum_iterations(20);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 	TS_ASSERT_EQUALS(results.size(), 0);
 }
 
@@ -369,9 +413,9 @@ void ForwardChainerUTest::test_negation_conflict()
 	fc.get_config().set_maximum_iterations(20);
 	fc.do_chain();
 
-	HandleSet resultSet = fc.get_chaining_result();
+	HandleSet resultSet = fc.get_results_set();
 	HandleSeq resultHandleSeq(resultSet.begin(), resultSet.end());
-	Handle results = al(SET_LINK, resultHandleSeq);
+	Handle results = al(SET_LINK, std::move(resultHandleSeq));
 
 	Handle American = an(CONCEPT_NODE, "American"),
 	       German = an(CONCEPT_NODE, "German"),
@@ -395,7 +439,8 @@ void ForwardChainerUTest::test_bindlink_no_vardecl()
 
 	_eval.eval("(load-from-path \"fc-bindlink-no-vardecl-config.scm\")");
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE, UREConfig::top_rbs_name);
+	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle source = al(MEMBER_LINK, an(CONCEPT_NODE, "terrier"),
 	                   an(CONCEPT_NODE, "dog"));
@@ -405,7 +450,7 @@ void ForwardChainerUTest::test_bindlink_no_vardecl()
 	fc.get_config().set_maximum_iterations(10);
 	fc.do_chain();
 
-	HandleSet results = fc.get_chaining_result();
+	HandleSet results = fc.get_results_set();
 
 	logger().debug() << "results = " << oc_to_string(results);
 

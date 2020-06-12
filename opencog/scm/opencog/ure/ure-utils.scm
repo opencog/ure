@@ -15,6 +15,8 @@
 ;; -- ure-rm-rule-by-name -- Remove rule from a rbs given the name of its alias
 ;; -- ure-rm-rules -- Remove rules from a rbs
 ;; -- ure-rm-rules-by-names -- Remove rules from a rbs given the names of its aliases
+;; -- ure-rm-all-rules -- Remove all rules from the given rbs
+;; -- ure-rules -- List all rules of a given rule base
 ;; -- ure-weighted-rules -- List all weighted rules of a given rule base
 ;; -- ure-set-num-parameter -- Set a numeric parameter of an rbs
 ;; -- ure-set-fuzzy-bool-parameter -- Set a fuzzy boolean parameter of an rbs
@@ -22,7 +24,9 @@
 ;; -- ure-set-maximum-iterations -- Set the URE:maximum-iterations parameter
 ;; -- ure-set-complexity-penalty -- Set the URE:complexity-penalty parameter
 ;; -- ure-set-jobs -- Set the URE:jobs parameter
+;; -- ure-set-expansion-pool-size -- Set the URE:expansion-pool-size parameter
 ;; -- ure-set-fc-retry-exhausted-sources -- Set the URE:FC:retry-exhausted-sources parameter
+;; -- ure-set-fc-full-rule-application -- Set the URE:FC:full-rule-application parameter
 ;; -- ure-set-bc-maximum-bit-size -- Set the URE:BC:maximum-bit-size
 ;; -- ure-set-bc-mm-complexity-penalty -- Set the URE:BC:MM:complexity-penalty
 ;; -- ure-set-bc-mm-compressiveness -- Set the URE:BC:MM:compressiveness
@@ -48,6 +52,8 @@
 ;; -- ure-logger-flush -- flush the URE logger
 ;; -- bool->tv -- Convert #t to TRUE_TV and #f to FALSE_TV
 ;; -- tv->bool -- Convert TRUE_TV to #t, anything else to #f
+;; -- confidence->count -- Convert Simple TV confidence to count
+;; -- count->confidence -- Convert Simple TV count to confidence
 ;; -- atom->number -- Convert NumberNode into its corresponding number
 ;; -- gt-zero-confidence -- Return TrueTV iff A's confidence is greater than 0
 ;; -- gt-zero-confidence-eval -- EvaluationLink wrapping up gt-zero-confidence call
@@ -77,23 +83,29 @@
 (define* (cog-fc rbs source
                  #:key
                  (vardecl (List))
+                 (trace-as #f)
                  (focus-set (Set))
                  (attention-allocation *unspecified*)
                  (maximum-iterations *unspecified*)
                  (complexity-penalty *unspecified*)
                  (jobs *unspecified*)
-                 (fc-retry-exhausted-sources *unspecified*))
+                 (expansion-pool-size *unspecified*)
+                 (fc-retry-exhausted-sources *unspecified*)
+                 (fc-full-rule-application *unspecified*))
 "
   Forward Chainer call.
 
   Usage: (cog-fc rbs source
                  #:vardecl vd
+                 #:trace-as tas
                  #:focus-set fs
                  #:attention-allocation aa
                  #:maximum-iterations mi
                  #:complexity-penalty cp
                  #:jobs jb
-                 #:fc-retry-exhausted-sources res)
+                 #:expansion-pool-size esp
+                 #:fc-retry-exhausted-sources res
+                 #:fc-full-rule-application fra)
 
   rbs: ConceptNode representing a rulebase.
 
@@ -102,6 +114,8 @@
 
   vd: [optional] Variable declaration of the source (in case it has
       variables).
+
+  tas: [optional] AtomSpace to record the inference traces.
 
   fs: [optional] Focus set, a SetLink with all atoms to consider for
       forward chaining.
@@ -117,10 +131,13 @@
       Possible range is (-inf, +inf) but it's rarely necessary in practice
       to go outside of [-10, 10].
 
-  jb: [optional, default=1] Number of jobs to run in parallel. Can
-      speed up reasoning, note that this may alter the results, especially
-      for the forward chainer as the output of a rule application may depend
-      on the output of the other rules.
+  jb: [optional, default=1] Number of jobs to run in parallel.
+
+  esp: [optional, default=1] This parameter controls how much the
+       expension pool is supposed to grow. The larger, the more choices
+       available to select the next expansion (application in the case of
+       the forward chainer), but also then the selection is more costly.
+       Negative or null means unlimited (not recommended).
 
   res: [optional, default=#f] Whether exhausted sources should be
        retried. A source is exhausted if all its valid rules (so that at
@@ -128,6 +145,10 @@
        it. Given that the forward chainer results are added to the kb
        atomspace during forward chaining, the same source may yield different
        results as time goes, thus this option.
+
+  fra: [optional, default=#f] Whether the selected rule is applied over the
+       entire atomspace, not just the source. This can be convienient if
+       the goal is to rapidly achieve inference closure.
 
   Note that the defaults of the optional arguments are not determined
   here (although they attempt to be documented here).  That is the case
@@ -145,11 +166,17 @@
       (ure-set-complexity-penalty rbs complexity-penalty))
   (if (not (unspecified? jobs))
       (ure-set-jobs rbs jobs))
+  (if (not (unspecified? expansion-pool-size))
+      (ure-set-expansion-pool-size rbs expansion-pool-size))
   (if (not (unspecified? fc-retry-exhausted-sources))
       (ure-set-fc-retry-exhausted-sources rbs fc-retry-exhausted-sources))
+  (if (not (unspecified? fc-full-rule-application))
+      (ure-set-fc-full-rule-application rbs fc-full-rule-application))
 
-  ;; Call the forward chainer
-  (cog-mandatory-args-fc rbs source vardecl focus-set))
+  ;; Defined optional atomspaces and call the forward chainer
+  (let* ((trace-enabled (cog-atomspace? trace-as))
+         (tas (if trace-enabled trace-as (cog-atomspace))))
+    (cog-mandatory-args-fc rbs source vardecl trace-enabled tas focus-set)))
 
 (define* (cog-bc rbs target
                  #:key
@@ -161,6 +188,7 @@
                  (maximum-iterations *unspecified*)
                  (complexity-penalty *unspecified*)
                  (jobs *unspecified*)
+                 (expansion-pool-size *unspecified*)
                  (bc-maximum-bit-size *unspecified*)
                  (bc-mm-complexity-penalty *unspecified*)
                  (bc-mm-compressiveness *unspecified*))
@@ -175,6 +203,8 @@
                  #:attention-allocation aa
                  #:maximum-iterations mi
                  #:complexity-penalty cp
+                 #:jobs jb
+                 #:expansion-pool-size esp
                  #:bc-maximum-bit-size mbs
                  #:bc-mm-complexity-penalty mcp
                  #:bc-mm-compressiveness mc)
@@ -204,10 +234,13 @@
       depth.  Possible range is (-inf, +inf) but it's rarely necessary in
       practice to go outside of [-10, 10].
 
-  jb: [optional, default=1] Number of jobs to run in parallel. Can
-      speed up reasoning, note that this may alter the results, especially
-      for the forward chainer as the output of a rule application may depend
-      on the output of the other rules.
+  jb: [optional, default=1] Number of jobs to run in parallel.
+
+  esp: [optional, default=1] This parameter controls how much the
+       expension pool is supposed to grow. The larger, the more choices
+       available to select the next expansion (application in the case of
+       the forward chainer), but also then the selection is more costly.
+       Negative or null means unlimited (not recommended).
 
   mbs: [optional, default=-1] Maximum size of the inference tree pool
        to evolve. Negative means unlimited.
@@ -235,6 +268,8 @@
       (ure-set-complexity-penalty rbs complexity-penalty))
   (if (not (unspecified? jobs))
       (ure-set-jobs rbs jobs))
+  (if (not (unspecified? expansion-pool-size))
+      (ure-set-expansion-pool-size rbs expansion-pool-size))
   (if (not (unspecified? bc-maximum-bit-size))
       (ure-set-bc-maximum-bit-size rbs bc-maximum-bit-size))
   (if (not (unspecified? bc-mm-complexity-penalty))
@@ -284,7 +319,7 @@
     ;; Switch to rbs atomspace
     (define current-as (cog-set-atomspace! (cog-as rbs)))
 
-    (define (mk-member alias tv) (if (null? tv)
+    (define (mk-member alias tv) (if (nil? tv)
                                      (MemberLink alias rbs)
                                      (MemberLink tv alias rbs)))
 
@@ -314,7 +349,7 @@
   adds a rule to a rulebase and sets its tv.
 
 "
-  (if (null? tv)
+  (if (nil? tv)
       (MemberLink rule-alias rbs)
       (MemberLink (car tv) rule-alias rbs)))
 
@@ -465,6 +500,23 @@
   *unspecified*
 )
 
+(define-public (ure-rm-all-rules rbs)
+"
+  Remove all rule of the given rbs
+"
+  (ure-rm-rules rbs (ure-rules rbs)))
+
+(define-public (ure-rules rbs)
+"
+  List all rules of rbs, as follow
+
+  (rule-1 ... rule-n)
+"
+  (define current-as (cog-set-atomspace! (cog-as rbs)))
+  (let* ((rules (cog-chase-link 'MemberLink 'DefinedSchemaNode rbs)))
+    (cog-set-atomspace! current-as)
+    rules))
+
 (define-public (ure-weighted-rules rbs)
 "
   List all weighted rules of rbs, as follow
@@ -611,6 +663,19 @@
 "
   (ure-set-num-parameter rbs "URE:jobs" value))
 
+(define (ure-set-expansion-pool-size rbs value)
+"
+  Set the URE:expansion-pool-size parameter of a given RBS
+
+  ExecutionLink
+    SchemaNode \"URE:expansion-pool-size\"
+    rbs
+    NumberNode value
+
+  Delete any previous one if exists.
+"
+  (ure-set-num-parameter rbs "URE:expansion-pool-size" value))
+
 (define (ure-set-fc-retry-exhausted-sources rbs value)
 "
   Set the URE:FC:retry-exhausted-sources parameter of a given RBS
@@ -623,6 +688,19 @@
   converted into tv.
 "
   (ure-set-fuzzy-bool-parameter rbs "URE:FC:retry-exhausted-sources" value))
+
+(define (ure-set-fc-full-rule-application rbs value)
+"
+  Set the URE:FC:full-rule-application parameter of a given RBS
+
+  EvaluationLink (stv value 1)
+    PredicateNode \"URE:FC:full-rule-application\"
+    rbs
+
+  If the provided value is a boolean, then it is automatically
+  converted into tv.
+"
+  (ure-set-fuzzy-bool-parameter rbs "URE:FC:full-rule-application" value))
 
 (define (ure-set-bc-maximum-bit-size rbs value)
 "
@@ -684,24 +762,149 @@
 ;; URE Logger ;;
 ;;;;;;;;;;;;;;;;
 
-(define (ure-logger-set-level! l) (cog-logger-set-level! (cog-ure-logger) l))
-(define (ure-logger-get-level) (cog-logger-get-level (cog-ure-logger)))
-(define (ure-logger-set-filename! filename) (cog-logger-set-filename! (cog-ure-logger) filename))
-(define (ure-logger-get-filename) (cog-logger-get-filename (cog-ure-logger)))
-(define (ure-logger-set-stdout! enable) (cog-logger-set-stdout! (cog-ure-logger) enable))
-(define (ure-logger-set-sync! enable) (cog-logger-set-sync! (cog-ure-logger) enable))
-(define (ure-logger-set-timestamp! enable) (cog-logger-set-timestamp! (cog-ure-logger) enable))
-(define (ure-logger-error-enabled?) (cog-logger-error-enabled? (cog-ure-logger)))
-(define (ure-logger-warn-enabled?) (cog-logger-warn-enabled? (cog-ure-logger)))
-(define (ure-logger-info-enabled?) (cog-logger-info-enabled? (cog-ure-logger)))
-(define (ure-logger-debug-enabled?) (cog-logger-debug-enabled? (cog-ure-logger)))
-(define (ure-logger-fine-enabled?) (cog-logger-fine-enabled? (cog-ure-logger)))
-(define (ure-logger-error . args) (apply cog-logger-error (cons (cog-ure-logger) args)))
-(define (ure-logger-warn . args) (apply cog-logger-warn (cons (cog-ure-logger) args)))
-(define (ure-logger-info . args) (apply cog-logger-info (cons (cog-ure-logger) args)))
-(define (ure-logger-debug . args) (apply cog-logger-debug (cons (cog-ure-logger) args)))
-(define (ure-logger-fine . args) (apply cog-logger-fine (cons (cog-ure-logger) args)))
-(define (ure-logger-flush) (cog-logger-flush (cog-ure-logger)))
+(define (ure-logger-set-level! l)
+"
+  Wrapper around cog-logger-set-level! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-level!) for more info.
+"
+  (cog-logger-set-level! (cog-ure-logger) l))
+
+(define (ure-logger-get-level)
+"
+  Wrapper around cog-logger-set-level! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-level!) for more info.
+"
+  (cog-logger-get-level (cog-ure-logger)))
+
+(define (ure-logger-set-filename! filename)
+"
+  Wrapper around cog-logger-set-filename! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-filename!) for more info.
+"
+  (cog-logger-set-filename! (cog-ure-logger) filename))
+
+(define (ure-logger-get-filename)
+"
+  Wrapper around cog-logger-get-filename using (cog-ure-logger) as logger.
+
+  See (help cog-logger-get-filename) for more info.
+"
+  (cog-logger-get-filename (cog-ure-logger)))
+
+(define (ure-logger-set-stdout! enable)
+"
+  Wrapper around cog-logger-set-stdout! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-stdout!) for more info.
+"
+  (cog-logger-set-stdout! (cog-ure-logger) enable))
+
+(define (ure-logger-set-sync! enable)
+"
+  Wrapper around cog-logger-set-sync! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-sync!) for more info.
+"
+  (cog-logger-set-sync! (cog-ure-logger) enable))
+
+(define (ure-logger-set-timestamp! enable)
+"
+  Wrapper around cog-logger-set-timestamp! using (cog-ure-logger) as logger.
+
+  See (help cog-logger-set-timestamp!) for more info.
+"
+  (cog-logger-set-timestamp! (cog-ure-logger) enable))
+
+(define (ure-logger-error-enabled?)
+"
+  Wrapper around cog-logger-error-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-error-enabled?) for more info.
+"
+  (cog-logger-error-enabled? (cog-ure-logger)))
+
+(define (ure-logger-warn-enabled?)
+"
+  Wrapper around cog-logger-warn-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-warn-enabled?) for more info.
+"
+  (cog-logger-warn-enabled? (cog-ure-logger)))
+
+(define (ure-logger-info-enabled?)
+"
+  Wrapper around cog-logger-info-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-info-enabled?) for more info.
+"
+  (cog-logger-info-enabled? (cog-ure-logger)))
+
+(define (ure-logger-debug-enabled?)
+"
+  Wrapper around cog-logger-debug-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-debug-enabled?) for more info.
+"
+  (cog-logger-debug-enabled? (cog-ure-logger)))
+
+(define (ure-logger-fine-enabled?)
+"
+  Wrapper around cog-logger-fine-enabled? using (cog-ure-logger) as logger.
+
+  See (help cog-logger-fine-enabled?) for more info.
+"
+  (cog-logger-fine-enabled? (cog-ure-logger)))
+
+(define (ure-logger-error . args)
+"
+  Wrapper around cog-logger-error using (cog-ure-logger) as logger.
+
+  See (help cog-logger-error) for more info.
+"
+  (apply cog-logger-error (cons (cog-ure-logger) args)))
+
+(define (ure-logger-warn . args)
+"
+  Wrapper around cog-logger-warn using (cog-ure-logger) as logger.
+
+  See (help cog-logger-warn) for more info.
+"
+  (apply cog-logger-warn (cons (cog-ure-logger) args)))
+
+(define (ure-logger-info . args)
+"
+  Wrapper around cog-logger-info using (cog-ure-logger) as logger.
+
+  See (help cog-logger-info) for more info.
+"
+  (apply cog-logger-info (cons (cog-ure-logger) args)))
+
+(define (ure-logger-debug . args)
+"
+  Wrapper around cog-logger-debug using (cog-ure-logger) as logger.
+
+  See (help cog-logger-debug) for more info.
+"
+  (apply cog-logger-debug (cons (cog-ure-logger) args)))
+
+(define (ure-logger-fine . args)
+"
+  Wrapper around cog-logger-fine using (cog-ure-logger) as logger.
+
+  See (help cog-logger-fine) for more info.
+"
+  (apply cog-logger-fine (cons (cog-ure-logger) args)))
+
+(define (ure-logger-flush)
+"
+  Wrapper around cog-logger-flush using (cog-ure-logger) as logger.
+
+  See (help cog-logger-flush) for more info.
+"
+  (cog-logger-flush (cog-ure-logger)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers for Implementing URE Rules ;;
@@ -718,6 +921,19 @@
   Convert TRUE_TV to #t, anything else to #f
 "
     (equal? (stv 1 1) tv))
+
+(define-public (confidence->count c)
+"
+  Convert Simple TV confidence into count
+"
+  (cog-tv-count (stv 1 c)))
+
+(define-public (count->confidence c)
+"
+  Convert Simple TV count into confidence
+"
+  (define K 800)
+  (exact->inexact (/ c (+ c K))))
 
 (define (atom->number A)
 "
@@ -907,7 +1123,9 @@
           ure-set-maximum-iterations
           ure-set-complexity-penalty
           ure-set-jobs
+          ure-set-expansion-pool-size
           ure-set-fc-retry-exhausted-sources
+          ure-set-fc-full-rule-application
           ure-set-bc-maximum-bit-size
           ure-set-bc-mm-complexity-penalty
           ure-set-bc-mm-compressiveness

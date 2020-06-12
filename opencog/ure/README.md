@@ -25,9 +25,9 @@ The overall design can be found on the wiki pages below:
 
 Examples can be found in this and other repositories:
 
-  [Rule Engine Examples](https://github.com/opencog/atomspace/tree/master/examples/ure)
-  [PLN Rules](https://github.com/opencog/opencog/tree/master/opencog/pln)
-  [PLN Examples](https://github.com/opencog/opencog/tree/master/examples/pln)
+  [Rule Engine Examples](https://github.com/ure/atomspace/tree/master/examples/ure)
+  [PLN Rules](https://github.com/pln/opencog/tree/master/opencog/pln)
+  [PLN Examples](https://github.com/pln/opencog/tree/master/examples/pln)
   [R2L Rules](https://github.com/opencog/opencog/tree/master/opencog/nlp/relex2logic/rules)
 
 ### Forward chaining

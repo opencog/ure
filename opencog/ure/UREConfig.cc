@@ -33,13 +33,24 @@ using namespace opencog;
 const std::string UREConfig::top_rbs_name = "URE";
 
 // Parameters
-const std::string UREConfig::max_iter_name = "URE:maximum-iterations";
-const std::string UREConfig::complexity_penalty_name = "URE:complexity-penalty";
-const std::string UREConfig::jobs_name = "URE:jobs";
-const std::string UREConfig::fc_retry_exhausted_sources_name = "URE:FC:retry-exhausted-sources";
-const std::string UREConfig::bc_max_bit_size_name = "URE:BC:maximum-bit-size";
-const std::string UREConfig::bc_mm_complexity_penalty_name = "URE:BC:MM:complexity-penalty";
-const std::string UREConfig::bc_mm_compressiveness_name = "URE:BC:MM:compressiveness";
+const std::string UREConfig::max_iter_name =
+	"URE:maximum-iterations";
+const std::string UREConfig::complexity_penalty_name =
+	"URE:complexity-penalty";
+const std::string UREConfig::jobs_name =
+	"URE:jobs";
+const std::string UREConfig::expansion_pool_size_name =
+	"URE:expansion-pool-size";
+const std::string UREConfig::fc_retry_exhausted_sources_name =
+	"URE:FC:retry-exhausted-sources";
+const std::string UREConfig::fc_full_rule_application_name =
+	"URE:FC:full-rule-application";
+const std::string UREConfig::bc_max_bit_size_name =
+	"URE:BC:maximum-bit-size";
+const std::string UREConfig::bc_mm_complexity_penalty_name =
+	"URE:BC:MM:complexity-penalty";
+const std::string UREConfig::bc_mm_compressiveness_name =
+	"URE:BC:MM:compressiveness";
 
 UREConfig::UREConfig(AtomSpace& as, const Handle& rbs) : _as(as)
 {
@@ -77,9 +88,19 @@ int UREConfig::get_jobs() const
 	return _common_params.jobs;
 }
 
+int UREConfig::get_expansion_pool_size() const
+{
+	return _common_params.expansion_pool_size;
+}
+
 bool UREConfig::get_retry_exhausted_sources() const
 {
 	return _fc_params.retry_exhausted_sources;
+}
+
+bool UREConfig::get_full_rule_application() const
+{
+	return _fc_params.full_rule_application;
 }
 
 double UREConfig::get_max_bit_size() const
@@ -119,9 +140,19 @@ void UREConfig::set_jobs(int j)
 	_common_params.jobs = j;
 }
 
+void UREConfig::set_expansion_pool_size(int eps)
+{
+	_common_params.expansion_pool_size = eps;
+}
+
 void UREConfig::set_retry_exhausted_sources(bool rs)
 {
 	_fc_params.retry_exhausted_sources = rs;
+}
+
+void UREConfig::set_full_rule_application(bool rs)
+{
+	_fc_params.full_rule_application = rs;
 }
 
 void UREConfig::set_mm_complexity_penalty(double mm_cp)
@@ -162,7 +193,7 @@ void UREConfig::fetch_common_parameters(const Handle& rbs)
 		          "Please check rules in /atomspace/examples/ure for example.\n\n",
 		          rule_name->to_short_string().c_str());
 
-		_common_params.rules.emplace(rule_name, rbs);
+		_common_params.rules.insert(createRule(rule_name, rbs));
 	}
 
 	// Fetch maximum number of iterations
@@ -174,6 +205,10 @@ void UREConfig::fetch_common_parameters(const Handle& rbs)
 
 	// Fetch number of jobs
 	_common_params.jobs = fetch_num_param(jobs_name, rbs, 1);
+
+	// Fetch production application ratio
+	_common_params.expansion_pool_size =
+		fetch_num_param(expansion_pool_size_name, rbs, 1);
 }
 
 void UREConfig::fetch_fc_parameters(const Handle& rbs)
@@ -181,6 +216,8 @@ void UREConfig::fetch_fc_parameters(const Handle& rbs)
 	// Fetch retry exhausted sources parameter
 	_fc_params.retry_exhausted_sources =
 		fetch_bool_param(fc_retry_exhausted_sources_name, rbs, false);
+	_fc_params.full_rule_application =
+		fetch_bool_param(fc_full_rule_application_name, rbs, false);
 }
 
 void UREConfig::fetch_bc_parameters(const Handle& rbs)
@@ -203,7 +240,8 @@ HandleSeq UREConfig::fetch_execution_outputs(const Handle& schema,
 {
 	// Retrieve rules
 	Handle var_node = _as.add_node(VARIABLE_NODE, "__EXECUTION_OUTPUT_VAR__"),
-		type_node = _as.add_node(TYPE_NODE, nameserver().getTypeName(type)),
+		type_node = _as.add_node(TYPE_NODE,
+		                std::move(std::string(nameserver().getTypeName(type)))),
 		typed_var = _as.add_link(TYPED_VARIABLE_LINK, var_node, type_node),
 		gl = _as.add_link(GET_LINK,
 		                  // TypedVariableLink
@@ -233,7 +271,8 @@ double UREConfig::fetch_num_param(const string& schema_name,
                                   const Handle& input,
                                   double default_value)
 {
-	Handle param_schema = _as.add_node(SCHEMA_NODE, schema_name);
+	Handle param_schema = _as.add_node(SCHEMA_NODE,
+	                                   std::move(std::string(schema_name)));
 	HandleSeq outputs = fetch_execution_outputs(param_schema, input, NUMBER_NODE);
 
 	if (outputs.size() == 0) {
@@ -265,7 +304,8 @@ bool UREConfig::fetch_bool_param(const string& pred_name,
                                  bool default_value)
 {
 	string input_name = input->get_name();
-	Handle pred = _as.get_node(PREDICATE_NODE, pred_name);
+	Handle pred = _as.get_node(PREDICATE_NODE,
+	                           std::move(std::string(pred_name)));
 	if (pred) {
 		Handle eval = _as.get_link(EVALUATION_LINK, pred, input);
 		if (eval) {

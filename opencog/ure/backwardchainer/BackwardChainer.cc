@@ -87,7 +87,7 @@ const UREConfig& BackwardChainer::get_config() const
 
 void BackwardChainer::do_chain()
 {
-	ure_logger().debug("Start Backward Chaining");
+	ure_logger().debug("Start backward chaining");
 	LAZY_URE_LOG_DEBUG << "With rule set:" << std::endl << oc_to_string(_rules);
 
 	while (not termination())
@@ -95,8 +95,8 @@ void BackwardChainer::do_chain()
 		do_step();
 	}
 
-	LAZY_URE_LOG_DEBUG << "Finished Backward Chaining with solutions:"
-	                   << std::endl << get_results()->to_string();
+	LAZY_URE_LOG_DEBUG << "Finished backward chaining with results:"
+	                   << std::endl << oc_to_string(get_results_set());
 }
 
 void BackwardChainer::do_step()
@@ -134,7 +134,12 @@ bool BackwardChainer::termination()
 Handle BackwardChainer::get_results() const
 {
 	HandleSeq results(_results.begin(), _results.end());
-	return _kb_as.add_link(SET_LINK, results);
+	return _kb_as.add_link(SET_LINK, std::move(results));
+}
+
+const HandleSet& BackwardChainer::get_results_set() const
+{
+	return _results;
 }
 
 void BackwardChainer::expand_meta_rules()
@@ -221,7 +226,8 @@ void BackwardChainer::expand_bit(AndBIT& andbit)
 	// bodies for future use.
 	Handle andbit_fcs = andbit.fcs;
 	Handle bitleaf_body = bitleaf->body;
-	_last_expansion_andbit = _bit.expand(andbit, *bitleaf, {rule, ts}, prob);
+	RuleTypedSubstitutionPair rtsp{rule, ts};
+	_last_expansion_andbit = _bit.expand(andbit, *bitleaf, rtsp, prob);
 
 	// Record the expansion in the trace atomspace
 	if (_last_expansion_andbit) {

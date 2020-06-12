@@ -23,6 +23,9 @@
 
 #include "ThompsonSampling.h"
 
+#include <boost/range/algorithm/transform.hpp>
+#include <boost/range/algorithm/max_element.hpp>
+
 #include <opencog/util/Logger.h>
 #include <opencog/util/oc_assert.h>
 #include <opencog/util/random.h>
@@ -34,7 +37,7 @@ namespace opencog {
 ThompsonSampling::ThompsonSampling(const TruthValueSeq& tvs, unsigned bins)
 	: _tvs(tvs), _bins(bins) {}
 
-std::vector<double> ThompsonSampling::distribution()
+std::vector<double> ThompsonSampling::distribution() const
 {
 	std::vector<double> probs(_tvs.size());
 
@@ -59,11 +62,27 @@ std::vector<double> ThompsonSampling::distribution()
 	return probs;
 }
 
-size_t ThompsonSampling::operator()()
+size_t ThompsonSampling::operator()(RandGen& rng) const
 {
-	std::vector<double> weights = distribution();
-	std::discrete_distribution<size_t> dist(weights.begin(), weights.end());
-	return dist(randGen());
+	OC_ASSERT(not _tvs.empty());
+
+	// Cheap trivial case
+	if (_tvs.size() == 1)
+		return 0;
+
+	// Randomly select a first order probability for each tv
+	std::vector<double> fops(_tvs.size());
+	boost::transform(_tvs, fops.begin(), [&](const auto& tv) {
+		return BetaDistribution(tv)(rng); });
+
+	// Pick up one of the maxima
+	auto it = boost::max_element(fops);
+	double max_p = *it;
+	std::set<size_t> maxima;
+	for (; it != fops.end(); ++it)
+		if (*it == max_p)
+			maxima.insert(std::distance(fops.begin(), it));
+	return *std::next(maxima.begin(), rng.randint(maxima.size()));
 }
 
 double ThompsonSampling::Pi(size_t i,

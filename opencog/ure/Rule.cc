@@ -28,6 +28,8 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
+#include <boost/range/algorithm/binary_search.hpp>
+#include <boost/range/algorithm/lower_bound.hpp>
 
 #include <opencog/util/oc_assert.h>
 #include <opencog/atoms/base/Link.h>
@@ -46,18 +48,31 @@
 
 namespace opencog {
 
+bool rule_ptr_less::operator()(const RulePtr& l, const RulePtr& r) const
+{
+	return *l < *r;
+}
+
 void RuleSet::expand_meta_rules(AtomSpace& as)
 {
-	for (const Rule& rule : *this) {
-		if (rule.is_meta()) {
-			Handle result = rule.apply(as);
-			for (const Handle& produced_h : result->getOutgoingSet()) {
-				Rule produced(rule.get_alias(), produced_h, rule.get_rbs());
-				auto ir = insert(produced);
-				if (ir.second) {
-					ure_logger().debug() << "New rule produced from meta rule:"
-					                     << std::endl << oc_to_string(produced);
-				}
+	// TODO: could certainly be optimized by not systematically
+	// recollecting and re-instantiating meta-rules.
+	RuleSet meta_rules;
+	for (RulePtr rule : *this) {
+		if (rule->is_meta()) {
+			meta_rules.insert(rule);
+		}
+	}
+
+	for (RulePtr rule : meta_rules) {
+		Handle result = rule->apply(as);
+		for (const Handle& produced_h : result->getOutgoingSet()) {
+			RulePtr produced =
+				createRule(rule->get_alias(), produced_h, rule->get_rbs());
+			auto [_, ir] = insert(produced);
+			if (ir) {
+				ure_logger().debug() << "New rule instantiated from a meta rule:"
+											<< std::endl << oc_to_string(*produced);
 			}
 		}
 	}
@@ -67,18 +82,68 @@ HandleSet RuleSet::aliases() const
 {
 	HandleSet aliases;
 	for (const auto& rule : *this)
-		aliases.insert(rule.get_alias());
+		aliases.insert(rule->get_alias());
 	return aliases;
+}
+
+std::pair<RuleSet::iterator, bool> RuleSet::insert(RulePtr rule)
+{
+	if (boost::binary_search(*this, rule, rule_ptr_less()))
+		return {end(), false};
+
+	RuleSet::iterator it = boost::lower_bound(*this, rule, rule_ptr_less());
+	it = super::insert(it, rule);
+	return {it, true};
+}
+
+bool RuleSet::operator==(const RuleSet& other) const
+{
+	if (size() != other.size())
+		return false;
+
+	size_t i = 0;
+	for (; i < size(); i++)
+		if (*at(i) != *other.at(i))
+			return false;
+	return true;
+}
+
+bool RuleSet::operator<(const RuleSet& other) const
+{
+	OC_ASSERT(false, "RuleSet::operator< not implemented");
+	return false;
+}
+
+RuleSet::iterator RuleSet::find(const RulePtr& rule)
+{
+	if (not boost::binary_search(*this, rule, rule_ptr_less()))
+		return end();
+	return boost::lower_bound(*this, rule, rule_ptr_less());
+}
+
+RuleSet::const_iterator RuleSet::find(const RulePtr& rule) const
+{
+	if (not boost::binary_search(*this, rule, rule_ptr_less()))
+		return cend();
+	return boost::lower_bound(*this, rule, rule_ptr_less());
+}
+
+TruthValueSeq RuleSet::get_tvs() const
+{
+	TruthValueSeq tvs;
+	for (const RulePtr& rule : *this)
+		tvs.push_back(rule->get_tv());
+	return tvs;
 }
 
 std::string RuleSet::to_string(const std::string& indent) const
 {
 	std::stringstream ss;
-	ss << indent << "size = " << size() << std::endl;
+	ss << indent << "size = " << size();
 	size_t i = 0;
-	for (const Rule& rule : *this)
-		ss << indent << "rule[" << i++ << "]:" << std::endl
-		   << oc_to_string(rule, indent + OC_TO_STRING_INDENT) << std::endl;
+	for (const RulePtr& rule : *this)
+		ss << std::endl << indent << "rule[" << i++ << "]:" << std::endl
+		   << oc_to_string(*rule, indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
 
@@ -89,27 +154,38 @@ std::string RuleSet::to_short_string(const std::string& indent) const
 	size_t i = 0;
 	for (const auto& rule : *this)
 		ss << std::endl << indent << "rule[" << i++ << "]:" << std::endl
-		   << rule.to_short_string(indent + oc_to_string_indent);
+		   << rule->to_short_string(indent + oc_to_string_indent);
 	return ss.str();
 }
 
 Rule::Rule()
-	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED) {}
+	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED), _exhausted(false) {}
 
 Rule::Rule(const Handle& rule_member)
-	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED)
+	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED), _exhausted(false)
 {
 	init(rule_member);
 }
 
+Rule::Rule(const Rule& r)
+{
+	premises_as_clauses = r.premises_as_clauses;
+	_rule = r._rule;
+	_rule_alias = r._rule_alias;
+	_name = r._name;
+	_rbs = r._rbs;
+	_tv = r._tv;
+	_exhausted = r._exhausted;
+}
+
 Rule::Rule(const Handle& rule_alias, const Handle& rbs)
-	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED)
+	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED), _exhausted(false)
 {
 	init(rule_alias, rbs);
 }
 
 Rule::Rule(const Handle& rule_alias, const Handle& rule, const Handle& rbs)
-	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED)
+	: premises_as_clauses(false), _rule_alias(Handle::UNDEFINED), _exhausted(false)
 {
 	init(rule_alias, rule, rbs);
 }
@@ -154,7 +230,7 @@ bool Rule::verify_rule()
     if (is_meta())
         return true;
 
-    Handle rewrite = _rule->get_implicand();
+    Handle rewrite = _rule->get_implicand()[0]; // assume only one rewrite
     Type rewrite_type = rewrite->get_type();
 
     // check 1: If there are multiple conclusions
@@ -182,9 +258,17 @@ bool Rule::operator<(const Rule& r) const
 	return content_based_handle_less()(Handle(_rule), Handle(r._rule));
 }
 
-bool Rule::is_alpha_equivalent(const Rule& r) const
+Rule& Rule::operator=(const Rule& r)
 {
-	return _rule->is_equal(Handle(r._rule));
+	premises_as_clauses = r.premises_as_clauses;
+	_rule = r._rule;
+	_rule_alias = r._rule_alias;
+	_name = r._name;
+	_rbs = r._rbs;
+	_tv = r._tv;
+	_exhausted = r._exhausted;
+
+	return *this;
 }
 
 TruthValuePtr Rule::get_tv() const
@@ -249,7 +333,7 @@ void Rule::add(AtomSpace& as)
 	// place during unification (see Rule::unify_source or
 	// Rule::unify_target) we avoid re-doing the alpha-conversion that
 	// way.
-	_rule = createBindLink(_rule->getOutgoingSet());
+	_rule = createBindLink(std::move(HandleSeq(_rule->getOutgoingSet())));
 }
 
 Handle Rule::get_vardecl() const
@@ -284,7 +368,7 @@ Handle Rule::get_implicant() const
 Handle Rule::get_implicand() const
 {
 	if (_rule)
-		return _rule->get_implicand();
+		return _rule->get_implicand()[0];  // assume that there is only one.
 	return Handle::UNDEFINED;
 }
 
@@ -297,7 +381,7 @@ bool Rule::is_meta() const
 {
 	Handle implicand = get_implicand();
 
-	if (not implicand)
+	if (not implicand)  // XXX this check is never needed !?
 		return false;
 
 	Type itype = implicand->get_type();
@@ -358,7 +442,7 @@ HandleSeq Rule::get_premises() const
 	if (not is_valid())
 		return HandleSeq();
 
-	Handle rewrite = _rule->get_implicand();
+	Handle rewrite = _rule->get_implicand()[0];  // assume there is only one.
 	Type rewrite_type = rewrite->get_type();
 
 	// If not an ExecutionOutputLink then return the clauses
@@ -394,7 +478,7 @@ Handle Rule::get_conclusion() const
 	if (not is_valid())
 		return Handle::UNDEFINED;
 
-	Handle rewrite = _rule->get_implicand();
+	Handle rewrite = _rule->get_implicand()[0];  // assume there is only one.
 	Type rewrite_type = rewrite->get_type();
 
 	// If not an ExecutionOutputLink then return the rewrite term
@@ -452,8 +536,11 @@ RuleTypedSubstitutionMap Rule::unify_source(const Handle& source,
 			// For each typed substitution produce a new rule by
 			// substituting all variables by their associated
 			// values.
-			for (const auto& ts : tss)
-				unified_rules.insert({alpha_rule.substituted(ts, queried_as), ts});
+			for (const auto& ts : tss) {
+				Rule sed_rule = alpha_rule.substituted(ts, queried_as);
+				RuleTypedSubstitutionPair rtsp{sed_rule, ts};
+				unified_rules.insert(rtsp);
+			}
 		}
 	}
 
@@ -487,7 +574,9 @@ RuleTypedSubstitutionMap Rule::unify_target(const Handle& target,
 			// substituting all variables by their associated
 			// values.
 			for (const auto& ts : tss) {
-				unified_rules.insert({alpha_rule.substituted(ts, queried_as), ts});
+				Rule sed_rule = alpha_rule.substituted(ts, queried_as);
+				RuleTypedSubstitutionPair rtsp{sed_rule, ts};
+				unified_rules.insert(rtsp);
 			}
 		}
 	}
@@ -495,11 +584,11 @@ RuleTypedSubstitutionMap Rule::unify_target(const Handle& target,
 	return unified_rules;
 }
 
-RuleSet Rule::strip_typed_substitution(const RuleTypedSubstitutionMap& rules)
+RuleSet Rule::strip_typed_substitution(const RuleTypedSubstitutionMap& rtsm)
 {
 	RuleSet rs;
-	for (const auto& r : rules)
-		rs.insert(r.first);
+	for (const auto& r : rtsm)
+		rs.insert(createRule(r.first));
 
 	return rs;
 }
@@ -509,11 +598,31 @@ Handle Rule::apply(AtomSpace& as) const
 	return HandleCast(_rule->execute(&as));
 }
 
+void Rule::set_exhausted()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	_exhausted = true;
+}
+
+void Rule::reset_exhausted()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	_exhausted = false;
+}
+
+bool Rule::is_exhausted() const
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	return _exhausted;
+}
+
 std::string Rule::to_string(const std::string& indent) const
 {
 	std::stringstream ss;
 	ss << indent << "name: " << _name << std::endl
+	   << indent << "rbs: " << _rbs->to_short_string() << std::endl
 	   << indent << "tv: " << _tv->to_string() << std::endl
+	   << indent << "exhausted: " << is_exhausted() << std::endl
 	   << indent << "rule:" << std::endl
 	   << _rule->to_string(indent + OC_TO_STRING_INDENT);
 	return ss.str();
@@ -529,7 +638,7 @@ std::string Rule::to_short_string(const std::string& indent) const
 Rule Rule::rand_alpha_converted() const
 {
 	// Clone the rule
-	Rule result = *this;
+	Rule result(*this);
 
 	// Alpha convert the rule
 	result.set_rule(_rule->alpha_convert());
@@ -595,20 +704,18 @@ std::string oc_to_string(const RuleTypedSubstitutionPair& rule_ts,
 	   << oc_to_string(rule_ts.first, indent + OC_TO_STRING_INDENT)
 	   << std::endl;
 	ss << indent << "typed substitutions:" << std::endl
-	   << oc_to_string(rule_ts.second, indent + OC_TO_STRING_INDENT)
-	   << std::endl;
+	   << oc_to_string(rule_ts.second, indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
 std::string oc_to_string(const RuleTypedSubstitutionMap& rules,
                          const std::string& indent)
 {
 	std::stringstream ss;
-	ss << indent << "size = " << rules.size() << std::endl;
+	ss << indent << "size = " << rules.size();
 	size_t i = 0;
 	for (const RuleTypedSubstitutionPair& rule : rules)
-		ss << indent << "rule[" << i++ << "]:" << std::endl
-		   << oc_to_string(rule, indent + OC_TO_STRING_INDENT)
-		   << std::endl;
+		ss << std::endl << indent << "rule[" << i++ << "]:" << std::endl
+		   << oc_to_string(rule, indent + OC_TO_STRING_INDENT);
 	return ss.str();
 }
 

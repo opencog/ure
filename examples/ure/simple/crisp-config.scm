@@ -28,8 +28,4 @@
 (ure-add-rules crisp-rbs crisp-rules)
 
 ; Termination criteria parameters
-(ure-set-num-parameter crisp-rbs "URE:maximum-iterations" 20)
-
-; Attention allocation (set the TV strength to 0 to disable it, 1 to
-; enable it)
-(ure-set-fuzzy-bool-parameter crisp-rbs "URE:attention-allocation" 0)
+(ure-set-maximum-iterations crisp-rbs 20)
