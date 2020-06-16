@@ -493,15 +493,22 @@ Handle Unify::substitute_vardecl(const Handle& vardecl,
 	return createLink(std::move(oset), t);
 }
 
-
+// Return true iff the given handle is not in the given atomspace (if
+// any).
 static bool not_in_atomspace(const Handle& handle, const AtomSpace* atomspace)
 {
 	return nullptr != atomspace
 	   and nullptr == atomspace->get_atom(handle);
 }
 
-// Is a clause constant, relative to some atomspace?
-// Why would it matter whether or not it is in some atomspace?
+// Return true iff the given clause is constant and is not in the
+// given atomspace. A set of variables is provided to make the
+// distinction between variables and variable interpreted as constants
+// (they are constants is not in vars). Checking the present of the
+// clause in the atomspace matters because we don't want to trigger a
+// rule that will produce a term conditioned on the presence of a
+// clause that was actually not in the atomspace (that would have been
+// turned into a constant due to partial instantiation of a rule).
 static bool not_constant(const HandleSet& vars,
                          const Handle& clause,
                          const AtomSpace* as)
