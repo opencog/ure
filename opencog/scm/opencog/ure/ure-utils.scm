@@ -80,6 +80,7 @@
 (use-modules (opencog logger))
 (use-modules (srfi srfi-1))
 (use-modules (ice-9 receive))
+(use-modules (ice-9 optargs))
 
 (define* (cog-fc rbs source
                  #:key
