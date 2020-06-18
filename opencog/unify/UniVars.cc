@@ -751,7 +751,7 @@ std::string UniVars::to_string(const std::string& indent) const
 	// Simple typemap
 	std::string indent_p = indent + OC_TO_STRING_INDENT;
 	ss << indent << "_simple_typemap:" << std::endl
-	   << oc_to_string(_simple_typemap, indent_p) << std::endl;
+	   << xoc_to_string(_simple_typemap, indent_p) << std::endl;
 
 	// Glob interval map
 	ss << indent << "_glob_intervalmap:" << std::endl
@@ -759,7 +759,7 @@ std::string UniVars::to_string(const std::string& indent) const
 
 	// Deep typemap
 	ss << indent << "_deep_typemap:" << std::endl
-	   << oc_to_string(_deep_typemap, indent_p);
+	   << xoc_to_string(_deep_typemap, indent_p);
 
 	return ss.str();
 }
