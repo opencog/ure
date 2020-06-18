@@ -755,22 +755,22 @@ std::string UniVars::to_string(const std::string& indent) const
 
 	// Glob interval map
 	ss << indent << "_glob_intervalmap:" << std::endl
-	   << oc_to_string(_glob_intervalmap, indent_p) << std::endl;
+	   << xoc_to_string(_glob_intervalmap, indent_p) << std::endl;
 
 	// Deep typemap
 	ss << indent << "_deep_typemap:" << std::endl
-	   << xoc_to_string(_deep_typemap, indent_p);
+	   << oc_to_string(_deep_typemap, indent_p);
 
 	return ss.str();
 }
 
-std::string oc_to_string(const UniVars& var, const std::string& indent)
+std::string opencog::oc_to_string(const UniVars& var, const std::string& indent)
 {
 	return var.to_string(indent);
 }
 
-std::string oc_to_string(const VariableSimpleTypeMap& vtm,
-                         const std::string& indent)
+std::string opencog::xoc_to_string(const VariableSimpleTypeMap& vtm,
+                                   const std::string& indent)
 {
 	std::stringstream ss;
 	ss << indent << "size = " << vtm.size();
@@ -787,7 +787,8 @@ std::string oc_to_string(const VariableSimpleTypeMap& vtm,
 	return ss.str();
 }
 
-std::string oc_to_string(const GlobIntervalMap& gim, const std::string& indent)
+std::string opencog::xoc_to_string(const GlobIntervalMap& gim,
+                                   const std::string& indent)
 {
 	std::stringstream ss;
 	ss << indent << "size = " << gim.size();
