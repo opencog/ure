@@ -869,12 +869,6 @@ bool tss_content_eq(const Unify::TypedSubstitutions& lhs,
 HandleMap strip_context(const Unify::HandleCHandleMap& hchm);
 
 /**
- * Generate a VariableList of the free variables of a given contextual
- * atom ch.
- */
-VariableListPtr gen_varlist(const Unify::CHandle& ch);
-
-/**
  * Merge two vardecls into one. If a variable is present in both
  * vardecls then the more restrictive one replaces the less
  * restrictive one.

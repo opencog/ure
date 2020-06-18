@@ -434,6 +434,12 @@ Handle Unify::substitute(BindLinkPtr bl, const TypedSubstitution& ts,
 	return substitute(bl, strip_context(ts.first), ts.second, queried_as);
 }
 
+static Handle make_vardecl(const Handle& h)
+{
+	HandleSet vars = get_free_variables(h);
+	return Handle(createVariableSet(HandleSeq(vars.begin(), vars.end())));
+}
+
 Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
                          Handle vardecl, const AtomSpace* queried_as)
 {
@@ -443,7 +449,7 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 		// If the bind link has no variable declaration either then
 		// infer one
 		Handle old_vardecl = bl->get_vardecl() ? bl->get_vardecl()
-			: gen_vardecl(bl->get_body());
+			: make_vardecl(bl->get_body());
 		// Substitute the variables in the old vardecl to obtain the
 		// new one.
 		vardecl = substitute_vardecl(old_vardecl, var2val);
