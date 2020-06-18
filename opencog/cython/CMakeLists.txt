@@ -19,7 +19,3 @@ INCLUDE_DIRECTORIES(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
-
-# Python Module init
-FILE(MAKE_DIRECTORY opencog)
-FILE(COPY opencog/__init__.py DESTINATION opencog)

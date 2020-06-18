@@ -56,5 +56,4 @@ INSTALL (TARGETS
 # Tell python where to find modules.
 
 INSTALL (FILES
-	__init__.py
 	DESTINATION "${PYTHON_DEST}")
