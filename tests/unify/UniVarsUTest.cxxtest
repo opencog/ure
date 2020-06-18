@@ -1,5 +1,5 @@
 /*
- * tests/atoms/core/VariablesUTest.cxxtest
+ * tests/atoms/core/UniVarsUTest.cxxtest
  *
  * Copyright (C) 2016 OpenCog Foundation
  * All Rights Reserved
@@ -21,8 +21,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <opencog/atoms/core/Variables.h>
-#include <opencog/atoms/core/VariableList.h>
+#include <opencog/unify/UniVars.h>
 #include <opencog/atomspace/AtomSpace.h>
 
 #include <cxxtest/TestSuite.h>
@@ -32,7 +31,7 @@ using namespace opencog;
 #define al _as.add_link
 #define an _as.add_node
 
-class VariablesUTest : public CxxTest::TestSuite
+class UniVarsUTest : public CxxTest::TestSuite
 {
 private:
 	Handle A, B, W, X, Y, Z, G1, G2, NT, PNT, CNT, NTI, DPTCI, LLT, LTI;
@@ -40,7 +39,7 @@ private:
 	AtomSpace _as;
 
 public:
-	VariablesUTest()
+	UniVarsUTest()
 	{
 		logger().set_level(Logger::DEBUG);
 		logger().set_timestamp_flag(false);
@@ -99,7 +98,7 @@ public:
 	void test_substitute_nocheck_scope();
 };
 
-void VariablesUTest::test_extend_1()
+void UniVarsUTest::test_extend_1()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -112,9 +111,7 @@ void VariablesUTest::test_extend_1()
 		            al(TYPED_VARIABLE_LINK, X, PNT),
 		            al(TYPED_VARIABLE_LINK, Y, CNT));
 
-	VariableList vl1(vardecl1), vl2(vardecl2);
-
-	Variables v1(vl1.get_variables()), v2(vl2.get_variables());
+	UniVars v1(vardecl1), v2(vardecl2);
 
 	v1.extend(v2);
 
@@ -128,7 +125,7 @@ void VariablesUTest::test_extend_1()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_extend_2()
+void UniVarsUTest::test_extend_2()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -143,9 +140,7 @@ void VariablesUTest::test_extend_2()
 		            al(TYPED_VARIABLE_LINK, X, al(TYPE_CHOICE)),
 		            al(TYPED_VARIABLE_LINK, Y, CNT));
 
-	VariableList vl1(vardecl1), vl2(vardecl2);
-
-	Variables v1(vl1.get_variables()), v2(vl2.get_variables());
+	UniVars v1(vardecl1), v2(vardecl2);
 
 	v1.extend(v2);
 
@@ -159,7 +154,7 @@ void VariablesUTest::test_extend_2()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_extend_3()
+void UniVarsUTest::test_extend_3()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -174,9 +169,7 @@ void VariablesUTest::test_extend_3()
 			            al(TYPED_VARIABLE_LINK, X, PNT),
 			            al(TYPED_VARIABLE_LINK, Y, CNT));
 
-	VariableList vl1(vardecl1), vl2(vardecl2);
-
-	Variables v1(vl1.get_variables()), v2(vl2.get_variables());
+	UniVars v1(vardecl1), v2(vardecl2);
 
 	v1.extend(v2);
 
@@ -190,7 +183,7 @@ void VariablesUTest::test_extend_3()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_extend_4()
+void UniVarsUTest::test_extend_4()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -205,9 +198,7 @@ void VariablesUTest::test_extend_4()
 			            al(TYPED_VARIABLE_LINK, X, al(TYPE_CHOICE, CNT, LLT)),
 			            al(TYPED_VARIABLE_LINK, Y, NT));
 
-	VariableList vl1(vardecl1), vl2(vardecl2);
-
-	Variables v1(vl1.get_variables()), v2(vl2.get_variables());
+	UniVars v1(vardecl1), v2(vardecl2);
 
 	v1.extend(v2);
 
@@ -221,7 +212,7 @@ void VariablesUTest::test_extend_4()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_extend_5()
+void UniVarsUTest::test_extend_5()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -265,9 +256,7 @@ void VariablesUTest::test_extend_5()
 			                     an(NUMBER_NODE, "2")),
 			                  PNT)));
 
-	VariableList vl1(vardecl1), vl2(vardecl2);
-
-	Variables v1(vl1.get_variables()), v2(vl2.get_variables());
+	UniVars v1(vardecl1), v2(vardecl2);
 
 	v1.extend(v2);
 
@@ -281,7 +270,7 @@ void VariablesUTest::test_extend_5()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_extend_6()
+void UniVarsUTest::test_extend_6()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -295,9 +284,7 @@ void VariablesUTest::test_extend_6()
 			            al(TYPED_VARIABLE_LINK, X, PNT),
 			            al(TYPED_VARIABLE_LINK, G2, PNT));
 
-	VariableList vl1(vardecl1), vl2(vardecl2);
-
-	Variables v1(vl1.get_variables()), v2(vl2.get_variables());
+	UniVars v1(vardecl1), v2(vardecl2);
 
 	v1.extend(v2);
 
@@ -311,14 +298,14 @@ void VariablesUTest::test_extend_6()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_ordered_1()
+void UniVarsUTest::test_find_variables_ordered_1()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Inferred vardecl should be in infix order since all links are
 	// ordered, that is [X, Y].
 	Handle body = al(INHERITANCE_LINK, X, Y);
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq varseq = vars.varseq;
 	HandleSeq expect{X, Y};
@@ -331,7 +318,7 @@ void VariablesUTest::test_find_variables_ordered_1()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_ordered_2()
+void UniVarsUTest::test_find_variables_ordered_2()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -340,7 +327,7 @@ void VariablesUTest::test_find_variables_ordered_2()
 	Handle body = al(LIST_LINK,
 	                 al(INHERITANCE_LINK, X, Y),
 	                 al(INHERITANCE_LINK, Z, W));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq varseq = vars.varseq;
 	HandleSeq expect{X, Y, Z, W};
@@ -353,7 +340,7 @@ void VariablesUTest::test_find_variables_ordered_2()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_ordered_3()
+void UniVarsUTest::test_find_variables_ordered_3()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -362,7 +349,7 @@ void VariablesUTest::test_find_variables_ordered_3()
 	Handle body = al(LIST_LINK,
 	                 al(INHERITANCE_LINK, X, Y),
 	                 al(INHERITANCE_LINK, Y, X));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq varseq = vars.varseq;
 	HandleSeq expect{X, Y};
@@ -375,7 +362,7 @@ void VariablesUTest::test_find_variables_ordered_3()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_ordered_4()
+void UniVarsUTest::test_find_variables_ordered_4()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -387,7 +374,7 @@ void VariablesUTest::test_find_variables_ordered_4()
 	                 al(QUOTE_LINK, Y),
 	                 al(INHERITANCE_LINK, X, Y),
 	                 al(SCOPE_LINK, al(INHERITANCE_LINK, Z, W)));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq varseq = vars.varseq;
 	HandleSeq expect{X, Y};
@@ -400,14 +387,14 @@ void VariablesUTest::test_find_variables_ordered_4()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_unordered_1()
+void UniVarsUTest::test_find_variables_unordered_1()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Inferred vardecl may not follow any particular order since the
 	// body structure imposes no asymmetry.
 	Handle body = al(AND_LINK, X, Y);
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSet result = vars.varset;
 	HandleSet expect{X, Y};
@@ -420,7 +407,7 @@ void VariablesUTest::test_find_variables_unordered_1()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_unordered_2()
+void UniVarsUTest::test_find_variables_unordered_2()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -434,7 +421,7 @@ void VariablesUTest::test_find_variables_unordered_2()
 	Handle body = al(AND_LINK,
 	                 al(OR_LINK, X, Y),
 	                 al(OR_LINK, Z, W));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq varseq = vars.varseq;
 
@@ -455,7 +442,7 @@ void VariablesUTest::test_find_variables_unordered_2()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_unordered_3()
+void UniVarsUTest::test_find_variables_unordered_3()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -464,7 +451,7 @@ void VariablesUTest::test_find_variables_unordered_3()
 	Handle body = al(AND_LINK,
 	                 al(OR_LINK, X, Y),
 	                 al(OR_LINK, Z, Z));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq varseq = vars.varseq;
 
@@ -481,7 +468,7 @@ void VariablesUTest::test_find_variables_unordered_3()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_unordered_4()
+void UniVarsUTest::test_find_variables_unordered_4()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -490,7 +477,7 @@ void VariablesUTest::test_find_variables_unordered_4()
 	Handle body = al(AND_LINK,
 	                 al(AND_LINK, X, Y),
 	                 al(OR_LINK, Z, W));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq varseq = vars.varseq;
 
@@ -508,7 +495,7 @@ void VariablesUTest::test_find_variables_unordered_4()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_unordered_5()
+void UniVarsUTest::test_find_variables_unordered_5()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -520,8 +507,8 @@ void VariablesUTest::test_find_variables_unordered_5()
 	Handle body2 = al(OR_LINK,
 	                  al(AND_LINK, Y, A),
 	                  al(AND_LINK, X, B));
-	Variables vars1;
-	Variables vars2;
+	UniVars vars1;
+	UniVars vars2;
 	vars1.find_variables(body1);
 	vars2.find_variables(body2);
 	HandleSeq varseq1 = vars1.varseq;
@@ -538,7 +525,7 @@ void VariablesUTest::test_find_variables_unordered_5()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_1()
+void UniVarsUTest::test_find_variables_mixed_1()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -547,7 +534,7 @@ void VariablesUTest::test_find_variables_mixed_1()
 	Handle body = al(AND_LINK,
 	                 al(INHERITANCE_LINK, X, Y),
 	                 al(INHERITANCE_LINK, Y, X));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSet result = vars.varset;
 	HandleSet expect{X, Y};
@@ -561,7 +548,7 @@ void VariablesUTest::test_find_variables_mixed_1()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_2()
+void UniVarsUTest::test_find_variables_mixed_2()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -571,7 +558,7 @@ void VariablesUTest::test_find_variables_mixed_2()
 	Handle body = al(AND_LINK,
 	                 al(SUBSET_LINK, X, Y),
 	                 al(INTENSIONAL_INHERITANCE_LINK, Y, X));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq varseq = vars.varseq;
 	HandleSeq expect{X, Y};
@@ -584,7 +571,7 @@ void VariablesUTest::test_find_variables_mixed_2()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_3()
+void UniVarsUTest::test_find_variables_mixed_3()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -594,8 +581,8 @@ void VariablesUTest::test_find_variables_mixed_3()
 	Handle body1 = al(INHERITANCE_LINK, al(AND_LINK, X, Y), Y);
 	Handle body2 = al(INHERITANCE_LINK, al(AND_LINK, Y, X), X);
 
-	Variables vars1;
-	Variables vars2;
+	UniVars vars1;
+	UniVars vars2;
 	vars1.find_variables(body1);
 	vars2.find_variables(body2);
 	HandleSeq varseq1 = vars1.varseq;
@@ -612,7 +599,7 @@ void VariablesUTest::test_find_variables_mixed_3()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_4()
+void UniVarsUTest::test_find_variables_mixed_4()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -623,7 +610,7 @@ void VariablesUTest::test_find_variables_mixed_4()
 	                 al(INHERITANCE_LINK, Y, X),
 	                 al(INHERITANCE_LINK, Z, W),
 	                 al(INHERITANCE_LINK, W, Z));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq result = vars.varseq;
 	HandleSeq expect1{X, Y, Z, W};
@@ -657,7 +644,7 @@ void VariablesUTest::test_find_variables_mixed_4()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_5()
+void UniVarsUTest::test_find_variables_mixed_5()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -667,7 +654,7 @@ void VariablesUTest::test_find_variables_mixed_5()
 	                 al(INHERITANCE_LINK, X, Y),
 	                 al(INHERITANCE_LINK, Y, X),
 	                 al(INHERITANCE_LINK, A, B));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSet result = vars.varset;
 	HandleSet expect{X, Y};
@@ -681,7 +668,7 @@ void VariablesUTest::test_find_variables_mixed_5()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_6()
+void UniVarsUTest::test_find_variables_mixed_6()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -695,8 +682,8 @@ void VariablesUTest::test_find_variables_mixed_6()
 	                  al(SET_LINK, Y, X),
 	                  al(LIST_LINK, Y, X));
 
-	Variables vars1;
-	Variables vars2;
+	UniVars vars1;
+	UniVars vars2;
 	vars1.find_variables(body1);
 	vars2.find_variables(body2);
 	HandleSeq varseq1 = vars1.varseq;
@@ -713,7 +700,7 @@ void VariablesUTest::test_find_variables_mixed_6()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_7()
+void UniVarsUTest::test_find_variables_mixed_7()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -727,8 +714,8 @@ void VariablesUTest::test_find_variables_mixed_7()
 	                  al(SET_LINK, Y, X),
 	                  al(LIST_LINK, Y, X));
 
-	Variables vars1;
-	Variables vars2;
+	UniVars vars1;
+	UniVars vars2;
 	vars1.find_variables(body1);
 	vars2.find_variables(body2);
 	HandleSeq varseq1 = vars1.varseq;
@@ -745,7 +732,7 @@ void VariablesUTest::test_find_variables_mixed_7()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_8()
+void UniVarsUTest::test_find_variables_mixed_8()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -756,7 +743,7 @@ void VariablesUTest::test_find_variables_mixed_8()
 	Handle ZYX = al(LIST_LINK, Z, Y, X);
 	Handle XZY = al(LIST_LINK, X, Z, Y);
 	Handle body = al(LIST_LINK, al(SET_LINK, XYZ, ZYX), XZY);
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq result = vars.varseq;
 	HandleSeq expect{X, Y, Z};
@@ -769,7 +756,7 @@ void VariablesUTest::test_find_variables_mixed_8()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_9()
+void UniVarsUTest::test_find_variables_mixed_9()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -781,8 +768,8 @@ void VariablesUTest::test_find_variables_mixed_9()
 	Handle body2 = al(LIST_LINK,
 	                  al(SET_LINK, Y, X),
 	                  al(SET_LINK, Y, al(LIST_LINK, X)));
-	Variables vars1;
-	Variables vars2;
+	UniVars vars1;
+	UniVars vars2;
 	vars1.find_variables(body1);
 	vars2.find_variables(body2);
 	HandleSeq varseq1 = vars1.varseq;
@@ -799,7 +786,7 @@ void VariablesUTest::test_find_variables_mixed_9()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_10()
+void UniVarsUTest::test_find_variables_mixed_10()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -808,7 +795,7 @@ void VariablesUTest::test_find_variables_mixed_10()
 	                 al(VARIABLE_LIST, X, Y),
 	                 al(LOCAL_QUOTE_LINK,
 	                    al(AND_LINK, X, Y)));
-	Variables vars;
+	UniVars vars;
 	vars.find_variables(body);
 	HandleSeq varseq = vars.varseq;
 
@@ -819,7 +806,7 @@ void VariablesUTest::test_find_variables_mixed_10()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_find_variables_mixed_11()
+void UniVarsUTest::test_find_variables_mixed_11()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -831,8 +818,8 @@ void VariablesUTest::test_find_variables_mixed_11()
 	Handle body2 = al(PRESENT_LINK,
 	                  al(INHERITANCE_LINK, Y, A),
 	                  al(INHERITANCE_LINK, X, B));
-	Variables vars1;
-	Variables vars2;
+	UniVars vars1;
+	UniVars vars2;
 	vars1.find_variables(body1);
 	vars2.find_variables(body2);
 	HandleSeq varseq1 = vars1.varseq;
@@ -849,7 +836,7 @@ void VariablesUTest::test_find_variables_mixed_11()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_is_type_1()
+void UniVarsUTest::test_is_type_1()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -857,7 +844,7 @@ void VariablesUTest::test_is_type_1()
 	                    al(TYPED_VARIABLE_LINK, X, PNT),
 	                    al(TYPED_VARIABLE_LINK, Y, CNT));
 
-	Variables v1(vardecl);
+	UniVars v1(vardecl);
 
 	bool is_x = v1.is_type(X, A);
 	bool is_y = v1.is_type(Y, A);
@@ -868,7 +855,7 @@ void VariablesUTest::test_is_type_1()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_is_type_2()
+void UniVarsUTest::test_is_type_2()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -886,7 +873,7 @@ void VariablesUTest::test_is_type_2()
 	                             an(NUMBER_NODE, "2")),
 	                          CNT)));
 
-	Variables v1(vardecl);
+	UniVars v1(vardecl);
 
 	bool is_x = v1.is_type(G1, al(LIST_LINK, A, B));
 	bool is_y = v1.is_type(G2, al(LIST_LINK, A, B));
@@ -897,7 +884,7 @@ void VariablesUTest::test_is_type_2()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_is_type_3()
+void UniVarsUTest::test_is_type_3()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -910,7 +897,7 @@ void VariablesUTest::test_is_type_3()
 	                             an(NUMBER_NODE, "2")),
 	                          PNT)));
 
-	Variables v1(vardecl);
+	UniVars v1(vardecl);
 
 	bool is_x = v1.is_type(G1, al(LIST_LINK, A, B));
 	bool is_y = v1.is_type(G2, al(LIST_LINK, A, B));
@@ -921,7 +908,7 @@ void VariablesUTest::test_is_type_3()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_is_type_4()
+void UniVarsUTest::test_is_type_4()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -939,7 +926,7 @@ void VariablesUTest::test_is_type_4()
 	                             an(NUMBER_NODE, "1")),
 	                          CNT)));
 
-	Variables v1(vardecl);
+	UniVars v1(vardecl);
 
 	bool is_x = v1.is_type(G1, al(LIST_LINK, A));
 	bool is_y = v1.is_type(G2, A);
@@ -950,7 +937,7 @@ void VariablesUTest::test_is_type_4()
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
-void VariablesUTest::test_substitute_nocheck_scope()
+void UniVarsUTest::test_substitute_nocheck_scope()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -963,7 +950,7 @@ void VariablesUTest::test_substitute_nocheck_scope()
 	// Replace Y by X, thus X in the satisfaction link above should be
 	// renamed to avoid name collision.
 	HandleMap var2val{{Y, X}};
-	Handle result = Variables(Y).substitute_nocheck(body, var2val);
+	Handle result = UniVars(Y).substitute_nocheck(body, var2val);
 	Handle expect = al(SATISFACTION_LINK,
 	                   Z,
 	                   al(PRESENT_LINK, al(INHERITANCE_LINK, Z, X)));
