@@ -193,6 +193,26 @@ Unify::Unify(const Handle& lhs, const Handle& rhs,
 	_variables = merge_variables(lhs_vars, rhs_vars);
 }
 
+Unify::Unify(const Handle& lhs, const Handle& rhs,
+             const Variables& lhs_vars, const Variables& rhs_vars)
+{
+	// Set terms to unify
+	_lhs = lhs;
+	_rhs = rhs;
+
+	// UniVars lhs_uv(lhs_vars.varseq);
+	UniVars lhs_uv;
+	for (const auto& vtype : lhs_vars._typemap)
+		lhs_uv.unpack_vartype(HandleCast(vtype.second));
+
+	UniVars rhs_uv;
+	for (const auto& vtype : rhs_vars._typemap)
+		rhs_uv.unpack_vartype(HandleCast(vtype.second));
+
+	// Set _variables
+	_variables = merge_variables(lhs_uv, rhs_uv);
+}
+
 Unify::TypedSubstitutions Unify::typed_substitutions(const SolutionSet& sol,
                                                      const Handle& pre) const
 {

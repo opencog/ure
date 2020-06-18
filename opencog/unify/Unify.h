@@ -33,6 +33,7 @@
 #include <opencog/atoms/base/Handle.h>
 #include <opencog/atoms/core/Context.h>
 #include <opencog/atoms/core/VariableList.h>
+#include <opencog/atoms/core/Variables.h>
 #include <opencog/atoms/pattern/BindLink.h>
 #include <opencog/unify/UniVars.h>
 
@@ -199,6 +200,8 @@ public:
 	      const Handle& rhs_vardecl=Handle::UNDEFINED);
 	Unify(const Handle& lhs, const Handle& rhs,
 	      const UniVars& lhs_vars, const UniVars& rhs_vars);
+	Unify(const Handle& lhs, const Handle& rhs,
+	      const Variables& lhs_vars, const Variables& rhs_vars);
 
 	/**
 	 * Generate typed substitution rules, given a satisfiable
