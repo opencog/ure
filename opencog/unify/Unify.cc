@@ -250,9 +250,11 @@ Unify::TypedSubstitution Unify::typed_substitution(const Partition& partition,
 	// Remove ill quotations
 	Variables tmpv(_variables.get_vardecl());
 	for (auto& vcv : var2cval) {
+		bool needless_quotation = true;
 		Handle consumed =
 			RewriteLink::consume_quotations(tmpv, vcv.second.handle,
-			                                vcv.second.context.quotation, false);
+			                                vcv.second.context.quotation,
+			                                needless_quotation, false);
 		vcv.second = CHandle(consumed, vcv.second.context);
 	}
 
@@ -466,7 +468,10 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 	// Perform substitution over the pattern term, then remove
 	// constant clauses
 	Handle clauses = variables.substitute_nocheck(bl->get_body(), values);
-	clauses = RewriteLink::consume_quotations(vardecl, clauses, true);
+	Variables tmpv(vardecl);
+	bool needless_quotation = true;
+	clauses = RewriteLink::consume_quotations(tmpv, clauses,
+                             Quotation(), needless_quotation, true);
 	if (queried_as)
 		clauses = remove_constant_clauses(vardecl, clauses, queried_as);
 	hs.push_back(clauses);
@@ -475,7 +480,10 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 	for (const Handle& himp: bl->get_implicand())
 	{
 		Handle rewrite = variables.substitute_nocheck(himp, values);
-		rewrite = RewriteLink::consume_quotations(vardecl, rewrite, false);
+		Variables tmpv(vardecl);
+		bool needless_quotation = true;
+		rewrite = RewriteLink::consume_quotations(tmpv, rewrite,
+		                      Quotation(), needless_quotation, false);
 		hs.push_back(rewrite);
 	}
 
