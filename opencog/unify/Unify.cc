@@ -200,7 +200,7 @@ Unify::Unify(const Handle& lhs, const Handle& rhs,
 	_lhs = lhs;
 	_rhs = rhs;
 
-	// UniVars lhs_uv(lhs_vars.varseq);
+#if COPY_TYPE_CONSTRAINTS
 	UniVars lhs_uv;
 	for (const auto& vtype : lhs_vars._typemap)
 		lhs_uv.unpack_vartype(HandleCast(vtype.second));
@@ -208,6 +208,11 @@ Unify::Unify(const Handle& lhs, const Handle& rhs,
 	UniVars rhs_uv;
 	for (const auto& vtype : rhs_vars._typemap)
 		rhs_uv.unpack_vartype(HandleCast(vtype.second));
+#endif
+
+	// Ignore the type constraints that might be present
+	UniVars lhs_uv(lhs_vars.varseq);
+	UniVars rhs_uv(rhs_vars.varseq);
 
 	// Set _variables
 	_variables = merge_variables(lhs_uv, rhs_uv);
