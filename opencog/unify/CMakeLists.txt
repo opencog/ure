@@ -1,5 +1,6 @@
 ADD_LIBRARY (unify
 	Unify
+	UniVars
 )
 
 TARGET_LINK_LIBRARIES(unify
@@ -13,5 +14,6 @@ INSTALL (TARGETS unify
 
 INSTALL (FILES
 	Unify.h
+	UniVars.h
 	DESTINATION "include/opencog/unify"
 )
