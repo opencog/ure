@@ -45,40 +45,37 @@ using namespace opencog;
 /* ================================================================= */
 
 UniVars::UniVars(bool ordered)
-	: _ordered(ordered)
+	: Variables(ordered)
 {
 }
 
 UniVars::UniVars(const Handle& vardecl, bool ordered)
-	: _ordered(ordered)
+	: Variables(vardecl, ordered)
 {
-	validate_vardecl(vardecl);
-	init_index();
+	for (const auto& pr: _typemap)
+		setup_types(pr.second);
 }
 
 UniVars::UniVars(const HandleSeq& vardecls, bool ordered)
-	: _ordered(ordered)
+	: Variables(vardecls, ordered)
 {
-	validate_vardecl(vardecls);
-	init_index();
+	for (const auto& pr: _typemap)
+		setup_types(pr.second);
 }
 
 /* ================================================================= */
 /**
- * Extract the variable type(s) from a TypedVariableLink
+ * Split out the component types from a TypedVariableLink
+ * Need to do this in order to perform type intersections.
+ * XXX Long run solution would be to create a distinct
+ * type-intersection utility... i.e. given two TypedVariableLink's,
+ * compute thier intersection...
+ *
+ * So ... the code here is a temporary work-around ...
  */
-void UniVars::unpack_vartype(const Handle& htypelink)
+void UniVars::setup_types(const TypedVariableLinkPtr& tvlp)
 {
-	if (TYPED_VARIABLE_LINK != htypelink->get_type())
-	{
-		throw InvalidParamException(TRACE_INFO,
-			"Expecting TypedVariableLink, got %s",
-			htypelink->to_short_string().c_str());
-	}
-
-	TypedVariableLinkPtr tvlp(TypedVariableLinkCast(htypelink));
 	const Handle& varname(tvlp->get_variable());
-	_typemap.insert({varname, tvlp});
 
 	const TypeSet& ts = tvlp->get_simple_typeset();
 	if (0 < ts.size())
@@ -91,85 +88,13 @@ void UniVars::unpack_vartype(const Handle& htypelink)
 	const std::pair<size_t, size_t>& gi = tvlp->get_glob_interval();
 	if (tvlp->default_interval() != gi)
 		_glob_intervalmap.insert({varname, gi});
-
-	varset.insert(varname);
-	varseq.emplace_back(varname);
 }
 
-/* ================================================================= */
-/**
- * Validate variable declarations for syntax correctness.
- *
- * This will check to make sure that a set of variable declarations are
- * of a reasonable form. Thus, for example, a structure similar to the
- * below is expected.
- *
- *       VariableList
- *          VariableNode "$var0"
- *          VariableNode "$var1"
- *          TypedVariableLink
- *             VariableNode "$var2"
- *             TypeNode  "ConceptNode"
- *          TypedVariableLink
- *             VariableNode "$var3"
- *             TypeChoice
- *                 TypeNode  "PredicateNode"
- *                 TypeNode  "GroundedPredicateNode"
- *
- * As a side-effect, the variables and type restrictions are unpacked.
- */
-void UniVars::validate_vardecl(const Handle& hdecls)
+void UniVars::unpack_vartype(const Handle& htypelink)
 {
-	// XXX FIXME URE calls us with broken handle!!
-	if (nullptr == hdecls) return;
-
-	// Expecting the declaration list to be either a single
-	// variable, a list or a set of variable declarations.
-	Type tdecls = hdecls->get_type();
-
-	// Order matters only if it is a list of variables
-	_ordered = VARIABLE_LIST == tdecls;
-
-	if (VARIABLE_NODE == tdecls or GLOB_NODE == tdecls)
-	{
-		varset.insert(hdecls);
-		varseq.emplace_back(hdecls);
-	}
-	else if (TYPED_VARIABLE_LINK == tdecls)
-	{
-		unpack_vartype(hdecls);
-	}
-	else if (VARIABLE_LIST == tdecls or VARIABLE_SET == tdecls)
-	{
-		// Extract the list of set of variables and make sure its as
-		// expected.
-		const HandleSeq& dset = hdecls->getOutgoingSet();
-		validate_vardecl(dset);
-	}
-	else if (UNQUOTE_LINK == tdecls)
-	{
-		// This indicates that the variable declaration is not in normal
-		// form (i.e. requires beta-reductions to be fully formed), thus
-		// variables inference is aborted for now.
-		return;
-	}
-	else if (ANCHOR_NODE == tdecls)
-	{
-		_anchor = hdecls;
-	}
-	else
-	{
-		throw InvalidParamException(TRACE_INFO,
-			"Expected a VariableList holding variable declarations");
-	}
-}
-
-bool UniVars::is_well_typed() const
-{
-	for (const auto& vt : _simple_typemap)
-		if (not opencog::is_well_typed(vt.second))
-			return false;
-	return true;
+	Variables::unpack_vartype(htypelink);
+	TypedVariableLinkPtr tvlp(TypedVariableLinkCast(htypelink));
+	setup_types(tvlp);
 }
 
 /* ================================================================= */
@@ -227,22 +152,12 @@ bool UniVars::is_equal(const UniVars& other, size_t index) const
 	return true;
 }
 
-/* ================================================================= */
-
-/// Return true if the variable `othervar` in `other` is
-/// alpha-convertible to the variable `var` in this. That is,
-/// return true if they are the same variable, differing only
-/// in name.
-
-bool UniVars::is_alpha_convertible(const Handle& var,
-                                     const Handle& othervar,
-                                     const UniVars& other,
-                                     bool check_type) const
+bool UniVars::is_well_typed() const
 {
-	IndexMap::const_iterator idx = other.index.find(othervar);
-	return other.index.end() != idx
-		and varseq.at(idx->second) == var
-		and (not check_type or is_equal(other, idx->second));
+	for (const auto& vt : _simple_typemap)
+		if (not opencog::is_well_typed(vt.second))
+			return false;
+	return true;
 }
 
 /* ================================================================= */
@@ -302,8 +217,8 @@ bool UniVars::is_type(const Handle& var, const Handle& val) const
 }
 
 bool UniVars::is_type(VariableSimpleTypeMap::const_iterator tit,
-                        VariableDeepTypeMap::const_iterator dit,
-                        const Handle& val) const
+                      VariableDeepTypeMap::const_iterator dit,
+                      const Handle& val) const
 {
 	bool ret = true;
 
@@ -437,98 +352,6 @@ const GlobInterval& UniVars::get_interval(const Handle& var) const
 
 /* ================================================================= */
 /**
- * Substitute the given arguments for the variables occuring in a tree.
- * That is, perform beta-reduction.  This is a lot like applying the
- * function `func` to the argument list `args`, except that no actual
- * evaluation is performed; only substitution.
- *
- * The resulting tree is NOT placed into any atomspace. If you want
- * that, you must do it yourself.  If you want evaluation or execution
- * to happen during substitution, then use either the EvaluationLink,
- * the ExecutionOutputLink, or the Instantiator.
- *
- * So, for example, if this VariableList contains:
- *
- *   VariableList
- *       VariableNode $a
- *       VariableNode $b
- *
- * and `func` is the template:
- *
- *   EvaluationLink
- *      PredicateNode "something"
- *      ListLink
- *         VariableNode $b      ; note the reversed order
- *         VariableNode $a
- *
- * and the `args` is a list
- *
- *      ConceptNode "one"
- *      NumberNode 2.0000
- *
- * then the returned result will be
- *
- *   EvaluationLink
- *      PredicateNode "something"
- *      ListLink
- *          NumberNode 2.0000    ; note reversed order here, also
- *          ConceptNode "one"
- *
- * That is, the arguments `one` and `2.0` were substituted for `$a` and `$b`.
- *
- * The `func` can be, for example, a single variable name(!) In this
- * case, the corresponding `arg` is returned. So, for example, if the
- * `func` was simply `$b`, then `2.0` would be returned.
- *
- * Type checking is performed before substitution; if the args fail to
- * satisfy the type constraints, an exception is thrown. If `silent`
- * is true, then the exception is non-printing, and so this method can
- * be used for "filtering", i.e. for automatically rejecting arguments
- * that fail the type check.
- *
- * The substitution is almost purely syntactic... with one exception:
- * the semantics of QuoteLink and UnquoteLink are honoured.  That is,
- * no variable reduction is performed into any part of the tree which
- * is quoted. (QuoteLink is like scheme's quasi-quote, in that each
- * UnquoteLink undoes one level of quotation.)
- *
- * Again, only a substitution is performed, there is no evaluation.
- * Note also that the resulting tree is NOT placed into any atomspace!
- */
-Handle UniVars::substitute(const Handle& func,
-                             const HandleSeq& args,
-                             bool silent) const
-{
-	if (args.size() != varseq.size())
-		throw SyntaxException(TRACE_INFO,
-			"Incorrect number of arguments specified, expecting %lu got %lu",
-			varseq.size(), args.size());
-
-	// XXX TODO type-checking could be lazy; if the function is not
-	// actually using one of the args, it's type should not be checked.
-	// Viz., one of the arguments might be undefined, and that's OK,
-	// if that argument is never actually used.  Fixing this requires a
-	// cut-n-paste of the substitute_nocheck code. I'm too lazy to do
-	// this ... no one wants this whizzy-ness just right yet.
-	if (not is_type(args))
-	{
-		if (silent) throw TypeCheckException();
-		throw SyntaxException(TRACE_INFO,
-			"Arguments fail to match variable declarations");
-	}
-
-	return substitute_nocheck(func, args);
-}
-
-Handle UniVars::substitute(const Handle& func,
-                             const HandleMap& map,
-                             bool silent) const
-{
-	return substitute(func, make_sequence(map), silent);
-}
-
-/* ================================================================= */
-/**
  * Extend a set of variables.
  *
  * That is, merge the given variables into this set.
@@ -562,7 +385,9 @@ void UniVars::extend(const UniVars& vset)
 
 			auto typemap_it = vset._typemap.find(h);
 			if (typemap_it != vset._typemap.end())
+			{
 				unpack_vartype(HandleCast(typemap_it->second));
+			}
 			else
 			{
 				varseq.emplace_back(h);
@@ -600,15 +425,14 @@ void UniVars::extend_interval(const Handle &h, const UniVars &vset)
 void UniVars::erase(const Handle& var)
 {
 	// Remove from the type maps
-	_typemap.erase(var);
 	_simple_typemap.erase(var);
 	_deep_typemap.erase(var);
 
 	// Remove from the interval map
 	_glob_intervalmap.erase(var);
 
-	// Remove FreeVariables
-	FreeVariables::erase(var);
+	// Remove Variables
+	Variables::erase(var);
 }
 
 bool UniVars::operator==(const UniVars& other) const
@@ -618,7 +442,7 @@ bool UniVars::operator==(const UniVars& other) const
 
 bool UniVars::operator<(const UniVars& other) const
 {
-	return FreeVariables::operator<(other)
+	return Variables::operator<(other)
 		or (_simple_typemap == other._simple_typemap
 		     and _deep_typemap < other._deep_typemap);
 }
@@ -697,47 +521,6 @@ Handle UniVars::get_vardecl() const
 	return Handle(createVariableSet(std::move(vardecls)));
 }
 
-void UniVars::validate_vardecl(const HandleSeq& oset)
-{
-	for (const Handle& h: oset)
-	{
-		Type t = h->get_type();
-		if (VARIABLE_NODE == t or GLOB_NODE == t)
-		{
-			varset.insert(h);
-			varseq.emplace_back(h);
-		}
-		else if (TYPED_VARIABLE_LINK == t)
-		{
-			unpack_vartype(h);
-		}
-		else if (ANCHOR_NODE == t)
-		{
-			_anchor = h;
-		}
-		else
-		{
-			throw InvalidParamException(TRACE_INFO,
-				"Expected a Variable or TypedVariable or Anchor, got: %s"
-				"\nVariableList is %s",
-					nameserver().getTypeName(t).c_str(),
-					to_string().c_str());
-		}
-	}
-}
-
-void UniVars::find_variables(const Handle& body)
-{
-	FreeVariables::find_variables(body);
-	_ordered = false;
-}
-
-void UniVars::find_variables(const HandleSeq& oset, bool ordered_link)
-{
-	FreeVariables::find_variables(oset, ordered_link);
-	_ordered = false;
-}
-
 std::string UniVars::to_string(const std::string& indent) const
 {
 	std::stringstream ss;
@@ -751,11 +534,11 @@ std::string UniVars::to_string(const std::string& indent) const
 	// Simple typemap
 	std::string indent_p = indent + OC_TO_STRING_INDENT;
 	ss << indent << "_simple_typemap:" << std::endl
-	   << xoc_to_string(_simple_typemap, indent_p) << std::endl;
+	   << oc_to_string(_simple_typemap, indent_p) << std::endl;
 
 	// Glob interval map
 	ss << indent << "_glob_intervalmap:" << std::endl
-	   << xoc_to_string(_glob_intervalmap, indent_p) << std::endl;
+	   << oc_to_string(_glob_intervalmap, indent_p) << std::endl;
 
 	// Deep typemap
 	ss << indent << "_deep_typemap:" << std::endl
@@ -769,7 +552,7 @@ std::string opencog::oc_to_string(const UniVars& var, const std::string& indent)
 	return var.to_string(indent);
 }
 
-std::string opencog::xoc_to_string(const VariableSimpleTypeMap& vtm,
+std::string opencog::oc_to_string(const VariableSimpleTypeMap& vtm,
                                    const std::string& indent)
 {
 	std::stringstream ss;
@@ -787,7 +570,7 @@ std::string opencog::xoc_to_string(const VariableSimpleTypeMap& vtm,
 	return ss.str();
 }
 
-std::string opencog::xoc_to_string(const GlobIntervalMap& gim,
+std::string opencog::oc_to_string(const GlobIntervalMap& gim,
                                    const std::string& indent)
 {
 	std::stringstream ss;
