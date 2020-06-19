@@ -33,7 +33,9 @@
 #include <opencog/atoms/base/Handle.h>
 #include <opencog/atoms/core/Context.h>
 #include <opencog/atoms/core/VariableList.h>
+#include <opencog/atoms/core/Variables.h>
 #include <opencog/atoms/pattern/BindLink.h>
+#include <opencog/unify/UniVars.h>
 
 namespace opencog {
 
@@ -185,7 +187,7 @@ public:
 	// after substitution (cause some values may be variables).
 	//
 	// TODO: maybe we could simplify a great deal of code by replacing
-	// Handle by Variables.
+	// Handle by UniVars.
 	typedef std::map<HandleCHandleMap, Handle> TypedSubstitutions;
 	typedef std::pair<HandleCHandleMap, Handle> TypedSubstitution;
 
@@ -196,6 +198,8 @@ public:
 	Unify(const Handle& lhs, const Handle& rhs,
 	      const Handle& lhs_vardecl=Handle::UNDEFINED,
 	      const Handle& rhs_vardecl=Handle::UNDEFINED);
+	Unify(const Handle& lhs, const Handle& rhs,
+	      const UniVars& lhs_vars, const UniVars& rhs_vars);
 	Unify(const Handle& lhs, const Handle& rhs,
 	      const Variables& lhs_vars, const Variables& rhs_vars);
 
@@ -514,7 +518,7 @@ private:
 	Handle _rhs;
 
 	// Common variable declaration of the two terms to unify.
-	Variables _variables;
+	UniVars _variables;
 
 public:                         // ???? It's a friend yet
 	/**
@@ -865,19 +869,13 @@ bool tss_content_eq(const Unify::TypedSubstitutions& lhs,
 HandleMap strip_context(const Unify::HandleCHandleMap& hchm);
 
 /**
- * Generate a VariableList of the free variables of a given contextual
- * atom ch.
- */
-VariableListPtr gen_varlist(const Unify::CHandle& ch);
-
-/**
  * Merge two vardecls into one. If a variable is present in both
  * vardecls then the more restrictive one replaces the less
  * restrictive one.
  *
  * TODO: give example.
  */
-Variables merge_variables(const Variables& lv, const Variables& rv);
+UniVars merge_variables(const UniVars& lv, const UniVars& rv);
 Handle merge_vardecl(const Handle& l_vardecl, const Handle& r_vardecl);
 
 // Debugging helpers see
