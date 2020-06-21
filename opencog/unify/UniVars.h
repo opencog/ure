@@ -55,18 +55,7 @@ struct UniVars : public Variables
 	// Extend this by adding in the given variables. If either this or
 	// the other are ordered, then the result is ordered
 	void extend(const UniVars&);
-
-	// Useful for debugging
-	std::string to_string(const std::string& indent=empty_string) const;
 };
-
-// Debugging helpers see
-// http://wiki.opencog.org/w/Development_standards#Print_OpenCog_Objects
-// The reason indent is not an optional argument with default is
-// because gdb doesn't support that, see
-// http://stackoverflow.com/questions/16734783 for more explanation.
-std::string oc_to_string(const UniVars& var,
-                         const std::string& indent=empty_string);
 
 /** @}*/
 }

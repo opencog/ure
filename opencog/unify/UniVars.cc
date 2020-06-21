@@ -108,9 +108,3 @@ void UniVars::extend(const UniVars& vset)
 	// If either this or the other are ordered then the result is ordered
 	_ordered = _ordered or vset._ordered;
 }
-
-std::string opencog::oc_to_string(const UniVars& var, const std::string& indent)
-{
-	return var.to_string(indent);
-}
-
