@@ -1091,12 +1091,12 @@ TypeSet Unify::simplify_type_union(TypeSet& type) const
 
 TypeSet Unify::get_union_type(const Handle& h) const
 {
-	const VariableSimpleTypeMap& vtm = _variables._simple_typemap;
+	const VariableTypeMap& vtm = _variables._typemap;
 	auto it = vtm.find(h);
-	if (it == vtm.end() or it->second.empty())
+	if (it == vtm.end() or it->second->get_simple_typeset().empty())
 		return {ATOM};
 	else {
-		return it->second;
+		return it->second->get_simple_typeset();
 	}
 }
 
