@@ -116,6 +116,8 @@ void UnifyGlobUTest::setUp(void)
 
 void UnifyGlobUTest::test_type_intersection_1()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = x;
 	Unify unify(lhs, rhs);
@@ -123,10 +125,14 @@ void UnifyGlobUTest::test_type_intersection_1()
 			expected = rhs;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_type_intersection_2()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = Y;
 
@@ -151,10 +157,14 @@ void UnifyGlobUTest::test_type_intersection_2()
 			expected = rhs;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_type_intersection_3()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = AB;
 
@@ -172,10 +182,14 @@ void UnifyGlobUTest::test_type_intersection_3()
 			expected = rhs;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_type_intersection_4()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = AB;
 
@@ -193,10 +207,14 @@ void UnifyGlobUTest::test_type_intersection_4()
 			expected = Unify::CHandle(Handle::UNDEFINED);
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_type_intersection_5()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = AB;
 
@@ -214,10 +232,14 @@ void UnifyGlobUTest::test_type_intersection_5()
 			expected = rhs;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_1()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(X, A);
 	Unify::SolutionSet result = unify();
 	Unify::SolutionSet expected =
@@ -227,10 +249,14 @@ void UnifyGlobUTest::test_unify_basic_1()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_2()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(X, Y);
 	Unify::SolutionSet result = unify();
 
@@ -250,10 +276,14 @@ void UnifyGlobUTest::test_unify_basic_2()
 	std::cout << "expected_2 = " << oc_to_string(expected_2) << std::endl;
 
 	TS_ASSERT((result==expected_1) or (result==expected_2))
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_3()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(X, x);
 	Unify::SolutionSet result = unify();
 
@@ -266,10 +296,14 @@ void UnifyGlobUTest::test_unify_basic_3()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_4()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(x, X);
 	Unify::SolutionSet result = unify();
 
@@ -282,10 +316,14 @@ void UnifyGlobUTest::test_unify_basic_4()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_5()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(X, AB);
 	Unify::SolutionSet result = unify();
 
@@ -296,10 +334,14 @@ void UnifyGlobUTest::test_unify_basic_5()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_multi_val_1()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(XY, ABC);
 	Unify::SolutionSet result = unify();
 
@@ -314,10 +356,14 @@ void UnifyGlobUTest::test_unify_multi_val_1()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_multi_val_2()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(al(LIST_LINK, U), al(LIST_LINK, U));
 	Unify::SolutionSet result = unify();
 	std::cout << "\n result\n" << oc_to_string(result) << std::endl;
@@ -326,10 +372,14 @@ void UnifyGlobUTest::test_unify_multi_val_2()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_multi_val_3()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(XYZ, al(LIST_LINK, U));
 	Unify::SolutionSet result = unify();
 	std::cout << "\n result\n" << oc_to_string(result) << std::endl;
@@ -340,10 +390,14 @@ void UnifyGlobUTest::test_unify_multi_val_3()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_multi_val_4()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(ABx, YBC);
 	Unify::SolutionSet result = unify();
 	std::cout << "\n result\n" << oc_to_string(result) << std::endl;
@@ -353,10 +407,14 @@ void UnifyGlobUTest::test_unify_multi_val_4()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_1()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                      Y,
 	                      an(TYPE_NODE, "ConceptNode"));
@@ -371,10 +429,14 @@ void UnifyGlobUTest::test_unify_typed_1()
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_2()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                   X,
 	                   an(TYPE_NODE, "PredicateNode"));
@@ -392,10 +454,14 @@ void UnifyGlobUTest::test_unify_typed_2()
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_3()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                   U,
 	                   al(TYPE_SET_LINK,
@@ -439,10 +505,14 @@ void UnifyGlobUTest::test_unify_typed_3()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_4()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                   U,
 	                   al(TYPE_SET_LINK,
@@ -494,10 +564,14 @@ void UnifyGlobUTest::test_unify_typed_4()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_5()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                   U,
 	                   al(TYPE_SET_LINK,
@@ -540,10 +614,14 @@ void UnifyGlobUTest::test_unify_typed_5()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_6()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(VARIABLE_LIST,
 	                   al(TYPED_VARIABLE_LINK,
 	                      X,
@@ -576,6 +654,8 @@ void UnifyGlobUTest::test_unify_typed_6()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 #undef al
