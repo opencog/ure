@@ -487,7 +487,7 @@ Handle UniVars::get_type_decl(const Handle& var, const Handle& alt) const
 
 		HandleSeq tcs;
 		for (Handle tn : types)
-			tcs.push_back(createLink(TYPE_SET_LINK, il, tn));
+			tcs.push_back(createLink(TYPE_INTERSECTION_LINK, il, tn));
 		return tcs.size() == 1 ?
 		       createLink(TYPED_VARIABLE_LINK, alt, tcs[0]) :
 		       createLink(TYPED_VARIABLE_LINK, alt,
