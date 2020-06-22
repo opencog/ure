@@ -75,11 +75,11 @@ void UniVars::extend(const UniVars& vset)
 				{
 					Handle isect = HandleCast(
 						createTypeIntersectionLink(HandleSeq{
-							HandleCast(vit->second->get_typedecl()),
-							HandleCast(tit->second->get_typedecl())}));
+							HandleCast(tit->second->get_typedecl()),
+							HandleCast(vit->second->get_typedecl())}));
 					TypedVariableLinkPtr tvp =
 						createTypedVariableLink(h, isect);
-					_typemap.insert({h, tvp});
+					_typemap[h] = tvp;
 				}
 				else
 				{
