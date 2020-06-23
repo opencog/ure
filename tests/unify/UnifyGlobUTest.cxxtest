@@ -225,7 +225,7 @@ void UnifyGlobUTest::test_type_intersection_5()
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "1"),
 	                            an(NUMBER_NODE, "2")),
-	                         an(TYPE_NODE, "ListLink"))));
+	                         an(TYPE_NODE, "ConceptNode"))));
 
 	Unify unify(lhs, rhs, l_decl);
 	Unify::CHandle result = unify.type_intersection(lhs, rhs),
