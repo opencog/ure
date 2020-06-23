@@ -742,8 +742,6 @@ void Unify::ordered_unify_glob(const HandleSeq &lhs,
 	for (size_t i = inter.first;
 	     (i <= inter.second and i <= rhs.size()); i++) {
 		const Handle r_h =
-				i == 1 ?
-				*rhs.begin() :
 				createLink(HandleSeq(rhs.begin(), rhs.begin() + i), LIST_LINK);
 		auto head_sol = flip ?
 		                unify(r_h, lhs[0], rc, lc) :
@@ -826,6 +824,27 @@ Unify::SolutionSet Unify::mkvarsol(CHandle lch, CHandle rch) const
 	if (not inter)
 		return SolutionSet();
 	else {
+
+		// Special case: if the variable is a glob, and it matched
+		// just one item, then unwrap that item. This seems ...
+		// kind of perverse to me, but the unit tests expect this
+		// behavior. Maybe change things in the future?
+		if (GLOB_NODE == lch.handle->get_type() and
+		    LIST_LINK == rch.handle->get_type() and
+		    1 == rch.handle->get_arity())
+		{
+			rch.handle = rch.handle->getOutgoingAtom(0);
+			if (rch.handle == lch.handle) return SolutionSet(true);
+			inter.handle = rch.handle;
+		}
+		if (GLOB_NODE == rch.handle->get_type() and
+		    LIST_LINK == lch.handle->get_type() and
+		    1 == lch.handle->get_arity())
+		{
+			lch.handle = lch.handle->getOutgoingAtom(0);
+			if (rch.handle == lch.handle) return SolutionSet(true);
+			inter.handle = lch.handle;
+		}
 		Block pblock{lch, rch};
 		Partitions par{{{pblock, inter}}};
 		return SolutionSet(par);
