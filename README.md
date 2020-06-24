@@ -1,6 +1,8 @@
 # Unified Rule Engine
 
-[![CircleCI](https://circleci.com/gh/opencog/ure.svg?style=svg)](https://circleci.com/gh/opencog/ure)
+opencog | singnet
+------- | -------
+[![CircleCI](https://circleci.com/gh/opencog/ure.svg?style=svg)](https://circleci.com/gh/opencog/ure) | [![CircleCI](https://circleci.com/gh/singnet/ure.svg?style=svg)](https://circleci.com/gh/singnet/ure)
 
 The Unified Rule Engine, URE for short, is a term rewriting engine for
 OpenCog. It can be used to implement any logic. As of today it is used
