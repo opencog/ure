@@ -35,7 +35,6 @@
 #include <opencog/atoms/core/VariableList.h>
 #include <opencog/atoms/core/Variables.h>
 #include <opencog/atoms/pattern/BindLink.h>
-#include <opencog/unify/UniVars.h>
 
 namespace opencog {
 
@@ -187,7 +186,7 @@ public:
 	// after substitution (cause some values may be variables).
 	//
 	// TODO: maybe we could simplify a great deal of code by replacing
-	// Handle by UniVars.
+	// Handle by Variables.
 	typedef std::map<HandleCHandleMap, Handle> TypedSubstitutions;
 	typedef std::pair<HandleCHandleMap, Handle> TypedSubstitution;
 
@@ -198,8 +197,6 @@ public:
 	Unify(const Handle& lhs, const Handle& rhs,
 	      const Handle& lhs_vardecl=Handle::UNDEFINED,
 	      const Handle& rhs_vardecl=Handle::UNDEFINED);
-	Unify(const Handle& lhs, const Handle& rhs,
-	      const UniVars& lhs_vars, const UniVars& rhs_vars);
 	Unify(const Handle& lhs, const Handle& rhs,
 	      const Variables& lhs_vars, const Variables& rhs_vars);
 
@@ -518,7 +515,7 @@ private:
 	Handle _rhs;
 
 	// Common variable declaration of the two terms to unify.
-	UniVars _variables;
+	Variables _variables;
 
 public:                         // ???? It's a friend yet
 	/**
@@ -875,7 +872,7 @@ HandleMap strip_context(const Unify::HandleCHandleMap& hchm);
  *
  * TODO: give example.
  */
-UniVars merge_variables(const UniVars& lv, const UniVars& rv);
+Variables merge_variables(const Variables& lv, const Variables& rv);
 Handle merge_vardecl(const Handle& l_vardecl, const Handle& r_vardecl);
 
 // Debugging helpers see
