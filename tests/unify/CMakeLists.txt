@@ -9,4 +9,3 @@ ENDIF (HAVE_GUILE)
 
 ADD_CXXTEST(UnifyUTest)
 ADD_CXXTEST(UnifyGlobUTest)
-ADD_CXXTEST(UniVarsUTest)
