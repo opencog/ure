@@ -93,8 +93,14 @@ AndBIT::AndBIT(AtomSpace& bit_as, const Handle& target, Handle vardecl,
                const BITNodeFitness& fitness, const AtomSpace* qas)
 	: exhausted(false), queried_as(qas)
 {
+	// in case it is undefined
+	if (nullptr == vardecl)
+	{
+		HandleSet vars = get_free_variables(target);
+		vardecl = HandleCast(createVariableSet(HandleSeq(vars.begin(), vars.end())));
+	}
+
 	// Create initial FCS
-	vardecl = gen_vardecl(target, vardecl); // in case it is undefined
 	Handle body =
 		Unify::remove_constant_clauses(vardecl, target, queried_as);
 	HandleSeq bl{body, target};

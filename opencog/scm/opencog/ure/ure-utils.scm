@@ -18,6 +18,7 @@
 ;; -- ure-rm-all-rules -- Remove all rules from the given rbs
 ;; -- ure-rules -- List all rules of a given rule base
 ;; -- ure-weighted-rules -- List all weighted rules of a given rule base
+;; -- ure-search-rules -- Retrieve all potential rules
 ;; -- ure-set-num-parameter -- Set a numeric parameter of an rbs
 ;; -- ure-set-fuzzy-bool-parameter -- Set a fuzzy boolean parameter of an rbs
 ;; -- ure-set-attention-allocation -- Set the URE:attention-allocation parameter
@@ -79,6 +80,7 @@
 (use-modules (opencog logger))
 (use-modules (srfi srfi-1))
 (use-modules (ice-9 receive))
+(use-modules (ice-9 optargs))
 
 (define* (cog-fc rbs source
                  #:key
@@ -536,6 +538,26 @@
 
     (cog-set-atomspace! current-as)
     clean-weighted-rules))
+
+(define*-public (ure-search-rules  #:optional (as (cog-atomspace)))
+"
+  Retrieve all potential rules in the given or default atomspace.
+  https://github.com/singnet/ure/issues/16
+"
+  (define current-as (cog-atomspace))
+
+  (define (filter-pot-rules DL-ATOMS-LIST)
+    (let* ((has-bind (lambda (x) (eq? 'BindLink (cog-type (cog-outgoing-atom x 1))))))
+      (filter has-bind DL-ATOMS-LIST)))
+
+  (cog-set-atomspace! as)
+
+  (let* ((dl-atoms-list (cog-get-atoms 'DefineLink))
+          (filtered-list (filter-pot-rules dl-atoms-list))
+          (rules-list (map (lambda (x) (cog-outgoing-atom x 0)) filtered-list)))
+
+    (cog-set-atomspace! current-as)
+    rules-list))
 
 (define (ure-set-num-parameter rbs name value)
 "

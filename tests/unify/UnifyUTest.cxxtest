@@ -204,7 +204,12 @@ void UnifyUTest::test_type_intersection()
 	Unify::CHandle result = unify.type_intersection(lhs, rhs),
 		expected = rhs;
 
+	logger().debug() << "result = " << oc_to_string(result);
+	logger().debug() << "expected = " << oc_to_string(expected);
+
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_join_1()
@@ -223,6 +228,8 @@ void UnifyUTest::test_join_1()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_join_2()
@@ -287,6 +294,8 @@ void UnifyUTest::test_join_2()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 // Same as test_join_2 but using A2 as well. See test_complex_1
@@ -375,6 +384,8 @@ void UnifyUTest::test_join_3()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_without_var_1()
@@ -393,6 +404,8 @@ void UnifyUTest::test_unify_without_var_1()
 	// On top of that make sure that the solution is empty as it is
 	// how failing is represented
 	TS_ASSERT(result.empty());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_without_var_2()
@@ -411,6 +424,8 @@ void UnifyUTest::test_unify_without_var_2()
 	// On top of that make sure that the solution is not empty as it
 	// is how success is represented
 	TS_ASSERT(not result.empty());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_basic_1()
@@ -425,6 +440,8 @@ void UnifyUTest::test_unify_basic_1()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_basic_2()
@@ -439,6 +456,8 @@ void UnifyUTest::test_unify_basic_2()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_basic_3()
@@ -453,6 +472,8 @@ void UnifyUTest::test_unify_basic_3()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_basic_4()
@@ -467,6 +488,8 @@ void UnifyUTest::test_unify_basic_4()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_basic_5()
@@ -481,6 +504,8 @@ void UnifyUTest::test_unify_basic_5()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_basic_6()
@@ -494,6 +519,8 @@ void UnifyUTest::test_unify_basic_6()
 	logger().debug() << "result = " << oc_to_string(result);
 
 	TS_ASSERT(not result.is_satisfiable());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_basic_7()
@@ -505,6 +532,8 @@ void UnifyUTest::test_unify_basic_7()
 	Unify::SolutionSet result = unify();
 
 	TS_ASSERT(not result.is_satisfiable());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_basic_8()
@@ -519,6 +548,8 @@ void UnifyUTest::test_unify_basic_8()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_undeclared_var_1()
@@ -540,6 +571,8 @@ void UnifyUTest::test_unify_undeclared_var_1()
 	// On top of that make sure that the solution is empty as it is
 	// how failing is represented
 	TS_ASSERT(result.empty());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_undeclared_var_2()
@@ -557,6 +590,8 @@ void UnifyUTest::test_unify_undeclared_var_2()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_undeclared_var_3()
@@ -573,6 +608,8 @@ void UnifyUTest::test_unify_undeclared_var_3()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_vardecl_1()
@@ -587,6 +624,8 @@ void UnifyUTest::test_unify_vardecl_1()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_vardecl_2()
@@ -601,6 +640,8 @@ void UnifyUTest::test_unify_vardecl_2()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_vardecl_3()
@@ -612,6 +653,8 @@ void UnifyUTest::test_unify_vardecl_3()
 		expected = Unify::SolutionSet({{{{X, A}, A}, {{Y, B}, B}}});
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_vardecl_4()
@@ -626,6 +669,8 @@ void UnifyUTest::test_unify_vardecl_4()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_vardecl_5()
@@ -640,6 +685,8 @@ void UnifyUTest::test_unify_vardecl_5()
 	logger().debug() << "result = " << oc_to_string(result);
 
 	TS_ASSERT(not result.is_satisfiable());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_cyclic_dependence_1()
@@ -652,6 +699,8 @@ void UnifyUTest::test_unify_cyclic_dependence_1()
 	logger().debug() << "result = " << oc_to_string(result);
 
 	TS_ASSERT(not result.is_satisfiable());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_cyclic_dependence_2()
@@ -665,6 +714,8 @@ void UnifyUTest::test_unify_cyclic_dependence_2()
 	logger().debug() << "result = " << oc_to_string(result);
 
 	TS_ASSERT(not result.is_satisfiable());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_cyclic_dependence_3()
@@ -679,6 +730,8 @@ void UnifyUTest::test_unify_cyclic_dependence_3()
 	logger().debug() << "result = " << oc_to_string(result);
 
 	TS_ASSERT(not result.is_satisfiable());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_cyclic_dependence_4()
@@ -695,6 +748,8 @@ void UnifyUTest::test_unify_cyclic_dependence_4()
 	logger().debug() << "result = " << oc_to_string(result);
 
 	TS_ASSERT(not result.is_satisfiable());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::xtest_unify_type_union_1()
@@ -706,6 +761,8 @@ void UnifyUTest::xtest_unify_type_union_1()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_unordered_1()
@@ -718,6 +775,8 @@ void UnifyUTest::test_unify_unordered_1()
 	logger().debug() << "result = " << oc_to_string(result);
 
 	TS_ASSERT(not result.is_satisfiable());
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_unordered_2()
@@ -732,6 +791,8 @@ void UnifyUTest::test_unify_unordered_2()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_unordered_3()
@@ -746,6 +807,8 @@ void UnifyUTest::test_unify_unordered_3()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_unordered_4()
@@ -759,6 +822,8 @@ void UnifyUTest::test_unify_unordered_4()
 
 	logger().debug() << "result = " << oc_to_string(result);
 	logger().debug() << "expected = " << oc_to_string(expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_unordered_5()
@@ -774,6 +839,8 @@ void UnifyUTest::test_unify_unordered_5()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_unordered_6()
@@ -789,6 +856,8 @@ void UnifyUTest::test_unify_unordered_6()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_unordered_7()
@@ -804,6 +873,8 @@ void UnifyUTest::test_unify_unordered_7()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_unordered_8()
@@ -819,6 +890,8 @@ void UnifyUTest::test_unify_unordered_8()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_alpha_equivalence()
@@ -885,6 +958,8 @@ void UnifyUTest::test_unify_alpha_equivalence()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_substitute()
@@ -908,6 +983,8 @@ void UnifyUTest::test_substitute()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_1()
@@ -1086,6 +1163,8 @@ void UnifyUTest::test_unify_complex_1()
 	logger().debug() << "ts_expected = " << oc_to_string(ts_expected);
 
 	TS_ASSERT(tss_content_eq(ts_result, ts_expected));
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_2()
@@ -1181,6 +1260,8 @@ void UnifyUTest::test_unify_complex_2()
 	logger().debug() << "tss_expected = " << oc_to_string(tss_expected);
 
 	TS_ASSERT(tss_content_eq(tss_result, tss_expected));
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_3()
@@ -1270,6 +1351,8 @@ void UnifyUTest::test_unify_complex_3()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_4()
@@ -1436,6 +1519,8 @@ void UnifyUTest::test_unify_complex_4()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_5()
@@ -1513,6 +1598,8 @@ void UnifyUTest::test_unify_complex_5()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_6()
@@ -1666,6 +1753,8 @@ void UnifyUTest::test_unify_complex_6()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_7()
@@ -1756,6 +1845,8 @@ void UnifyUTest::test_unify_complex_7()
 	logger().debug() << "ts_expected = " << oc_to_string(ts_expected);
 
 	TS_ASSERT(tss_content_eq(ts_result, ts_expected));
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_8()
@@ -1806,6 +1897,8 @@ void UnifyUTest::test_unify_complex_8()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_9()
@@ -1891,6 +1984,8 @@ void UnifyUTest::test_unify_complex_9()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyUTest::test_unify_complex_10()
@@ -2011,6 +2106,8 @@ void UnifyUTest::test_unify_complex_10()
 	logger().debug() << "ts_expected = " << oc_to_string(ts_expected);
 
 	TS_ASSERT(tss_content_eq(ts_result, ts_expected));
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 /**
@@ -2379,6 +2476,8 @@ void UnifyUTest::test_unify_complex_11()
 	logger().debug() << "sub_expected = " << oc_to_string(sub_expected);
 
 	TS_ASSERT(content_eq(sub_result, sub_expected));
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 /**
@@ -2687,6 +2786,8 @@ void UnifyUTest::test_unify_complex_12()
 	logger().debug() << "sub_expected = " << oc_to_string(sub_expected);
 
 	TS_ASSERT(content_eq(sub_result, sub_expected));
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 #undef al
