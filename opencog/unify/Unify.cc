@@ -223,10 +223,13 @@ Unify::TypedSubstitution Unify::typed_substitution(const Partition& partition,
 	var2cval = substitution_closure(var2cval);
 
 	// Remove ill quotations
+	Variables tmpv(_variables.get_vardecl());
 	for (auto& vcv : var2cval) {
+		bool needless_quotation = true;
 		Handle consumed =
-			RewriteLink::consume_quotations(_variables, vcv.second.handle,
-			                                vcv.second.context.quotation, false);
+			RewriteLink::consume_quotations(tmpv, vcv.second.handle,
+			                                vcv.second.context.quotation,
+			                                needless_quotation, false);
 		vcv.second = CHandle(consumed, vcv.second.context);
 	}
 
@@ -237,12 +240,21 @@ Unify::TypedSubstitution Unify::typed_substitution(const Partition& partition,
 	return {var2cval, vardecl};
 }
 
+static Variables gen_univars(const Handle& h, const Handle& vardecl)
+{
+	if (vardecl)
+		return Variables(vardecl);
+	HandleSet vars = get_free_variables(h);
+	HandleSeq varli(vars.begin(), vars.end());
+	return Variables(varli);
+}
+
 void Unify::set_variables(const Handle& lhs, const Handle& rhs,
                           const Handle& lhs_vardecl, const Handle& rhs_vardecl)
 {
 	// Merge the 2 type declarations
-	Variables lv = gen_variables(lhs, lhs_vardecl);
-	Variables rv = gen_variables(rhs, rhs_vardecl);
+	Variables lv = gen_univars(lhs, lhs_vardecl);
+	Variables rv = gen_univars(rhs, rhs_vardecl);
 	_variables = merge_variables(lv, rv);
 }
 
@@ -278,8 +290,9 @@ Unify::HandleCHandleMap Unify::substitution_closure(const HandleCHandleMap& var2
 	// associated to these variables.
 	HandleCHandleMap result(var2cval);
 	for (auto& el : result) {
-		VariableListPtr varlist = gen_varlist(el.second);
-		const Variables& variables = varlist->get_variables();
+		HandleSet free_vars = el.second.get_free_variables();
+		HandleSeq free_list(free_vars.begin(), free_vars.end());
+		Variables variables(free_list);
 		HandleSeq values = variables.make_sequence(var2val);
 		el.second.handle = variables.substitute_nocheck(el.second.handle, values);
 	}
@@ -398,6 +411,12 @@ Handle Unify::substitute(BindLinkPtr bl, const TypedSubstitution& ts,
 	return substitute(bl, strip_context(ts.first), ts.second, queried_as);
 }
 
+static Handle make_vardecl(const Handle& h)
+{
+	HandleSet vars = get_free_variables(h);
+	return Handle(createVariableSet(HandleSeq(vars.begin(), vars.end())));
+}
+
 Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
                          Handle vardecl, const AtomSpace* queried_as)
 {
@@ -407,7 +426,7 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 		// If the bind link has no variable declaration either then
 		// infer one
 		Handle old_vardecl = bl->get_vardecl() ? bl->get_vardecl()
-			: gen_vardecl(bl->get_body());
+			: make_vardecl(bl->get_body());
 		// Substitute the variables in the old vardecl to obtain the
 		// new one.
 		vardecl = substitute_vardecl(old_vardecl, var2val);
@@ -424,7 +443,10 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 	// Perform substitution over the pattern term, then remove
 	// constant clauses
 	Handle clauses = variables.substitute_nocheck(bl->get_body(), values);
-	clauses = RewriteLink::consume_quotations(vardecl, clauses, true);
+	Variables tmpv(vardecl);
+	bool needless_quotation = true;
+	clauses = RewriteLink::consume_quotations(tmpv, clauses,
+                             Quotation(), needless_quotation, true);
 	if (queried_as)
 		clauses = remove_constant_clauses(vardecl, clauses, queried_as);
 	hs.push_back(clauses);
@@ -433,7 +455,10 @@ Handle Unify::substitute(BindLinkPtr bl, const HandleMap& var2val,
 	for (const Handle& himp: bl->get_implicand())
 	{
 		Handle rewrite = variables.substitute_nocheck(himp, values);
-		rewrite = RewriteLink::consume_quotations(vardecl, rewrite, false);
+		Variables tmpv(vardecl);
+		bool needless_quotation = true;
+		rewrite = RewriteLink::consume_quotations(tmpv, rewrite,
+		                      Quotation(), needless_quotation, false);
 		hs.push_back(rewrite);
 	}
 
@@ -696,8 +721,6 @@ void Unify::ordered_unify_glob(const HandleSeq &lhs,
 	for (size_t i = inter.first;
 	     (i <= inter.second and i <= rhs.size()); i++) {
 		const Handle r_h =
-				i == 1 ?
-				*rhs.begin() :
 				createLink(HandleSeq(rhs.begin(), rhs.begin() + i), LIST_LINK);
 		auto head_sol = flip ?
 		                unify(r_h, lhs[0], rc, lc) :
@@ -780,6 +803,27 @@ Unify::SolutionSet Unify::mkvarsol(CHandle lch, CHandle rch) const
 	if (not inter)
 		return SolutionSet();
 	else {
+
+		// Special case: if the variable is a glob, and it matched
+		// just one item, then unwrap that item. This seems ...
+		// kind of perverse to me, but the unit tests expect this
+		// behavior. Maybe change things in the future?
+		if (GLOB_NODE == lch.handle->get_type() and
+		    LIST_LINK == rch.handle->get_type() and
+		    1 == rch.handle->get_arity())
+		{
+			rch.handle = rch.handle->getOutgoingAtom(0);
+			if (rch.handle == lch.handle) return SolutionSet(true);
+			inter.handle = rch.handle;
+		}
+		if (GLOB_NODE == rch.handle->get_type() and
+		    LIST_LINK == lch.handle->get_type() and
+		    1 == lch.handle->get_arity())
+		{
+			lch.handle = lch.handle->getOutgoingAtom(0);
+			if (rch.handle == lch.handle) return SolutionSet(true);
+			inter.handle = lch.handle;
+		}
 		Block pblock{lch, rch};
 		Partitions par{{{pblock, inter}}};
 		return SolutionSet(par);
@@ -1029,16 +1073,6 @@ HandleMap strip_context(const Unify::HandleCHandleMap& hchm)
 	return result;
 }
 
-/**
- * Generate a VariableList of the free variables of a given contextual
- * atom ch.
- */
-VariableListPtr gen_varlist(const Unify::CHandle& ch)
-{
-	HandleSet free_vars = ch.get_free_variables();
-	return createVariableList(HandleSeq(free_vars.begin(), free_vars.end()));
-}
-
 Unify::CHandle Unify::type_intersection(const CHandle& lch, const CHandle& rch) const
 {
 	if (inherit(lch, rch))
@@ -1055,12 +1089,12 @@ TypeSet Unify::simplify_type_union(TypeSet& type) const
 
 TypeSet Unify::get_union_type(const Handle& h) const
 {
-	const VariableSimpleTypeMap& vtm = _variables._simple_typemap;
+	const VariableTypeMap& vtm = _variables._typemap;
 	auto it = vtm.find(h);
-	if (it == vtm.end() or it->second.empty())
+	if (it == vtm.end() or it->second->get_simple_typeset().empty())
 		return {ATOM};
 	else {
-		return it->second;
+		return it->second->get_simple_typeset();
 	}
 }
 
@@ -1181,7 +1215,7 @@ bool Unify::is_node_satisfiable(const CHandle& lch, const CHandle& rch) const
 Variables merge_variables(const Variables& lhs, const Variables& rhs)
 {
 	Variables new_vars(lhs);
-	new_vars.extend(rhs);
+	new_vars.extend_intersect(rhs);
 	return new_vars;
 }
 
@@ -1192,12 +1226,11 @@ Handle merge_vardecl(const Handle& lhs_vardecl, const Handle& rhs_vardecl)
 	if (not rhs_vardecl)
 		return lhs_vardecl;
 
-	VariableList
+	Variables
 		lhs_vl(lhs_vardecl),
 		rhs_vl(rhs_vardecl);
 
-	Variables new_vars =
-		merge_variables(lhs_vl.get_variables(), rhs_vl.get_variables());
+	Variables new_vars = merge_variables(lhs_vl, rhs_vl);
 	return new_vars.get_vardecl();
 }
 

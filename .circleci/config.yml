@@ -3,7 +3,7 @@ version: 2.0
 jobs:
   ure:
     docker:
-      - image: singularitynet/opencog-deps
+      - image: $CIRCLE_PROJECT_USERNAME/opencog-deps
         user: root
         environment:
           CCACHE_DIR: /ws/ccache
@@ -82,7 +82,7 @@ jobs:
 
   miner:
     docker:
-      - image: singularitynet/opencog-deps
+      - image: $CIRCLE_PROJECT_USERNAME/opencog-deps
         user: root
         environment:
           CCACHE_DIR: /ws/ccache
@@ -134,7 +134,7 @@ jobs:
 
   pln:
     docker:
-      - image: opencog/opencog-deps
+      - image: $CIRCLE_PROJECT_USERNAME/opencog-deps
         user: root
         environment:
           CCACHE_DIR: /ws/ccache
@@ -186,7 +186,7 @@ jobs:
 
   opencog:
     docker:
-      - image: singularitynet/opencog-deps
+      - image: $CIRCLE_PROJECT_USERNAME/opencog-deps
         user: root
         environment:
           CCACHE_DIR: /ws/ccache
@@ -241,7 +241,7 @@ jobs:
 
   package: #Place holder
     docker:
-      - image: singularitynet/opencog-deps
+      - image: $CIRCLE_PROJECT_USERNAME/opencog-deps
         user: root
     working_directory: /ws/ure
     steps:

@@ -116,6 +116,8 @@ void UnifyGlobUTest::setUp(void)
 
 void UnifyGlobUTest::test_type_intersection_1()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = x;
 	Unify unify(lhs, rhs);
@@ -123,16 +125,20 @@ void UnifyGlobUTest::test_type_intersection_1()
 			expected = rhs;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_type_intersection_2()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = Y;
 
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                   X,
-	                   al(TYPE_SET_LINK,
+	                   al(TYPE_INTERSECTION_LINK,
 	                      al(INTERVAL_LINK,
 	                         an(NUMBER_NODE, "1"),
 	                         an(NUMBER_NODE, "4")),
@@ -140,7 +146,7 @@ void UnifyGlobUTest::test_type_intersection_2()
 
 	Handle r_decl = al(TYPED_VARIABLE_LINK,
 	                   Y,
-	                   al(TYPE_SET_LINK,
+	                   al(TYPE_INTERSECTION_LINK,
 	                      al(INTERVAL_LINK,
 	                         an(NUMBER_NODE, "2"),
 	                         an(NUMBER_NODE, "3")),
@@ -151,17 +157,21 @@ void UnifyGlobUTest::test_type_intersection_2()
 			expected = rhs;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_type_intersection_3()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = AB;
 
 	Handle l_decl = al(VARIABLE_LIST,
 	                   al(TYPED_VARIABLE_LINK,
 	                      X,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "1"),
 	                            an(NUMBER_NODE, "2")),
@@ -172,17 +182,21 @@ void UnifyGlobUTest::test_type_intersection_3()
 			expected = rhs;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_type_intersection_4()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = AB;
 
 	Handle l_decl = al(VARIABLE_LIST,
 	                   al(TYPED_VARIABLE_LINK,
 	                      X,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "1"),
 	                            an(NUMBER_NODE, "1")),
@@ -193,31 +207,39 @@ void UnifyGlobUTest::test_type_intersection_4()
 			expected = Unify::CHandle(Handle::UNDEFINED);
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_type_intersection_5()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle lhs = X;
 	Handle rhs = AB;
 
 	Handle l_decl = al(VARIABLE_LIST,
 	                   al(TYPED_VARIABLE_LINK,
 	                      X,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "1"),
 	                            an(NUMBER_NODE, "2")),
-	                         an(TYPE_NODE, "ListLink"))));
+	                         an(TYPE_NODE, "ConceptNode"))));
 
 	Unify unify(lhs, rhs, l_decl);
 	Unify::CHandle result = unify.type_intersection(lhs, rhs),
 			expected = rhs;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_1()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(X, A);
 	Unify::SolutionSet result = unify();
 	Unify::SolutionSet expected =
@@ -227,10 +249,14 @@ void UnifyGlobUTest::test_unify_basic_1()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_2()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(X, Y);
 	Unify::SolutionSet result = unify();
 
@@ -250,10 +276,14 @@ void UnifyGlobUTest::test_unify_basic_2()
 	std::cout << "expected_2 = " << oc_to_string(expected_2) << std::endl;
 
 	TS_ASSERT((result==expected_1) or (result==expected_2))
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_3()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(X, x);
 	Unify::SolutionSet result = unify();
 
@@ -266,10 +296,14 @@ void UnifyGlobUTest::test_unify_basic_3()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_4()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(x, X);
 	Unify::SolutionSet result = unify();
 
@@ -282,10 +316,14 @@ void UnifyGlobUTest::test_unify_basic_4()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_basic_5()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(X, AB);
 	Unify::SolutionSet result = unify();
 
@@ -296,10 +334,14 @@ void UnifyGlobUTest::test_unify_basic_5()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_multi_val_1()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(XY, ABC);
 	Unify::SolutionSet result = unify();
 
@@ -314,10 +356,14 @@ void UnifyGlobUTest::test_unify_multi_val_1()
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_multi_val_2()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(al(LIST_LINK, U), al(LIST_LINK, U));
 	Unify::SolutionSet result = unify();
 	std::cout << "\n result\n" << oc_to_string(result) << std::endl;
@@ -326,10 +372,14 @@ void UnifyGlobUTest::test_unify_multi_val_2()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_multi_val_3()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(XYZ, al(LIST_LINK, U));
 	Unify::SolutionSet result = unify();
 	std::cout << "\n result\n" << oc_to_string(result) << std::endl;
@@ -340,10 +390,14 @@ void UnifyGlobUTest::test_unify_multi_val_3()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_multi_val_4()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Unify unify(ABx, YBC);
 	Unify::SolutionSet result = unify();
 	std::cout << "\n result\n" << oc_to_string(result) << std::endl;
@@ -353,10 +407,14 @@ void UnifyGlobUTest::test_unify_multi_val_4()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_1()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                      Y,
 	                      an(TYPE_NODE, "ConceptNode"));
@@ -371,10 +429,14 @@ void UnifyGlobUTest::test_unify_typed_1()
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_2()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                   X,
 	                   an(TYPE_NODE, "PredicateNode"));
@@ -392,13 +454,17 @@ void UnifyGlobUTest::test_unify_typed_2()
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_3()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                   U,
-	                   al(TYPE_SET_LINK,
+	                   al(TYPE_INTERSECTION_LINK,
 	                      al(INTERVAL_LINK,
 	                         an(NUMBER_NODE, "0"),
 	                         an(NUMBER_NODE, "2")),
@@ -406,21 +472,21 @@ void UnifyGlobUTest::test_unify_typed_3()
 	Handle r_decl = al(VARIABLE_LIST,
 	                   al(TYPED_VARIABLE_LINK,
 	                      X,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "1"),
 	                            an(NUMBER_NODE, "1")),
 	                         an(TYPE_NODE, "GlobNode"))),
 	                   al(TYPED_VARIABLE_LINK,
 	                      Y,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "0"),
 	                            an(NUMBER_NODE, "+inf")),
 	                         an(TYPE_NODE, "GlobNode"))),
 	                   al(TYPED_VARIABLE_LINK,
 	                      Z,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "0"),
 	                            an(NUMBER_NODE, "+inf")),
@@ -434,18 +500,24 @@ void UnifyGlobUTest::test_unify_typed_3()
 			Unify::SolutionSet(
 					{{{{U, al(LIST_LINK, {X, Y})}, al(LIST_LINK, {X, Y})},
 					  {{Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
+					 {{{U, X}, U},
+					  {{Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, X}, X},
 					  {{Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}}});
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_4()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                   U,
-	                   al(TYPE_SET_LINK,
+	                   al(TYPE_INTERSECTION_LINK,
 	                      al(INTERVAL_LINK,
 	                         an(NUMBER_NODE, "0"),
 	                         an(NUMBER_NODE, "inf")),
@@ -453,21 +525,21 @@ void UnifyGlobUTest::test_unify_typed_4()
 	Handle r_decl = al(VARIABLE_LIST,
 	                   al(TYPED_VARIABLE_LINK,
 	                      X,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "0"),
 	                            an(NUMBER_NODE, "+inf")),
 	                         an(TYPE_NODE, "GlobNode"))),
 	                   al(TYPED_VARIABLE_LINK,
 	                      Y,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "0"),
 	                            an(NUMBER_NODE, "+inf")),
 	                         an(TYPE_NODE, "GlobNode"))),
 	                   al(TYPED_VARIABLE_LINK,
 	                      Z,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "0"),
 	                            an(NUMBER_NODE, "+inf")),
@@ -485,22 +557,32 @@ void UnifyGlobUTest::test_unify_typed_4()
 					  {{Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, X}, U},
 					  {{Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
+					 {{{U, X}, X},
+					  {{Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, Z}, U},
 					  {{Y, X, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
+					 {{{U, Z}, Z},
+					  {{Y, X, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, Y}, U},
+					  {{Z, X, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
+					 {{{U, Y}, Y},
 					  {{Z, X, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, al(LIST_LINK, {X, Y, Z})}, al(LIST_LINK, {X, Y, Z})}},
 					 {{{U, X, Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}}});
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_5()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(TYPED_VARIABLE_LINK,
 	                   U,
-	                   al(TYPE_SET_LINK,
+	                   al(TYPE_INTERSECTION_LINK,
 	                      al(INTERVAL_LINK,
 	                         an(NUMBER_NODE, "2"),
 	                         an(NUMBER_NODE, "inf")),
@@ -508,21 +590,21 @@ void UnifyGlobUTest::test_unify_typed_5()
 	Handle r_decl = al(VARIABLE_LIST,
 	                   al(TYPED_VARIABLE_LINK,
 	                      X,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "0"),
 	                            an(NUMBER_NODE, "+inf")),
 	                         an(TYPE_NODE, "GlobNode"))),
 	                   al(TYPED_VARIABLE_LINK,
 	                      Y,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "2"),
 	                            an(NUMBER_NODE, "+inf")),
 	                         an(TYPE_NODE, "GlobNode"))),
 	                   al(TYPED_VARIABLE_LINK,
 	                      Z,
-	                      al(TYPE_SET_LINK,
+	                      al(TYPE_INTERSECTION_LINK,
 	                         al(INTERVAL_LINK,
 	                            an(NUMBER_NODE, "2"),
 	                            an(NUMBER_NODE, "+inf")),
@@ -540,10 +622,14 @@ void UnifyGlobUTest::test_unify_typed_5()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 void UnifyGlobUTest::test_unify_typed_6()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	Handle l_decl = al(VARIABLE_LIST,
 	                   al(TYPED_VARIABLE_LINK,
 	                      X,
@@ -576,6 +662,8 @@ void UnifyGlobUTest::test_unify_typed_6()
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected)
+
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 #undef al
