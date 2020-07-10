@@ -22,13 +22,18 @@ Let's say the thing in black box is named Fritz and from above
 relations we need to deduce its color.
 
 In the following sections will show different ways to solve this
-problem. But before that some modules must be loaded, the query module
-for using the pattern matcher, and the ure module for using
-URE.
+problem.
+
+First enter the guile interpreter
+
+```bash
+guile
+```
+
+Then loaded opencog, the pattern matcher, and the ure modules.
 
 ```scheme
-(use-modules (opencog exec))
-(use-modules (opencog ure))
+(use-modules (opencog) (opencog exec) (opencog ure))
 ```
 
 ## Pattern Matcher
