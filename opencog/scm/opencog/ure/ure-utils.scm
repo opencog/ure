@@ -7,14 +7,16 @@
 ;; configure a rule-based system (rbs).
 ;;
 ;; Utilities include:
-;; -- ure-add-rule -- Associate a rule to a rbs with a certain TV
-;; -- ure-add-rule-by-name -- Associate a rule (by name) to a rbs with a certain TV
-;; -- ure-add-rules -- Associate  a list of rule-alias and TV pairs to a rbs
-;; -- ure-add-rules-by-names -- Associate a list of rules (by names) and TV pairs to a rbs
+;; -- ure-add-rule-alias -- Associate a rule to a rbs with a certain TV
+;; -- ure-add-rule-name -- Associate a rule (by name) to a rbs with a certain TV
+;; -- ure-add-rule-symbol -- Associate a rule symbol to a rbs with a certain TV
+;; -- ure-add-rule-aliases -- Associate  a list of rule-alias and TV pairs to a rbs
+;; -- ure-add-rule-names -- Associate a list of rules (by names) and TV pairs to a rbs
+;; -- ure-add-rule-symbols -- Associate a list of rules symbols and TV pairs to a rbs
 ;; -- ure-rm-rule -- Remove rule from a rbs
-;; -- ure-rm-rule-by-name -- Remove rule from a rbs given the name of its alias
+;; -- ure-rm-rule-name -- Remove rule from a rbs given the name of its alias
 ;; -- ure-rm-rules -- Remove rules from a rbs
-;; -- ure-rm-rules-by-names -- Remove rules from a rbs given the names of its aliases
+;; -- ure-rm-rule-names -- Remove rules from a rbs given the names of its aliases
 ;; -- ure-rm-all-rules -- Remove all rules from the given rbs
 ;; -- ure-rules -- List all rules of a given rule base
 ;; -- ure-weighted-rules -- List all weighted rules of a given rule base
@@ -297,6 +299,49 @@
 ;; URE Configuration Helpers ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define-public (rule-symbol->rule-name rule-symbol)
+"
+  Convert rule symbol into rule name
+
+  (rule-symbol->rule-name 'subset-deduction)
+
+  returns
+
+  \"subset-deduction-rule\"
+"
+  (string-append (symbol->string rule-symbol) "-rule"))
+
+(define-public (rule-symbol-tv->rule-name-tv rule-symbol-tv)
+"
+  Convert a rule symbol, (list rule-symbol tv) or (cons rule-symbol-tv)
+  respectively into
+
+  (rule-symbol->rule-name rule-symbol)
+
+  (list (rule-symbol->rule-name rule-symbol) tv)
+
+  (cons (rule-symbol->rule-name rule-symbol) tv)
+"
+  (define rs->rn rule-symbol->rule-name)
+  (cond [(symbol? rule-symbol-tv) (rs->rn rule-symbol-tv)]
+        [(pair? rule-symbol-tv) (cons (rs->rn (car rule-symbol-tv)) tv)]
+        [(list? rule-symbol-tv) (list (rs->rn (car rule-symbol-tv)) tv)]))
+
+(define-public (rule-symbols->rule-names rule-symbols)
+"
+
+  Convert list of rule symbols into list of rule names, or list of
+  pairs (rule-symbol tv) into list of pairs (rule-name tv), where each
+  pair can be represented by
+
+  (list rule-symbol tv)
+
+  or
+
+  (cons rule-symbol tv)
+"
+  (map rule-symbol-tv->rule-name-tv rule-symbols))
+
 (define-public (ure-define-add-rule rbs rule-name rule . tv)
 "
   Associate a rule name and a rule content, and adds it to a rulebase
@@ -335,9 +380,9 @@
     )
 )
 
-(define-public (ure-add-rule rbs rule-alias . tv)
+(define-public (ure-add-rule-alias rbs rule-alias . tv)
 "
-  Usage: (ure-add-rule rbs rule-alias . tv)
+  Usage: (ure-add-rule-alias rbs rule-alias . tv)
 
   Given
 
@@ -355,7 +400,7 @@
       (MemberLink rule-alias rbs)
       (MemberLink (car tv) rule-alias rbs)))
 
-(define-public (ure-add-rule-by-name rbs rule-name . tv)
+(define-public (ure-add-rule-name rbs rule-name . tv)
 "
   Given
 
@@ -378,11 +423,34 @@
   ;; Switch to rbs atomspace
   (define current-as (cog-set-atomspace! (cog-as rbs)))
   (define rule-alias (DefinedSchemaNode rule-name))
-  (let ((member (apply ure-add-rule (cons rbs (cons rule-alias tv)))))
+  (let ((member (apply ure-add-rule-alias (cons rbs (cons rule-alias tv)))))
     (cog-set-atomspace! current-as)
     member))
 
-(define-public (ure-add-rules rbs rules)
+(define-public (ure-add-rule-symbol rbs rule-symbol . tv)
+"
+  Given
+
+  rbs: The ConceptNode that represents a rulebase,
+
+  rule-symbol : a symbol of the rule name (without \"-rule\" suffix),
+
+  tv (head): Optional TV representing the probability (including
+             confidence) that the rule produces a desire outcome,
+
+  adds a rule to a rulebase and sets its tv, that is
+
+  (Member
+    (DefinedSchemaNode (rule-symbol->rule-name rule-symbol))
+    rbs)
+
+  The rule is added in the atomspace of rbs, if different from the
+  current one.
+"
+  (define rule-name (rule-symbol->rule-name rule-symbol))
+  (apply ure-add-rule-name (cons rbs (cons rule-name tv))))
+
+(define-public (ure-add-rule-aliases rbs rules)
 "
   Given
 
@@ -412,13 +480,13 @@
                (tv (if (list? tved-rule)
                        (cadr tved-rule)
                        (cdr tved-rule))))
-          (ure-add-rule rbs rule-alias tv))
-        (ure-add-rule rbs tved-rule)))
+          (ure-add-rule-alias rbs rule-alias tv))
+        (ure-add-rule-alias rbs tved-rule)))
 
   (for-each add-rule rules)
 )
 
-(define-public (ure-add-rules-by-names rbs rules)
+(define-public (ure-add-rule-names rbs rules)
 "
   Given
 
@@ -446,12 +514,95 @@
   current one.
 "
   (define current-as (cog-set-atomspace! (cog-as rbs)))
-  (define (add-rule-by-name-in-rbs rule-name)
-    (ure-add-rule-by-name rbs rule-name))
-  (for-each add-rule-by-name-in-rbs rules)
+  (define (add-rule-name-in-rbs rule-name)
+    (ure-add-rule-name rbs rule-name))
+  (for-each add-rule-name-in-rbs rules)
   (cog-set-atomspace! current-as)
   *unspecified*)
 
+(define-public (ure-add-rule-symbols rbs rule-symbols)
+"
+  Given
+
+  rbs: a ConceptNode that represents a rulebase,
+
+  rules: A list of rule symbols, or rule-symbol and tv pairs, represented as
+
+         (list rule-symbol tv)
+
+         or
+
+         (cons rule-symbol tv)
+
+         where rule-symbol is the rule symbol (corresponding to the rule
+         name without \"-rule\" appended to it) of DefinedSchemaNode rule
+         alias in a already created DefineLink. In case the TVs are not
+         provided the default TV is used.
+
+  create for each rule
+
+  (MemberLink tv
+    (DefinedSchemaNode (rule-symbol->rule-name rule-symbol))
+    rbs)
+
+  The rules are added in the atomspace of rbs, if different from the
+  current one.
+"
+  (define rule-names (rule-symbols->rule-names rule-symbols))
+  (ure-add-rule-names rbs rule-names))
+
+(define-public (rule-symbol? rule)
+  (or
+   (symbol? rule)
+   (and (pair? rule) (symbol? (car rule)))
+   (and (list? rule) (symbol? (car rule)))))
+
+(define-public (rule-name? rule)
+  (or
+   (string? rule)
+   (and (pair? rule) (string? (car rule)))
+   (and (list? rule) (string? (car rule)))))
+
+(define-public (DefinedSchemaNode? x)
+  (and (cog-atom? x) (equal? (cog-type x) 'DefinedSchemaNode)))
+
+(define-public (rule-alias? rule)
+  (or
+   (DefinedSchemaNode? rule)
+   (and (pair? rule) (DefinedSchemaNode? (car rule)))
+   (and (list? rule) (DefinedSchemaNode? (car rule)))))
+
+(define-public (ure-add-rule rbs rule . tv)
+"
+  Wrapper around
+
+  ure-add-rule-name
+  ure-add-rule-symbol
+  ure-add-rule-alias
+
+  recognize the rule format and automatically call the right function
+"
+  (define add-rule-fun
+    (cond [(rule-symbol? rule) ure-add-rule-symbol]
+          [(rule-name? rule) ure-add-rule-name]
+          [(rule-alias? rule) ure-add-rule-alias]))
+  (apply add-rule-fun (cons rbs (cons rule tv))))
+
+(define-public (ure-add-rules rbs rules)
+"
+  Wrapper around
+
+  ure-add-rule-names
+  ure-add-rule-symbols
+  ure-add-rule-aliases
+
+  recognize the rule format and automatically call the right function
+"
+  (define (ure-add-rule-to-rbs rule) (ure-add-rule rbs rule))
+  (for-each ure-add-rule-to-rbs rules))
+
+;; TODO: generalize ure-rm-rule to accept rule-symbol and rule-name as
+;; well, like ure-add-rule
 (define-public (ure-rm-rule rbs rule-alias)
 "
   Given a rule-base and rule alias, remove the rule from the rule-base
@@ -466,10 +617,9 @@
   (define member (MemberLink rule-alias rbs))
   (cog-delete member)
   (cog-set-atomspace! current-as)
-  *unspecified*
-)
+  *unspecified*)
 
-(define-public (ure-rm-rule-by-name rbs rule-name)
+(define-public (ure-rm-rule-name rbs rule-name)
 "
   Like ure-rm-rule but provide the name of the DefinedSchemaNode
   instead of the atom (called alias)
@@ -490,7 +640,7 @@
   (for-each rm-rule-from-rbs rule-aliases)
 )
 
-(define-public (ure-rm-rules-by-names rbs rule-names)
+(define-public (ure-rm-rule-names rbs rule-names)
 "
   Like ure-rm-rules but provide the names of the DefinedSchemaNode
   to remove instead of the atoms (called aliases)
@@ -1131,14 +1281,17 @@
           cog-bc
           cog-ure-logger
           ure-define-add-rule
-          ure-add-rule
-          ure-add-rule-by-name
-          ure-add-rules-by-names
+          ure-add-rule-alias
+          ure-add-rule-name
+          ure-add-rule-symbol
+          ure-add-rule-aliases
+          ure-add-rule-names
+          ure-add-rule-symbols
           ure-weighted-rules
           ure-rm-rule
-          ure-rm-rule-by-name
+          ure-rm-rule-name
           ure-rm-rules
-          ure-rm-rules-by-names
+          ure-rm-rule-names
           ure-set-num-parameter
           ure-set-fuzzy-bool-parameter
           ure-set-attention-allocation
