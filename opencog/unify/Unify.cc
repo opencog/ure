@@ -686,8 +686,8 @@ Unify::SolutionSet Unify::ordered_unify(const HandleSeq& lhs,
 
 	if (lhs.empty() and rhs.empty()) return SolutionSet(true);
 
-#define is_lh_glob lhs[0]->get_type() == GLOB_NODE
-#define is_rh_glob rhs[0]->get_type() == GLOB_NODE
+#define is_lh_glob lhs[0]->get_type() == GLOB_NODE and is_declared_variable(lhs[0])
+#define is_rh_glob rhs[0]->get_type() == GLOB_NODE and is_declared_variable(rhs[0])
 
 	if (!lhs.empty() and !rhs.empty() and !(is_lh_glob) and !(is_rh_glob)){
 		const auto head_sol = unify(lhs[0], rhs[0], lc, rc);
