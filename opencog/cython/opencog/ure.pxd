@@ -1,6 +1,7 @@
 from libcpp.set cimport set
 from libcpp.vector cimport vector
 from opencog.atomspace cimport cHandle, cAtomSpace
+from opencog.logger cimport cLogger
 
 
 cdef extern from "opencog/ure/forwardchainer/ForwardChainer.h" namespace "opencog":
@@ -69,3 +70,7 @@ cdef extern from "opencog/ure/backwardchainer/BackwardChainer.h" namespace "open
 
         void do_chain() except +
         cHandle get_results() const
+
+
+cdef extern from "opencog/ure/URELogger.h" namespace "opencog":
+    cdef cLogger& ure_logger()
