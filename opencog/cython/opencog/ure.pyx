@@ -7,3 +7,4 @@
 
 include "forwardchainer.pyx"
 include "backwardchainer.pyx"
+include "logger.pyx"
