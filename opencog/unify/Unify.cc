@@ -686,8 +686,8 @@ Unify::SolutionSet Unify::ordered_unify(const HandleSeq& lhs,
 
 	if (lhs.empty() and rhs.empty()) return SolutionSet(true);
 
-#define is_lh_glob lhs[0]->get_type() == GLOB_NODE
-#define is_rh_glob rhs[0]->get_type() == GLOB_NODE
+#define is_lh_glob lhs[0]->get_type() == GLOB_NODE and is_declared_variable(lhs[0])
+#define is_rh_glob rhs[0]->get_type() == GLOB_NODE and is_declared_variable(rhs[0])
 
 	if (!lhs.empty() and !rhs.empty() and !(is_lh_glob) and !(is_rh_glob)){
 		const auto head_sol = unify(lhs[0], rhs[0], lc, rc);
@@ -720,8 +720,20 @@ void Unify::ordered_unify_glob(const HandleSeq &lhs,
 	const auto inter = _variables.get_interval(lhs[0]);
 	for (size_t i = inter.first;
 	     (i <= inter.second and i <= rhs.size()); i++) {
-		const Handle r_h =
-				createLink(HandleSeq(rhs.begin(), rhs.begin() + i), LIST_LINK);
+		// The condition is to avoid extra complexity when calculating
+		// type-intersection for glob. Should be fixed from the atomspace
+		// Variables::is_type.
+		Handle r_h;
+		if (i == 1) {
+			Type rtype = (*rhs.begin())->get_type();
+			if (GLOB_NODE == rtype)
+				r_h = *rhs.begin();
+			else if (QUOTE_LINK == rtype or UNQUOTE_LINK == rtype)
+				r_h = createLink((*rhs.begin())->getOutgoingSet(), LIST_LINK);
+			else r_h = createLink(HandleSeq(rhs.begin(), rhs.begin() + i), LIST_LINK);
+		}
+		else r_h = createLink(HandleSeq(rhs.begin(), rhs.begin() + i), LIST_LINK);
+
 		auto head_sol = flip ?
 		                unify(r_h, lhs[0], rc, lc) :
 		                unify(lhs[0], r_h, lc, rc);

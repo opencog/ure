@@ -500,8 +500,6 @@ void UnifyGlobUTest::test_unify_typed_3()
 			Unify::SolutionSet(
 					{{{{U, al(LIST_LINK, {X, Y})}, al(LIST_LINK, {X, Y})},
 					  {{Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
-					 {{{U, X}, U},
-					  {{Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, X}, X},
 					  {{Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}}});
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
@@ -557,15 +555,9 @@ void UnifyGlobUTest::test_unify_typed_4()
 					  {{Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, X}, U},
 					  {{Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
-					 {{{U, X}, X},
-					  {{Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, Z}, U},
 					  {{Y, X, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
-					 {{{U, Z}, Z},
-					  {{Y, X, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, Y}, U},
-					  {{Z, X, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
-					 {{{U, Y}, Y},
 					  {{Z, X, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}},
 					 {{{U, al(LIST_LINK, {X, Y, Z})}, al(LIST_LINK, {X, Y, Z})}},
 					 {{{U, X, Y, Z, al(LIST_LINK, HandleSeq{})}, al(LIST_LINK, HandleSeq{})}}});
