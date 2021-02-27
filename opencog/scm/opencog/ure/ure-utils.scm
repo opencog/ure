@@ -615,7 +615,7 @@
 "
   (define current-as (cog-set-atomspace! (cog-as rbs)))
   (define member (MemberLink rule-alias rbs))
-  (cog-delete member)
+  (cog-extract! member)
   (cog-set-atomspace! current-as)
   *unspecified*)
 
@@ -741,10 +741,10 @@
     ;; Delete any previous value for that parameter
     (cog-execute! del-prev-val)
     ;; Delete pattern to not create to much junk in the atomspace
-    (cog-delete del-prev-val)
-    (cog-delete (DeleteLink exec-var))
-    (cog-delete exec-var)
-    (cog-delete var)
+    (cog-extract! del-prev-val)
+    (cog-extract! (DeleteLink exec-var))
+    (cog-extract! exec-var)
+    (cog-extract! var)
   )
 
   ; Set new value for that parameter, switch back to current-as and
@@ -1233,7 +1233,7 @@
     (let* ((result (cog-fc RB-NODE (Set) #:focus-set (Set FOCUS-SET)))
            (result-list (cog-outgoing-set result)))
         ; Cleanup
-        (cog-delete result)
+        (cog-extract! result)
 
         ; If there are multiple results for application of a rule, the
         ; result will have a ListLink of the results. Get the results out
@@ -1246,7 +1246,7 @@
                 ; Cleanup. NOTE: Cleanup is not done on `other` b/c, it might
                 ; contain atoms which are part of r2l outputs, which if deleted
                 ; recursively might affect the nlp pipline.
-                (map cog-delete-recursive list-links)
+                (map cog-extract-recursive! list-links)
                 (delete-duplicates (append partial-results other))
             )
         )
