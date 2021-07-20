@@ -58,6 +58,7 @@
 ;; -- confidence->count -- Convert Simple TV confidence to count
 ;; -- count->confidence -- Convert Simple TV count to confidence
 ;; -- atom->number -- Convert NumberNode into its corresponding number
+;; -- rule-symbol->rule-name -- Convert rule symbol to rule name (appending "-rule")
 ;; -- gt-zero-confidence -- Return TrueTV iff A's confidence is greater than 0
 ;; -- gt-zero-confidence-eval -- EvaluationLink wrapping up gt-zero-confidence call
 ;; -- absolutely-true -- Return TrueTV iff A's TV is TrueTV
@@ -580,7 +581,7 @@
   ure-add-rule-symbol
   ure-add-rule-alias
 
-  recognize the rule format and automatically call the right function
+  recognize the rule format and automatically call the right function.
 "
   (define add-rule-fun
     (cond [(rule-symbol? rule) ure-add-rule-symbol]
