@@ -212,6 +212,13 @@ jobs:
           name: Install URE
           command: cd /ws/ure/build && make -j2 install && ldconfig
       - run:
+          name: Checkout LG-Atomese
+          command: |
+            git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/lg-atomese /ws/lg-atomese
+            mkdir -p /ws/lg-atomese/build
+            cd /ws/lg-atomese/build && cmake .. && make -j2 && make -j2 install
+            ldconfig
+      - run:
           name: Checkout OpenCog
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/opencog .
       - run:
