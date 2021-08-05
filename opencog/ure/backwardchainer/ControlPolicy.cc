@@ -446,7 +446,7 @@ Handle ControlPolicy::mk_expansion_control_rules_query(const Handle& inf_rule,
 	// ImplicationScope with a pattern in its antecedent to
 	// retrieve
 	HandleSeq antecedents{in_preproof_eval, expand_exec};
-	for (const Handle pv : pattern_vars)
+	for (const Handle& pv : pattern_vars)
 		antecedents.push_back(al(UNQUOTE_LINK, pv));
 	Handle pat_expand_preproof_impl = al(QUOTE_LINK,
 	                                     al(IMPLICATION_SCOPE_LINK,
