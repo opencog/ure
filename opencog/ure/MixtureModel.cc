@@ -49,7 +49,7 @@ TruthValuePtr MixtureModel::operator()() const
 
 	std::vector<TruthValuePtr> tvs;
 	std::vector<double> weights;
-	for (const Handle model : models) {
+	for (const Handle& model : models) {
 		double weight = prior_estimate(model) * beta_factor(model);
 		LAZY_URE_LOG_FINE << "MixtureModel::operator model = " << model->id_to_string()
 		                  << ", weight = " << weight;
