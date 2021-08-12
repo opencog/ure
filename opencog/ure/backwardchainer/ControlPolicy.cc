@@ -129,7 +129,7 @@ RuleTypedSubstitutionMap ControlPolicy::get_valid_rules(const AndBIT& andbit,
 		// Only insert unexplored rules for this leaf
 		RuleTypedSubstitutionMap pos_rules;
 		for (const auto& rule : unified_rules)
-			if (not _bit.is_in(rule, bitleaf))
+			if (not _bit.contains(bitleaf, rule))
 				pos_rules.insert(rule);
 
 		valid_rules.insert(pos_rules.begin(), pos_rules.end());

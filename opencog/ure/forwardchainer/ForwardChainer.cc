@@ -633,11 +633,13 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 			// If it's a List or Set then add all the results. That
 			// kinda means that to infer List or Set themselves you
 			// need to Quote them.
-			if (t == LIST_LINK or t == SET_LINK)
-				for (const Handle& hc : h->getOutgoingSet())
+			if (t == LIST_LINK or t == SET_LINK) {
+				for (const Handle& hc : h->getOutgoingSet()) {
 					results.insert(as.add_atom(hc));
-			else
+				}
+			} else {
 				results.insert(as.add_atom(h));
+			}
 		}
 	};
 
