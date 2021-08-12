@@ -59,7 +59,7 @@ AndBITFitness::AndBITFitness(FitnessType ft, const std::set<ContentHash>& tr)
 		break;
 	case (Trace):
 		function = [&](const AndBIT& andbit) {
-			return is_in(andbit.fcs.value(), _trace) ? 1.0 : 0.0; };
+			return contains(_trace, andbit.fcs.value()) ? 1.0 : 0.0; };
 		lower = 0.0;
 		upper = 1.0;
 		break;

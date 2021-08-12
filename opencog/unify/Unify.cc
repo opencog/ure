@@ -383,7 +383,7 @@ bool Unify::has_cycle(const HandleMultimap& vg)
 	using boost::algorithm::any_of;
 	HandleMultimap cvg = closure(vg);
 	return any_of(cvg, [](const HandleMultimap::value_type& vvs) {
-			return is_in(vvs.first, vvs.second); });
+			return contains(vvs.second, vvs.first); });
 }
 
 HandleMultimap Unify::closure(const HandleMultimap& vg)
@@ -965,7 +965,7 @@ Unify::SolutionSet Unify::subunify(const TypedBlockSeq& common_blocks,
 	// block. If so it means they have already been unified.
 	auto both_in_block = [](const CHandle& lch, const CHandle& rch,
 	                        const TypedBlock& block) {
-		return is_in(lch, block.first) and is_in(rch, block.first);
+		return contains(block.first, lch) and contains(block.first, rch);
 	};
 	for (auto lit = all_chs.begin(); lit != all_chs.end(); ++lit) {
 		for (auto rit = std::next(lit); rit != all_chs.end(); ++rit) {
