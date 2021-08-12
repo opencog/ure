@@ -70,7 +70,7 @@ Unify::CHandle::find_variables(const Handle& h) const
 	return std::find_if(context.scope_variables.cbegin(),
 	                    context.scope_variables.cend(),
 	                    [&](const Variables& variables) {
-		                    return variables.is_in_varset(h);
+		                    return variables.varset_contains(h);
 	                    });
 }
 
@@ -1196,7 +1196,7 @@ bool Unify::inherit(const std::pair<double, double> &lgm,
 
 bool Unify::is_declared_variable(const Handle& h) const
 {
-	return _variables.is_in_varset(h);
+	return _variables.varset_contains(h);
 }
 
 bool Unify::is_declared_variable(const CHandle& ch) const

@@ -486,8 +486,8 @@ public:
 	 * Return true if the rule is already an or-children of bitnode up
 	 * to an alpha conversion.
 	 */
-	bool is_in(const RuleTypedSubstitutionPair& rule,
-	           const BITNode& bitnode) const;
+	bool contains(const BITNode& bitnode,
+	              const RuleTypedSubstitutionPair& rule) const;
 
 private:
 	// Queried atomspace
