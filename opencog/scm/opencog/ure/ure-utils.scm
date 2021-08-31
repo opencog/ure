@@ -391,6 +391,12 @@
   adds a rule to a rulebase and sets its tv.
 
 "
+  ; rule-alias might be an atom-tv pair.
+  ; If it is, then flatten it.
+  ; The AtomSpace treats atom-tv pairs as key-value pairs.
+  (if (list? rule-alias) (set! tv (cdr rule-alias)))
+  (if (list? rule-alias) (set! rule-alias (car rule-alias)))
+
   (if (nil? tv)
       (MemberLink rule-alias rbs)
       (MemberLink (car tv) rule-alias rbs)))
