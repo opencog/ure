@@ -314,18 +314,16 @@
 
 (define-public (rule-symbol-tv->rule-name-tv rule-symbol-tv)
 "
-  Convert a rule symbol, (list rule-symbol tv) or (cons rule-symbol-tv)
+  Convert a rule symbol, (list rule-symbol tv)
   respectively into
 
   (rule-symbol->rule-name rule-symbol)
 
   (list (rule-symbol->rule-name rule-symbol) tv)
-
-  (cons (rule-symbol->rule-name rule-symbol) tv)
 "
   (define rs->rn rule-symbol->rule-name)
   (cond [(symbol? rule-symbol-tv) (rs->rn rule-symbol-tv)]
-        [(pair? rule-symbol-tv) (cons (rs->rn (car rule-symbol-tv)) tv)]
+        [(pair? rule-symbol-tv) (list (rs->rn (car rule-symbol-tv)) tv)]
         [(list? rule-symbol-tv) (list (rs->rn (car rule-symbol-tv)) tv)]))
 
 (define-public (rule-symbols->rule-names rule-symbols)
@@ -336,10 +334,6 @@
   pair can be represented by
 
   (list rule-symbol tv)
-
-  or
-
-  (cons rule-symbol tv)
 "
   (map rule-symbol-tv->rule-name-tv rule-symbols))
 
@@ -424,7 +418,7 @@
   ;; Switch to rbs atomspace
   (define current-as (cog-set-atomspace! (cog-as rbs)))
   (define rule-alias (DefinedSchemaNode rule-name))
-  (let ((member (apply ure-add-rule-alias (cons rbs (cons rule-alias tv)))))
+  (let ((member (apply ure-add-rule-alias (list rbs rule-alias tv))))
     (cog-set-atomspace! current-as)
     member))
 
@@ -449,7 +443,7 @@
   current one.
 "
   (define rule-name (rule-symbol->rule-name rule-symbol))
-  (apply ure-add-rule-name (cons rbs (cons rule-name tv))))
+  (apply ure-add-rule-name (list rbs rule-name tv)))
 
 (define-public (ure-add-rule-aliases rbs rules)
 "
@@ -460,10 +454,6 @@
   rules: A list of rule-alias, or rule-alias and tv pairs, represented as
 
          (list rule-alias tv)
-
-         or
-
-         (cons rule-alias tv)
 
          where rule-alias is the node alias of a rule in a DefineLink
          already created. In case the TVs are not provided the default
@@ -497,10 +487,6 @@
 
          (list rule-name tv)
 
-         or
-
-         (cons rule-name tv)
-
          where rule-name is the rule name of DefinedSchemaNode rule
          alias in a already created DefineLink. In case the TVs are not
          provided the default TV is used.
@@ -530,10 +516,6 @@
   rules: A list of rule symbols, or rule-symbol and tv pairs, represented as
 
          (list rule-symbol tv)
-
-         or
-
-         (cons rule-symbol tv)
 
          where rule-symbol is the rule symbol (corresponding to the rule
          name without \"-rule\" appended to it) of DefinedSchemaNode rule
@@ -587,7 +569,7 @@
     (cond [(rule-symbol? rule) ure-add-rule-symbol]
           [(rule-name? rule) ure-add-rule-name]
           [(rule-alias? rule) ure-add-rule-alias]))
-  (apply add-rule-fun (cons rbs (cons rule tv))))
+  (apply add-rule-fun (list rbs rule tv)))
 
 (define-public (ure-add-rules rbs rules)
 "
@@ -679,7 +661,7 @@
    (tv-n . rule-n))
 "
   (define current-as (cog-set-atomspace! (cog-as rbs)))
-  (let* ((get-weighted-rule (lambda (x) (cons (cog-tv (MemberLink x rbs)) x)))
+  (let* ((get-weighted-rule (lambda (x) (list (cog-tv (MemberLink x rbs)) x)))
          (weighted-rules (cog-map-chase-link 'MemberLink
                                              'DefinedSchemaNode
                                              get-weighted-rule
