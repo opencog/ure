@@ -38,6 +38,4 @@
   rule)
 
 (define rbs (Concept "URE"))
-(ure-add-rules rbs
-               (list
-                (list rule-name (stv 1 1))))
+(ure-add-rules rbs (list rule-name (stv 1 1)))
