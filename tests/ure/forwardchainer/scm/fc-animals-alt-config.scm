@@ -53,5 +53,5 @@
 (define rbs (Concept "URE"))
 (ure-add-rules rbs
                (list
-                (cons if-croaks-and-eats-flies-then-frog-rule-name (stv 0.9 1))
-                (cons if-frog-then-green-rule-name (stv 0.5 1))))
+                (list if-croaks-and-eats-flies-then-frog-rule-name (stv 0.9 1))
+                (list if-frog-then-green-rule-name (stv 0.5 1))))
