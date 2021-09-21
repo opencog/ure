@@ -28,6 +28,7 @@
 (define crisp-deduction-tv (stv 0.6 0.9))
 (define fc-rules (list (list crisp-modus-ponens-rule-name crisp-modus-ponens-tv)
                        (list fc-deduction-rule-name crisp-deduction-tv)))
+(format #t "duuude pre uer-add-ru\n")
 (ure-add-rules fc-rbs fc-rules)
 
 ; Termination criteria parameters

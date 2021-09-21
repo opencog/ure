@@ -93,12 +93,15 @@ void ForwardChainerUTest::setUp()
 
 	// Load the simple deduction rbs to test it
 	std::string result; // to be able to read load errors
+printf("duude pre setup\n");
 	result = _eval.eval("(load-from-path \"fc-deduction-config.scm\")");
 	CHKERR;
+printf("duude post set configp\n");
 
 	// Load the simple deduction + modus ponens rbs to test it
 	result = _eval.eval("(load-from-path \"fc-config.scm\")");
 	CHKERR;
+printf("duude post final set fcconfigp\n");
 }
 
 void ForwardChainerUTest::tearDown()
@@ -244,8 +247,10 @@ void ForwardChainerUTest::test_fritz_green()
 	std::string result =
 		_eval.eval("(load-from-path \"fc-animals-config.scm\")");
 	logger().debug() << "result = " << result;
+printf("duuude post animal; config\n");
 	_eval.eval("(load-from-path \"animals.scm\")");
 	randGen().seed(0);
+printf("duuude post load\n");
 
 	Handle top_rbs = _as.get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));

@@ -85,6 +85,8 @@
 (use-modules (ice-9 receive))
 (use-modules (ice-9 optargs))
 
+(define cep (current-error-port))
+
 (define* (cog-fc rbs source
                  #:key
                  (vardecl (List))
@@ -391,15 +393,17 @@
   adds a rule to a rulebase and sets its tv.
 
 "
-  ; rule-alias might be an atom-tv pair.
-  ; If it is, then flatten it.
-  ; The AtomSpace treats atom-tv pairs as key-value pairs.
+(format cep "enter add-ure-rule-lais \n")
+(format cep "lais = ~A\n" rule-alias)
+(format cep "rs = ~A\n" rbs)
+(format cep "tv = ~A\n" tv)
+  (define ralias
+    (if (list? rule-alias) (car rule-alias) rule-alias))
   (if (list? rule-alias) (set! tv (cdr rule-alias)))
-  (if (list? rule-alias) (set! rule-alias (car rule-alias)))
 
   (if (nil? tv)
-      (MemberLink rule-alias rbs)
-      (MemberLink (car tv) rule-alias rbs)))
+      (MemberLink ralias rbs)
+      (MemberLink (car tv) ralias rbs)))
 
 (define-public (ure-add-rule-name rbs rule-name . tv)
 "
@@ -575,7 +579,13 @@
     (cond [(rule-symbol? rule) ure-add-rule-symbol]
           [(rule-name? rule) ure-add-rule-name]
           [(rule-alias? rule) ure-add-rule-alias]))
-  (apply add-rule-fun (list rbs rule tv)))
+(format cep "enter add-ure-rule\n")
+(format cep "the thing is ~A\n" (list rbs rule tv))
+(format cep "the decide is ~A ~A ~A\n" (rule-symbol? rule) (rule-name?
+rule) (rule-alias? rule))
+  (apply add-rule-fun (list rbs rule tv))
+(format cep "done add-ure-rule\n")
+)
 
 (define-public (ure-add-rules rbs rules)
 "
@@ -588,6 +598,7 @@
   recognize the rule format and automatically call the right function
 "
   (define (ure-add-rule-to-rbs rule) (ure-add-rule rbs rule))
+(format cep "duuude start ure-add-rules\n")
   (for-each ure-add-rule-to-rbs rules))
 
 ;; TODO: generalize ure-rm-rule to accept rule-symbol and rule-name as

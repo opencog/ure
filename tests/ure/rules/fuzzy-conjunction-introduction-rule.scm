@@ -15,6 +15,8 @@
 
 (use-modules (srfi srfi-1))
 
+(define cep (current-error-port))
+
 ;; Generate variable (Variable prefix + "-" + to_string(i))
 (define (gen-variable prefix i)
   (Variable (string-append prefix "-" (number->string i))))
@@ -44,6 +46,7 @@
                     ;; doesn't matter and that way alpha-conversion
                     ;; works better.
                     (List (And variables) (Set variables)))))
+(format cep "duuude varys=~A\n" variables)
     (Bind
       vardecl
       pattern
