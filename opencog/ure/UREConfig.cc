@@ -22,10 +22,10 @@
  */
 
 #include "UREConfig.h"
+#include "Utils.h"
 
 #include <opencog/util/oc_assert.h>
 #include <opencog/atoms/core/NumberNode.h>
-#include <opencog/atomspaceutils/AtomSpaceUtils.h>
 
 using namespace std;
 using namespace opencog;
@@ -176,7 +176,7 @@ HandleSeq UREConfig::fetch_rule_names(const Handle& rbs)
 
 	// Remove the GetLink pattern and other no longer useful atoms
 	// from the AtomSpace
-	extract_hypergraph(_as, gl);
+	remove_hypergraph(_as, gl);
 	_as.extract_atom(results);
 
 	return rule_names;
@@ -261,7 +261,7 @@ HandleSeq UREConfig::fetch_execution_outputs(const Handle& schema,
 
 	// Remove the GetLink pattern and other no longer useful atoms
 	// from the AtomSpace
-	extract_hypergraph(_as, gl);
+	remove_hypergraph(_as, gl);
 	_as.extract_atom(results);
 
 	return outputs;

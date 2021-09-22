@@ -27,8 +27,8 @@
 
 #include <opencog/util/empty_string.h>
 #include <opencog/ure/Rule.h>
+#include <opencog/ure/Utils.h>
 #include <opencog/atoms/base/Handle.h>
-#include <opencog/atomspaceutils/AtomSpaceUtils.h>
 #include "Fitness.h"
 
 namespace opencog
