@@ -10,6 +10,7 @@ ADD_CXXTEST(UREConfigUTest)
 ADD_CXXTEST(BetaDistributionUTest)
 ADD_CXXTEST(ActionSelectionUTest)
 ADD_CXXTEST(RuleUTest)
+ADD_CXXTEST(UtilsUTest)
 
 ADD_SUBDIRECTORY (forwardchainer)
 ADD_SUBDIRECTORY (backwardchainer)
