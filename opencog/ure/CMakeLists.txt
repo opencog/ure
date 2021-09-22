@@ -15,6 +15,7 @@ ADD_LIBRARY(ure
 	URESCM
 	Rule
 	UREConfig
+	Utils
 	MixtureModel
 	ActionSelection
 	BetaDistribution
@@ -38,6 +39,7 @@ INSTALL (FILES
 	URELogger.h
 	Rule.h
 	UREConfig.h
+	Utils.h
 	MixtureModel.h
 	ActionSelection.h
 	BetaDistribution.h
