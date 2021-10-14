@@ -317,10 +317,9 @@ workflows:
             - ure
       - spacetime:
           requires:
-            - atomspace
+            - ure
       - pln:
           requires:
-            - atomspace
             - ure
             - spacetime
       - opencog:
