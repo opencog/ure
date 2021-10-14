@@ -205,6 +205,9 @@ jobs:
           name: Install URE
           command: cd /ws/ure/build && make -j2 install && ldconfig
       - run:
+          name: Install SpaceTime
+          command: cd /ws/spacetime/build && make -j2 install && ldconfig
+      - run:
           name: Checkout PLN
           command: git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/pln .
       - run:
