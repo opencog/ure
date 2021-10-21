@@ -31,12 +31,12 @@
 
 ;; scheme@(guile-user)> (crisp-fc AB)
 ;; $1 = (SetLink
-;;    (ImplicationLink (stv 1 0.99999982)
-;;       (PredicateNode "A" (stv 1 0.99999982))
-;;       (PredicateNode "C" (stv 1 0.99999982))
+;;    (ImplicationLink (stv 1 1)
+;;       (PredicateNode "A" (stv 1 1))
+;;       (PredicateNode "C" (stv 1 1))
 ;;    )
-;;    (PredicateNode "B" (stv 1 0.99999982))
-;;    (PredicateNode "C" (stv 1 0.99999982))
+;;    (PredicateNode "B" (stv 1 1))
+;;    (PredicateNode "C" (stv 1 1))
 ;; )
 
 ; 2. Test backward chaining (based on the modus ponens rule)

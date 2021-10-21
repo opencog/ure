@@ -78,7 +78,7 @@
          ;; Produced rule rewrite. Apply formula to calculate the TV
          ;; over the partially substituted ImplicationScope.
          (produced-rewrite (ExecutionOutput
-                            (GroundedSchema "scm: conditional-partial-instantiation-formula")
+                            (GroundedSchema "scm: conditional-partial-instantiation")
                             (Unquote
                               (List
                                 ;; Conclusion
@@ -104,7 +104,7 @@
       meta-pattern
       meta-rewrite)))
 
-(define (conditional-partial-instantiation-formula PImpl Impl)
+(define (conditional-partial-instantiation PImpl Impl)
   ;; For now merely put the TV of Impl on PImpl
   (cog-set-tv! PImpl (cog-tv Impl)))
 

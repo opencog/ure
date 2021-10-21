@@ -19,7 +19,7 @@
             )
         )
         (ExecutionOutputLink
-            (GroundedSchemaNode "scm: fc-deduction-formula")
+            (GroundedSchemaNode "scm: fc-deduction")
             (ListLink
                 (InheritanceLink
                     (ConceptNode "Cat")
@@ -52,7 +52,7 @@
             )
         )
         (ExecutionOutputLink
-            (GroundedSchemaNode "scm: fc-deduction-formula")
+            (GroundedSchemaNode "scm: fc-deduction")
             (ListLink
                 (InheritanceLink
                     (VariableNode "$A")

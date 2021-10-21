@@ -90,8 +90,8 @@
         ))
      ;; test if the conclusion will conflict with the known truth:
      ;; it's fine if the conclusion doesn't exist in the knowledge base;
-     ;; but if it already exist and the truth value is not true, 
-     ;; then this conclusion conflict with the know truth, so that it 
+     ;; but if it already exist and the truth value is not true,
+     ;; then this conclusion conflict with the know truth, so that it
      ;; should not be selected.
      (Or
         (EvaluationLink
@@ -101,8 +101,7 @@
         (EvaluationLink
 	   (GroundedPredicateNode "scm: absolutely-true")
 	   (ListLink akx)
-        )       
- 
+        )
      )
 
      (Or
@@ -113,21 +112,18 @@
         (EvaluationLink
 	   (GroundedPredicateNode "scm: absolutely-true")
 	   (ListLink bky)
-        )       
- 
+        )
      )
- 
-   )      
+   )
    (ExecutionOutputLink
-     (GroundedSchemaNode "scm: keep-different-pet-formula")
+     (GroundedSchemaNode "scm: keep-different-pet")
      (ListLink akx bky)
    )
-   
   )
  )
 )
 
-(define (keep-different-pet-formula akx bky)
+(define (keep-different-pet akx bky)
 
     (cog-set-tv! akx (stv 1 1))
     (cog-set-tv! bky (stv 1 1))
@@ -143,7 +139,7 @@
 (define Einstein-rbs (ConceptNode "Einstein-rbs"))
 (Inheritance Einstein-rbs (ConceptNode "URE"))
 
-;; Associate the rules to the rule base 
+;; Associate the rules to the rule base
 (MemberLink (stv 1 1)
    keep-different-pet-rule-name
    Einstein-rbs

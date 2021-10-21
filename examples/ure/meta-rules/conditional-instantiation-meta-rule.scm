@@ -67,7 +67,7 @@
         (Unquote (Present P))
         (Evaluation (GroundedPredicate "scm: true-enough") (Unquote P)))
       (ExecutionOutput
-        (GroundedSchema "scm: conditional-full-instantiation-formula")
+        (GroundedSchema "scm: conditional-full-instantiation")
         (Unquote
           (ListLink
             Q
@@ -102,8 +102,8 @@
 
 ;; Set (stv 1 1) on Q is Impl and P strength are both above 0.5 and
 ;; their confidence is non null.
-(define (conditional-full-instantiation-formula Q Impl P)
-  ;; (cog-logger-info "conditional-full-instantiation-formula Q = ~a,  Impl = ~a, P = ~a"
+(define (conditional-full-instantiation Q Impl P)
+  ;; (cog-logger-info "conditional-full-instantiation Q = ~a,  Impl = ~a, P = ~a"
   ;;                  Q Impl P)
   ;; Evaluate Q
   (if (and (true-enough-bool Impl) (true-enough-bool P))

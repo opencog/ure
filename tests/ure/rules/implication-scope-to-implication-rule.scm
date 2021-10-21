@@ -37,7 +37,7 @@
 
 (define implication-scope-to-implication-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-scope-to-implication-formula")
+     (GroundedSchemaNode "scm: implication-scope-to-implication")
      (ListLink
         (Implication
            (Quote (Lambda
@@ -54,7 +54,7 @@
      (Present implication-scope-to-implication-body)
      implication-scope-to-implication-rewrite))
 
-(define (implication-scope-to-implication-formula Impl ImplSc)
+(define (implication-scope-to-implication Impl ImplSc)
   (cog-set-tv! Impl (cog-tv ImplSc)))
 
 ;; Name the rule

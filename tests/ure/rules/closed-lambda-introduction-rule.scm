@@ -35,7 +35,7 @@
 
 (define closed-lambda-introduction-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: closed-lambda-introduction-formula")
+     (GroundedSchemaNode "scm: closed-lambda-introduction")
      (ListLink
         (QuoteLink (LambdaLink
            (UnquoteLink (VariableNode "$V"))
@@ -48,7 +48,7 @@
      closed-lambda-introduction-pattern
      closed-lambda-introduction-rewrite))
 
-(define (closed-lambda-introduction-formula lamb body)
+(define (closed-lambda-introduction lamb body)
   (cog-set-tv! lamb (cog-tv body)))
 
 (define (closed-lambda-introduction-precondition atom)

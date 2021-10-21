@@ -29,10 +29,10 @@
     (Present
       (Variable "$I"))
     (ExecutionOutput
-      (GroundedSchema "scm: conditional-direct-evaluation-implication-scope-formula")
+      (GroundedSchema "scm: conditional-direct-evaluation-implication-scope")
       (Variable "$I"))))
 
-(define (conditional-direct-evaluation-implication-scope-formula I)
+(define (conditional-direct-evaluation-implication-scope I)
   (let* ((out (cog-outgoing-set I))
          (arity (length out))
          (vardecl (if (= arity 2) #f (list-ref out 0)))

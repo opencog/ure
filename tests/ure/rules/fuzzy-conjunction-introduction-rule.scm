@@ -39,7 +39,7 @@
          (vardecl (VariableSet (map gen-typed-variable variables)))
          (pattern (Present variables))
          (rewrite (ExecutionOutput
-                    (GroundedSchema "scm: fuzzy-conjunction-introduction-formula")
+                    (GroundedSchema "scm: fuzzy-conjunction-introduction")
                     ;; We wrap the variables in Set because the order
                     ;; doesn't matter and that way alpha-conversion
                     ;; works better.
@@ -64,7 +64,7 @@
     (and (is-set andees)
          (every confident-enough andees))))
 
-(define (fuzzy-conjunction-introduction-formula A S)
+(define (fuzzy-conjunction-introduction A S)
   (let* ((andees (cog-outgoing-set S))
          (min-s-atom (min-element-by-key andees cog-mean))
          (min-c-atom (min-element-by-key andees cog-confidence))

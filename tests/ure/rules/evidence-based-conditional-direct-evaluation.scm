@@ -36,6 +36,6 @@
   ;; (Bind
 )
 
-(define (evidence-based-conditional-direct-evaluation-implication-scope-formula
+(define (evidence-based-conditional-direct-evaluation-implication-scope
          conclusion . premises)
 )

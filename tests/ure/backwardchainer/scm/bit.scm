@@ -105,7 +105,7 @@
     )
   )
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: deduction-formula")
+    (GroundedSchemaNode "scm: deduction")
     (ListLink
       (ImplicationLink
         (LambdaLink
@@ -145,7 +145,7 @@
         )
       )
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: implication-implicant-distribution-formula")
+        (GroundedSchemaNode "scm: implication-implicant-distribution")
         (ListLink
           (ImplicationLink
             (LambdaLink
@@ -191,7 +191,7 @@
             )
           )
           (ExecutionOutputLink
-            (GroundedSchemaNode "scm: implication-introduction-formula")
+            (GroundedSchemaNode "scm: implication-introduction")
             (ListLink
               (ImplicationLink
                 (LambdaLink
@@ -252,7 +252,7 @@
         )
       )
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: implication-and-lambda-factorization-formula")
+        (GroundedSchemaNode "scm: implication-and-lambda-factorization")
         (ImplicationLink
           (AndLink
             (LambdaLink
@@ -383,7 +383,7 @@
               (ConceptNode "treatment-1")
               (ConceptNode "compound-A")))))))
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: deduction-formula")
+    (GroundedSchemaNode "scm: deduction")
     (ListLink
       (ImplicationLink
         (LambdaLink
@@ -411,7 +411,7 @@
                 (VariableNode "$X")
                 (ConceptNode "treatment-1"))))))
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: implication-implicant-distribution-formula")
+        (GroundedSchemaNode "scm: implication-implicant-distribution")
         (ListLink
           (ImplicationLink
             (LambdaLink
@@ -443,7 +443,7 @@
                     (VariableNode "$X")
                     (ConceptNode "treatment-1"))))))
           (ExecutionOutputLink
-            (GroundedSchemaNode "scm: implication-introduction-formula")
+            (GroundedSchemaNode "scm: implication-introduction")
             (ListLink
               (ImplicationLink
                 (LambdaLink
@@ -483,7 +483,7 @@
                     (ConceptNode "treatment-1")
                     (ConceptNode "compound-A"))))))))
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: implication-and-lambda-factorization-formula")
+        (GroundedSchemaNode "scm: implication-and-lambda-factorization")
         (ImplicationLink
           (AndLink
             (LambdaLink
@@ -664,7 +664,7 @@
     )
   )
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: deduction-formula")
+    (GroundedSchemaNode "scm: deduction")
     (ListLink
       (ImplicationLink
         (LambdaLink
@@ -695,7 +695,7 @@
         )
       )
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: deduction-formula")
+        (GroundedSchemaNode "scm: deduction")
         (ListLink
           (ImplicationLink
             (LambdaLink
@@ -714,7 +714,7 @@
             (VariableNode "$B-732fec2a")
           )
           (ExecutionOutputLink
-            (GroundedSchemaNode "scm: deduction-formula")
+            (GroundedSchemaNode "scm: deduction")
             (ListLink
               (ImplicationLink
                 (LambdaLink
@@ -883,7 +883,7 @@
     )
   )
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: conditional-full-instantiation-scope-formula")
+    (GroundedSchemaNode "scm: conditional-full-instantiation-scope")
     (ListLink
       (EvaluationLink
         (PredicateNode "property")
@@ -893,7 +893,7 @@
         )
       )
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: fuzzy-conjunction-introduction-formula")
+        (GroundedSchemaNode "scm: fuzzy-conjunction-introduction")
         (ListLink
           (AndLink
             (EvaluationLink
@@ -934,7 +934,7 @@
               )
             )
             (ExecutionOutputLink
-              (GroundedSchemaNode "scm: conditional-full-instantiation-scope-formula")
+              (GroundedSchemaNode "scm: conditional-full-instantiation-scope")
               (ListLink
                 (EvaluationLink
                   (PredicateNode "property")
@@ -1140,7 +1140,7 @@
     )
   )
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: specialization-formula")
+    (GroundedSchemaNode "scm: specialization")
     (ListLink
       (EvaluationLink
         (PredicateNode "minsup")

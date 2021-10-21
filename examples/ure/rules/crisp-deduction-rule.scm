@@ -36,7 +36,7 @@
             )
         )
         (ExecutionOutputLink
-            (GroundedSchemaNode "scm: crisp-deduction-formula")
+            (GroundedSchemaNode "scm: crisp-deduction")
             (ListLink
                 (ImplicationLink
                     (VariableNode "$A")
@@ -55,7 +55,7 @@
 ;; set the TV of A->C to (stv 1 1)
 ;; -----------------------------------------------------------------------------
 
-(define (crisp-deduction-formula AC AB BC)
+(define (crisp-deduction AC AB BC)
     (let
         ((sAB (cog-mean AB))
          (cAB (cog-confidence AB))
