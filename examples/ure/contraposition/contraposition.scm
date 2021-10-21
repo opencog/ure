@@ -107,13 +107,13 @@
 	   (ListLink kp vB vY))
         (EvaluationLink
 	   (GroundedPredicateNode "scm: absolutely-true")
-	   (ListLink bky))))      
-   
+	   (ListLink bky))))
+
    (ExecutionOutputLink
-     (GroundedSchemaNode "scm: keep-different-pet-formula")
+     (GroundedSchemaNode "scm: keep-different-pet")
      (ListLink akx bky)))))
 
-(define (keep-different-pet-formula akx bky)
+(define (keep-different-pet akx bky)
     (cog-set-tv! akx (stv 1 1))
     (cog-set-tv! bky (stv 1 1)))
 

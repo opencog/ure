@@ -41,7 +41,7 @@
             )
         )
         (ExecutionOutputLink
-            (GroundedSchemaNode "scm: fc-deduction-formula")
+            (GroundedSchemaNode "scm: fc-deduction")
             (ListLink
                 (InheritanceLink
                     (VariableNode "$A")
@@ -65,7 +65,7 @@
 ;; set the TV of A->C to (stv 1 1)
 ;; -----------------------------------------------------------------------------
 
-(define (fc-deduction-formula AC AB BC)
+(define (fc-deduction AC AB BC)
     (let (  (sAB (cog-mean AB))
             (cAB (cog-confidence AB))
             (sBC (cog-mean BC))

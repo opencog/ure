@@ -74,7 +74,7 @@
 
 (define implication-and-lambda-factorization-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-and-lambda-factorization-formula")
+     (GroundedSchemaNode "scm: implication-and-lambda-factorization")
      (ImplicationLink
         (AndLink
            (QuoteLink (LambdaLink
@@ -95,7 +95,7 @@
      implication-and-lambda-factorization-pattern
      implication-and-lambda-factorization-rewrite))
 
-(define (implication-and-lambda-factorization-formula Impl)
+(define (implication-and-lambda-factorization Impl)
   (cog-set-tv! Impl (stv 1 1)))
 
 ;; Name the rule

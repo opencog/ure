@@ -27,6 +27,7 @@
 #include <boost/range/algorithm/find.hpp>
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 
 #include <boost/algorithm/string/classification.hpp>
@@ -693,6 +694,59 @@ unsigned AndBIT::leading_spaces(const std::string& line)
 	return line.size() - left_trimmed_line.size();
 }
 
+std::string AndBIT::remove_vowels(std::string str, size_t tg_size)
+{
+	std::string::size_type pos;
+
+	// Remove lower-case vowels, starting at the end
+	while (str.size() > tg_size) {
+		if ((pos = str.find_last_of("aeiou")) == std::string::npos
+			 or // Never remove the first character
+			 pos == 0)
+			break;
+		str.replace (pos, 1, "");
+	}
+	return str;
+}
+
+std::string AndBIT::remove_consonants(std::string str, size_t tg_size)
+{
+	std::string::size_type pos;
+
+	// Remove lower-case consonants, starting at the end
+	while (str.size() > tg_size) {
+		if ((pos = str.find_last_of("bcdfghjklmnpqrtvwxyz")) == std::string::npos
+			 or // Never remove the first character
+			 pos == 0)
+			break;
+		str.replace (pos, 1, "");
+	}
+	return str;
+}
+
+std::string AndBIT::abbreviate(std::string str, size_t tg_size)
+{
+	// We remove characters bit by bit in each word of the rule name,
+	// starting from the end.
+	std::vector<std::string> words;
+	boost::split(words, str, boost::is_any_of("-"));
+
+	for (int min_wrd_size = 3; 0 < min_wrd_size; min_wrd_size--) {
+		for (std::string& word : boost::adaptors::reverse(words)) {
+			int wrd_size = word.size();
+			int rm_size = (int)str.size() - (int)tg_size;
+			size_t wrd_tg_size = std::max(min_wrd_size, wrd_size - rm_size);
+			word = remove_vowels(word, wrd_tg_size);
+			word = remove_consonants(word, wrd_tg_size);
+			str = boost::join(words, "-");
+			if (str.size() == tg_size)
+				return str;
+		}
+	}
+
+	return str;
+}
+
 std::string AndBIT::line_separator(const std::string& up_aa,
                                    const std::string& low_aa,
                                    const Handle& gsn,
@@ -701,7 +755,7 @@ std::string AndBIT::line_separator(const std::string& up_aa,
 	// Calculate the leading space and line separator sizes. We assume
 	// that low_aa has no leading space.
 	size_t lead_sp_size = 0;                // Leading space size
-	size_t line_sep_size = low_aa.size(); 	// Line separator size
+	size_t line_sep_size = low_aa.size();   // Line separator size
 	if (not up_aa.empty()) {
 		std::string up_bl = bottom_line(up_aa);
 		size_t up_bls = up_bl.size();
@@ -712,17 +766,23 @@ std::string AndBIT::line_separator(const std::string& up_aa,
 	// Get formula string
 	std::string lang, lib, fun;
 	LibraryManager::parse_schema(gsn->get_name(), lang, lib, fun);
-	std::string formula_str = fun.substr(0, line_sep_size - 2);
-	size_t formula_str_size = formula_str.size();
+	std::string frml_str = fun;
+
+	// Abbreviate formula string to fit inside the line separator
+	size_t frml_str_max_size = line_sep_size;
+	if (2 < frml_str_max_size)
+		frml_str_max_size -= 2;
+	std::string abbr_frml_str = abbreviate(frml_str, frml_str_max_size);
+	size_t abbr_frml_str_size = abbr_frml_str.size();
 
 	// Overlay the formula string on top of the line
 	std::string line_str;
-	size_t offset = (line_sep_size - formula_str_size) / 2;
+	size_t offset = (line_sep_size - abbr_frml_str_size) / 2;
 	for (size_t i = 0; i < line_sep_size; ++i)
-		if (i < offset or offset + formula_str_size <= i)
+		if (i < offset or offset + abbr_frml_str_size <= i)
 			line_str.push_back(unordered_premises ? '=' : '-');
 		else
-			line_str.push_back(formula_str[i - offset]);
+			line_str.push_back(abbr_frml_str[i - offset]);
 
 	// Append leading space in front of the line
 	return std::string(lead_sp_size, ' ') + line_str;

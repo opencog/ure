@@ -53,14 +53,14 @@
 
 (define implication-full-instantiation-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-full-instantiation-formula")
+     (GroundedSchemaNode "scm: implication-full-instantiation")
      (ListLink
         implication-instantiation-body)))
 
 ;; Only try to match an ImplicationLink with a type restricted
 ;; variable in the ImplicationLink variable definition. The choice of
 ;; the substitution term is done randomly in
-;; implication-full-instantiation-formula. All scoped variables are
+;; implication-full-instantiation. All scoped variables are
 ;; instantiated.
 (define implication-full-instantiation-rule
   (BindLink
@@ -79,7 +79,7 @@
 ;; 3. calculates its TV (just the TV on the ImplicationLink)
 ;;
 ;; If no substitution is possible it returns the undefined handle
-(define (implication-full-instantiation-formula Impl)
+(define (implication-full-instantiation Impl)
   (let* (
          (Impl-outgoings (cog-outgoing-set Impl))
          (TyVs (car Impl-outgoings))
@@ -115,7 +115,7 @@
 
 (define implication-partial-instantiation-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-partial-instantiation-formula")
+     (GroundedSchemaNode "scm: implication-partial-instantiation")
      (ListLink
         implication-instantiation-body)))
 
@@ -142,7 +142,7 @@
 ;; matching should be supported. Probably enabling self grounding in
 ;; the pattern matcher would do the trick (see
 ;; PatternMatchEngine::self_compare)
-(define (implication-partial-instantiation-formula Impl)
+(define (implication-partial-instantiation Impl)
   (let* (
          (Impl-outgoings (cog-outgoing-set Impl))
          (TyVs (car Impl-outgoings))

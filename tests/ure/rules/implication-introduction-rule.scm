@@ -42,7 +42,7 @@
 
 (define implication-introduction-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-introduction-formula")
+     (GroundedSchemaNode "scm: implication-introduction")
      (ListLink
         (VariableNode "$P")
         (VariableNode "$Q"))))
@@ -53,7 +53,7 @@
      implication-introduction-body
      implication-introduction-rewrite))
 
-(define (implication-introduction-formula P Q)
+(define (implication-introduction P Q)
   (let* (
          (P-s (cog-mean P))
          (P-c (cog-confidence P))

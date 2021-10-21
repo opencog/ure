@@ -31,6 +31,8 @@
 #include <opencog/atoms/base/Handle.h>
 #include "Fitness.h"
 
+class BITUTest;
+
 namespace opencog
 {
 
@@ -78,6 +80,8 @@ public:
  */
 class AndBIT : public boost::totally_ordered<AndBIT>
 {
+	friend class ::BITUTest;
+
 public:
 	// FCS associated to the and-BIT
 	Handle fcs;
@@ -394,6 +398,24 @@ private:
 	 * Return the number of leading spaces.
 	 */
 	static unsigned leading_spaces(const std::string& line);
+
+	/**
+	 * Abbreviate the formula string to fit inside a line separator (to
+	 * reach a given target size, tg_size).
+	 *
+	 * It assumes the string only uses lower case words dash separated,
+	 * such as
+	 *
+	 * implication-conditional-conjunction-introduction
+	 *
+	 * It will attempt not to remove entire words.
+	 *
+	 * This function is inspired by Paul Davis's short_version function
+	 * of the Ardour PBD library.
+	 */
+	static std::string remove_vowels(std::string str, size_t tg_size);
+	static std::string remove_consonants(std::string str, size_t tg_size);
+	static std::string abbreviate(std::string str, size_t tg_size);
 
 	/**
 	 * Given an ascii art, produce a string that seperates the upper

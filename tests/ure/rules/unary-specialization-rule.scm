@@ -39,7 +39,7 @@
           (VariableNode "$texts")
           (VariableNode "$ms")))))
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: specialization-formula")
+    (GroundedSchemaNode "scm: specialization")
     (ListLink
       (EvaluationLink
         (PredicateNode "minsup")

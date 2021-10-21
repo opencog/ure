@@ -89,6 +89,7 @@ public:
 	void setUp();
 	void tearDown();
 
+	void test_abbreviate();
 	void test_get_leaves();
 	void test_expand_1();
 	void test_expand_2();
@@ -104,8 +105,24 @@ void BITUTest::tearDown()
 {
 }
 
+void BITUTest::test_abbreviate()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	size_t tg_size = 20;
+	std::string rule_name = "back-predictive-implication-direct-introduction";
+	std::string abbr_rule_name = AndBIT::abbreviate(rule_name, tg_size);
+
+	logger().debug() << "rule_name = " << rule_name;
+	logger().debug() << "abbr_rule_name = " << abbr_rule_name;
+
+	TS_ASSERT_EQUALS(abbr_rule_name.size(), tg_size);
+}
+
 void BITUTest::test_get_leaves()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	AndBIT andbit(_eval.eval_h("fcs-1"));
 	HandleSet result;
 	for (const auto& el : andbit.leaf2bitnode)
@@ -138,14 +155,16 @@ void BITUTest::test_get_leaves()
 		             "  )"
 		             ")")};
 
-	std::cout << "result = " << oc_to_string(result);
-	std::cout << "expected = " << oc_to_string(expected);
+	logger().debug() << "result = " << oc_to_string(result);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(result, expected);
 }
 
 void BITUTest::test_expand_1()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	AndBIT andbit(_eval.eval_h("fcs-2"));
 	Handle leaf = _eval.eval_h("(LambdaLink"
 	                           "  (TypedVariableLink"
@@ -249,7 +268,7 @@ void BITUTest::test_expand_1()
 		             "    )"
 		             "  )"
 		             "  (ExecutionOutputLink"
-		             "    (GroundedSchemaNode \"scm: deduction-formula\")"
+		             "    (GroundedSchemaNode \"scm: deduction\")"
 		             "    (ListLink"
 		             "      (ImplicationLink"
 		             "        (LambdaLink"
@@ -277,7 +296,7 @@ void BITUTest::test_expand_1()
 		             "                (VariableNode \"$X\")"
 		             "                (ConceptNode \"treatment-1\"))))))"
 		             "      (ExecutionOutputLink"
-		             "        (GroundedSchemaNode \"scm: implication-implicant-distribution-formula\")"
+		             "        (GroundedSchemaNode \"scm: implication-implicant-distribution\")"
 		             "        (ListLink"
 		             "          (ImplicationLink"
 		             "            (LambdaLink"
@@ -309,7 +328,7 @@ void BITUTest::test_expand_1()
 		             "                    (ConceptNode \"treatment-1\")"
 		             "                    (ConceptNode \"compound-A\"))))))"
 		             "          (ExecutionOutputLink"
-		             "            (GroundedSchemaNode \"scm: implication-introduction-formula\")"
+		             "            (GroundedSchemaNode \"scm: implication-introduction\")"
 		             "            (ListLink"
 		             "              (ImplicationLink"
 		             "                (LambdaLink"
@@ -340,7 +359,7 @@ void BITUTest::test_expand_1()
 		             "                    (VariableNode \"$X\")"
 		             "                    (ConceptNode \"treatment-1\"))))"
 		             "              (ExecutionOutputLink"
-		             "                (GroundedSchemaNode \"scm: closed-lambda-introduction-formula\")"
+		             "                (GroundedSchemaNode \"scm: closed-lambda-introduction\")"
 		             "                (ListLink"
 		             "                  (LambdaLink"
 		             "                    (TypedVariableLink"
@@ -357,7 +376,7 @@ void BITUTest::test_expand_1()
 		             "                      (ConceptNode \"treatment-1\")"
 		             "                      (ConceptNode \"compound-A\")))))))))"
 		             "      (ExecutionOutputLink"
-		             "        (GroundedSchemaNode \"scm: implication-and-lambda-factorization-formula\")"
+		             "        (GroundedSchemaNode \"scm: implication-and-lambda-factorization\")"
 		             "        (ImplicationLink"
 		             "          (AndLink"
 		             "            (LambdaLink"
@@ -402,6 +421,8 @@ void BITUTest::test_expand_1()
 
 void BITUTest::test_expand_2()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	AndBIT andbit(_eval.eval_h("fcs-3"));
 
 	Handle leaf = _eval.eval_h("(ImplicationLink"
@@ -653,7 +674,7 @@ void BITUTest::test_expand_2()
 		             "    )"
 		             "  )"
 		             "  (ExecutionOutputLink"
-		             "    (GroundedSchemaNode \"scm: deduction-formula\")"
+		             "    (GroundedSchemaNode \"scm: deduction\")"
 		             "    (ListLink"
 		             "      (ImplicationLink"
 		             "        (LambdaLink"
@@ -684,7 +705,7 @@ void BITUTest::test_expand_2()
 		             "        )"
 		             "      )"
 		             "      (ExecutionOutputLink"
-		             "        (GroundedSchemaNode \"scm: deduction-formula\")"
+		             "        (GroundedSchemaNode \"scm: deduction\")"
 		             "        (ListLink"
 		             "          (ImplicationLink"
 		             "            (LambdaLink"
@@ -703,7 +724,7 @@ void BITUTest::test_expand_2()
 		             "            (VariableNode \"$B-732fec2a\")"
 		             "          )"
 		             "          (ExecutionOutputLink"
-		             "            (GroundedSchemaNode \"scm: deduction-formula\")"
+		             "            (GroundedSchemaNode \"scm: deduction\")"
 		             "            (ListLink"
 		             "              (ImplicationLink"
 		             "                (LambdaLink"
@@ -771,7 +792,7 @@ void BITUTest::test_expand_2()
 		             "                )"
 		             "              )"
 		             "              (ExecutionOutputLink"
-		             "                (GroundedSchemaNode \"scm: implication-and-lambda-factorization-formula\")"
+		             "                (GroundedSchemaNode \"scm: implication-and-lambda-factorization\")"
 		             "                (ImplicationLink"
 		             "                  (AndLink"
 		             "                    (QuoteLink"
@@ -858,6 +879,8 @@ void BITUTest::test_expand_2()
 
 void BITUTest::test_expand_3()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	AndBIT andbit(_eval.eval_h("fcs-5"));
 
 	Handle leaf = _eval.eval_h("(EvaluationLink"
@@ -958,7 +981,7 @@ void BITUTest::test_expand_3()
 		             "    )"
 		             "  )"
 		             "  (ExecutionOutputLink"
-		             "    (GroundedSchemaNode \"scm: specialization-formula\")"
+		             "    (GroundedSchemaNode \"scm: specialization\")"
 		             "    (ListLink"
 		             "      (EvaluationLink"
 		             "        (PredicateNode \"minsup\")"
@@ -986,7 +1009,7 @@ void BITUTest::test_expand_3()
 		             "        )"
 		             "      )"
 		             "      (ExecutionOutputLink"
-		             "        (GroundedSchemaNode \"scm: specialization-formula\")"
+		             "        (GroundedSchemaNode \"scm: specialization\")"
 		             "        (ListLink"
 		             "          (EvaluationLink"
 		             "            (PredicateNode \"minsup\")"
@@ -1029,6 +1052,8 @@ void BITUTest::test_expand_3()
 
 void BITUTest::test_has_cycle()
 {
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
 	AndBIT andbit_1(_eval.eval_h("fcs-1"));
 	TS_ASSERT(not andbit_1.has_cycle());
 

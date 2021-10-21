@@ -83,7 +83,7 @@
 
 (define implication-scope-direct-evaluation-rewrite
   (ExecutionOutput
-     (GroundedSchema "scm: implication-scope-direct-evaluation-formula")
+     (GroundedSchema "scm: implication-scope-direct-evaluation")
      (List
         (Variable "$P")
         (Variable "$Q"))))
@@ -99,7 +99,7 @@
 (define (true-enough? A)
   (and (> (cog-mean A) 0.5) (> (cog-conf A) 0)))
 
-(define (implication-scope-direct-evaluation-formula P Q)
+(define (implication-scope-direct-evaluation P Q)
   (let* (
          (K 800) ; parameter to convert from count to confidence
          ;; Current hack to limit X as concepts
