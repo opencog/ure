@@ -27,6 +27,7 @@
 #include <boost/range/algorithm/find.hpp>
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 
 #include <boost/algorithm/string/classification.hpp>
@@ -691,6 +692,59 @@ unsigned AndBIT::leading_spaces(const std::string& line)
 {
 	std::string left_trimmed_line = boost::trim_left_copy(line);
 	return line.size() - left_trimmed_line.size();
+}
+
+std::string AndBIT::remove_vowels(std::string str, size_t tg_size)
+{
+	std::string::size_type pos;
+
+	// Remove lower-case vowels, starting at the end
+	while (str.size() > tg_size) {
+		if ((pos = str.find_last_of("aeiou")) == std::string::npos
+			 or // Never remove the first character
+			 pos == 0)
+			break;
+		str.replace (pos, 1, "");
+	}
+	return str;
+}
+
+std::string AndBIT::remove_consonants(std::string str, size_t tg_size)
+{
+	std::string::size_type pos;
+
+	// Remove lower-case consonants, starting at the end
+	while (str.size() > tg_size) {
+		if ((pos = str.find_last_of("bcdfghjklmnpqrtvwxyz")) == std::string::npos
+			 or // Never remove the first character
+			 pos == 0)
+			break;
+		str.replace (pos, 1, "");
+	}
+	return str;
+}
+
+std::string AndBIT::abbreviate(std::string str, size_t tg_size)
+{
+	// We remove characters bit by bit in each word of the rule name,
+	// starting from the end.
+	std::vector<std::string> words;
+	boost::split(words, str, boost::is_any_of("-"));
+
+	for (int min_wrd_size = 3; 0 < min_wrd_size; min_wrd_size--) {
+		for (std::string& word : boost::adaptors::reverse(words)) {
+			int wrd_size = word.size();
+			int rm_size = (int)str.size() - (int)tg_size;
+			size_t wrd_tg_size = std::max(min_wrd_size, wrd_size - rm_size);
+			word = remove_vowels(word, wrd_tg_size);
+			word = remove_consonants(word, wrd_tg_size);
+			str = boost::join(words, "-");
+			if (str.size() == tg_size)
+				return str;
+		}
+	}
+
+	return str;
 }
 
 std::string AndBIT::line_separator(const std::string& up_aa,
