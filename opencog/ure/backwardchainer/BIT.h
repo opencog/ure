@@ -31,6 +31,8 @@
 #include <opencog/atoms/base/Handle.h>
 #include "Fitness.h"
 
+class BITUTest;
+
 namespace opencog
 {
 
@@ -78,6 +80,8 @@ public:
  */
 class AndBIT : public boost::totally_ordered<AndBIT>
 {
+	friend class ::BITUTest;
+
 public:
 	// FCS associated to the and-BIT
 	Handle fcs;
