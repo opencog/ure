@@ -265,7 +265,7 @@ void BackwardChainer::fulfill_fcs(const Handle& fcs)
 {
 	// Temporary atomspace to not pollute _as with intermediary
 	// results
-	AtomSpace tmp_as(&_kb_as);
+	AtomSpacePtr tmp_as(createAtomSpace(&_kb_as));
 
 	// Run the FCS and add the results, if any, in _as.
 	//
@@ -281,7 +281,7 @@ void BackwardChainer::fulfill_fcs(const Handle& fcs)
 	//
 	// TODO: Maybe we could take advantage of the new read-only
 	// capabilities of the AtomSpace.
-	Handle hresult = HandleCast(fcs->execute(&tmp_as));
+	Handle hresult = HandleCast(fcs->execute(tmp_as.get()));
 	HandleSeq results;
 	for (const Handle& result : hresult->getOutgoingSet())
 		results.push_back(_kb_as.add_atom(result));

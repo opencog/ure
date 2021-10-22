@@ -108,7 +108,7 @@ private:
 
 	// AtomSpace holding the pattern matcher queries to fetch the
 	// various control rule
-	AtomSpace* _query_as;
+	AtomSpacePtr _query_as;
 
 	// Map each action (inference rule expansion) to the set of
 	// control rules involving it.
