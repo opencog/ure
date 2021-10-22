@@ -58,7 +58,7 @@ ControlPolicy::ControlPolicy(const UREConfig& ure_config, const BIT& bit,
 
 	// Fetches expansion control rules from _control_as
 	if (_control_as) {
-		_query_as = new AtomSpace(_control_as);
+		_query_as = createAtomSpace(_control_as);
 		for (const Handle& rule_alias : rules.aliases()) {
 			HandleSet exp_ctrl_rules = fetch_expansion_control_rules(rule_alias);
 			_expansion_control_rules[rule_alias] = exp_ctrl_rules;
@@ -72,7 +72,6 @@ ControlPolicy::ControlPolicy(const UREConfig& ure_config, const BIT& bit,
 
 ControlPolicy::~ControlPolicy()
 {
-	delete(_query_as);
 }
 
 RuleSelection ControlPolicy::select_rule(AndBIT& andbit, BITNode& bitleaf)

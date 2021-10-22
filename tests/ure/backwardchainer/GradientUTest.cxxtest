@@ -34,8 +34,8 @@
 using namespace std;
 using namespace opencog;
 
-#define L _as.add_link
-#define N _as.add_node
+#define L _as->add_link
+#define N _as->add_node
 
 Handle* id1(AtomSpace* as, Handle* params)
 {
@@ -46,7 +46,7 @@ Handle* id1(AtomSpace* as, Handle* params)
 class GradientUTest: public CxxTest::TestSuite
 {
 private:
-	AtomSpace _as;
+	AtomSpacePtr _as;
 
 	// Constants
 	Handle Gradient, ExpandTo, Plus, NumberT, rbs, GradientSum, GradientAny;
@@ -85,6 +85,7 @@ GradientUTest::GradientUTest()
 	// ure_logger().set_print_to_stdout_flag(true);
 	randGen().seed(0);
 
+	_as = createAtomSpace();
 	set_grounded_schemata();
 	set_constants();
 	set_variables();
@@ -198,7 +199,7 @@ void GradientUTest::setUp()
 
 void GradientUTest::tearDown()
 {
-	_as.clear();
+	_as->clear();
 }
 
 void GradientUTest::test_gradient()
@@ -214,7 +215,7 @@ void GradientUTest::test_gradient()
 						L(NUMERIC_OUTPUT_LINK, Plus, N4, N3)),
 					X));
 
-	BackwardChainer bc(_as, rbs, src2);
+	BackwardChainer bc(*_as.get(), rbs, src2);
 	bc.get_config().set_maximum_iterations(10);
 	bc.do_chain();
 	Handle result = bc.get_results(),

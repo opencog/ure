@@ -225,7 +225,7 @@ private:
 	// is the primary mechanism by which chaining is restricted to
 	// the focus set.  This is effective, but not very efficient;
 	// perhaps there is some better mechanism?
-	AtomSpace _focus_set_as;
+	AtomSpacePtr _focus_set_as;
 
 	UREConfig _config;
 

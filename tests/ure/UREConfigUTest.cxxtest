@@ -7,11 +7,11 @@ using namespace opencog;
 
 class UREConfigUTest : public CxxTest::TestSuite {
 private:
-	AtomSpace _as;
+	AtomSpacePtr _as;
 	SchemeEval _eval;
 
 public:
-	UREConfigUTest() : _eval(&_as)
+	UREConfigUTest() : _as(createAtomSpace()), _eval(_as)
 	{
 		// Module loading is borked from the C++ environment, so
 		// add the following paths so that utilities.scm is found.
@@ -43,9 +43,9 @@ public:
 	{
 		// Get the ConceptNode corresponding to the rule-based system
 		// to test
-		Handle rbs = _as.get_node(CONCEPT_NODE, "fc-rule-base");
+		Handle rbs = _as->get_node(CONCEPT_NODE, "fc-rule-base");
 
-		UREConfig cr(_as, rbs);
+		UREConfig cr(*_as.get(), rbs);
 
 		TS_ASSERT_EQUALS(cr.get_rules().size(), 2);
 		TS_ASSERT_EQUALS(cr.get_maximum_iterations(), 20);
