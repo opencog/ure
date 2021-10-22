@@ -85,14 +85,15 @@ void ForwardChainer::init(const Handle& source,
 {
 	validate(source);
 
+	_focus_set_as = createAtomSpace();
 	_search_focus_set = not focus_set.empty();
 
 	// Add focus set atoms and sources to focus_set atomspace
 	if (_search_focus_set) {
 		for (const Handle& h : focus_set)
-			_focus_set_as.add_atom(h);
+			_focus_set_as->add_atom(h);
 		for (const SourcePtr& src : _sources.sources)
-			_focus_set_as.add_atom(src->body);
+			_focus_set_as->add_atom(src->body);
 	}
 
 	// Set rules.
@@ -529,7 +530,7 @@ RuleSet ForwardChainer::get_valid_rules(const Source& source)
 		if (rule->is_meta())
 			continue;
 
-		const AtomSpace& ref_as(_search_focus_set ? _focus_set_as : _kb_as);
+		const AtomSpace& ref_as(_search_focus_set ? *_focus_set_as.get() : _kb_as);
 		RuleTypedSubstitutionMap urm =
 			rule->unify_source(source.body, source.vardecl, &ref_as);
 		RuleSet unified_rules = Rule::strip_typed_substitution(urm);
@@ -646,7 +647,7 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 	// Wrap in try/catch in case the pattern matcher can't handle it
 	try
 	{
-		AtomSpace& ref_as(_search_focus_set ? _focus_set_as : _kb_as);
+		AtomSpace& ref_as(_search_focus_set ? *_focus_set_as.get() : _kb_as);
 		AtomSpacePtr derived_rule_as(createAtomSpace(&ref_as));
 		Handle rhcpy = derived_rule_as->add_atom(rule.get_rule());
 
