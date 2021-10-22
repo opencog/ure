@@ -647,8 +647,8 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 	try
 	{
 		AtomSpace& ref_as(_search_focus_set ? _focus_set_as : _kb_as);
-		AtomSpace derived_rule_as(&ref_as);
-		Handle rhcpy = derived_rule_as.add_atom(rule.get_rule());
+		AtomSpacePtr derived_rule_as(createAtomSpace(&ref_as));
+		Handle rhcpy = derived_rule_as->add_atom(rule.get_rule());
 
 		// Make Sure that all constant clauses appear in the AtomSpace
 		// as unification might have created constant clauses which aren't
