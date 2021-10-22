@@ -31,13 +31,13 @@
 using namespace std;
 using namespace opencog;
 
-#define al _as.add_link
-#define an _as.add_node
+#define al _as->add_link
+#define an _as->add_node
 
 class RuleUTest: public CxxTest::TestSuite
 {
 private:
-	AtomSpace _as;
+	AtomSpacePtr _as;
 	SchemeEval _eval;
 	Handle deduction_rule_h,
 		deduction_implication_rule_h, deduction_inheritance_rule_h,
@@ -49,7 +49,7 @@ private:
 		X, A, V, CT, Typed_X, P_body_var, P, Q, Eval_P, Eval_Q;
 
 public:
-	RuleUTest() : _eval(&_as)
+	RuleUTest() : _as(createAtomSpace()), _eval(_as)
 	{
 		logger().set_level(Logger::INFO);
 		logger().set_timestamp_flag(false);
@@ -148,7 +148,7 @@ void RuleUTest::setUp()
 
 void RuleUTest::tearDown()
 {
-	_as.clear();
+	_as->clear();
 }
 
 void RuleUTest::test_insert_rule()

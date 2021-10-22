@@ -32,13 +32,13 @@
 
 using namespace opencog;
 
-#define al _as.add_link
-#define an _as.add_node
+#define al _as->add_link
+#define an _as->add_node
 
 class UnifyUTest :  public CxxTest::TestSuite
 {
 private:
-	AtomSpace _as;
+	AtomSpacePtr _as;
 	SchemeEval _eval;
 	Handle X, Y, Z, W, V, A, B,
 		InhAB, InhXB, InhAY, InhXY, InhAZ, InhAW, InhAV,
@@ -51,7 +51,7 @@ private:
 	Context::VariablesStack X_varstack;
 
 public:
-	UnifyUTest() : _eval(&_as)
+	UnifyUTest() : _as(createAtomSpace()), _eval(_as)
 	{
 		logger().set_level(Logger::INFO);
 		logger().set_print_to_stdout_flag(true);
@@ -977,7 +977,7 @@ void UnifyUTest::test_substitute()
 
 	BindLinkPtr bl(BindLinkCast(hbl));
 
-	Handle result = _as.add_atom(Unify::substitute(bl, {{X, Y}}, Y_vardecl));
+	Handle result = _as->add_atom(Unify::substitute(bl, {{X, Y}}, Y_vardecl));
 
 	logger().debug() << "result = " << oc_to_string(result);
 	logger().debug() << "expected = " << oc_to_string(expected);

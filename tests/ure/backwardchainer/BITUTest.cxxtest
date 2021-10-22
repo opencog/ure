@@ -1,5 +1,5 @@
 /*
- * BackwardChainerUTest.cxxtest
+ * BITUTest.cxxtest
  *
  *  Created on: Oct 20, 2014
  *      Authors: misgana
@@ -16,13 +16,13 @@ using namespace opencog;
 
 //#define DEBUG 1
 
-#define al _as.add_link
-#define an _as.add_node
+#define al _as->add_link
+#define an _as->add_node
 
 class BITUTest: public CxxTest::TestSuite
 {
 private:
-	AtomSpace _as;
+	AtomSpacePtr _as;
 	SchemeEval _eval;
 
 	Handle closed_lambda_introduction_rule_h;
@@ -30,7 +30,7 @@ private:
 	Handle unary_specialization_rule_h;
 
 public:
-	BITUTest() : _eval(&_as)
+	BITUTest() : _as(createAtomSpace()), _eval(_as)
 	{
 		logger().set_level(Logger::DEBUG);
 		logger().set_timestamp_flag(false);
@@ -83,7 +83,7 @@ public:
 
 	~BITUTest()
 	{
-		_as.clear();
+		_as->clear();
 	}
 
 	void setUp();

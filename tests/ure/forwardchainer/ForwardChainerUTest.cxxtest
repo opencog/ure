@@ -15,8 +15,8 @@
 
 using namespace opencog;
 
-#define al _as.add_link
-#define an _as.add_node
+#define al _as->add_link
+#define an _as->add_node
 
 #define CHKERR \
    TSM_ASSERT("Caught scm error during eval", \
@@ -25,11 +25,11 @@ using namespace opencog;
 class ForwardChainerUTest: public CxxTest::TestSuite
 {
 private:
-	AtomSpace _as;
+	AtomSpacePtr _as;
 	SchemeEval _eval;
 
 public:
-	ForwardChainerUTest() : _eval(&_as)
+	ForwardChainerUTest() : _as(createAtomSpace()), _eval(_as)
 	{
 #undef DEBUG
 		logger().set_level(Logger::INFO);
@@ -89,7 +89,7 @@ public:
 
 void ForwardChainerUTest::setUp()
 {
-	_as.clear();
+	_as->clear();
 
 	// Load the simple deduction rbs to test it
 	std::string result; // to be able to read load errors
@@ -115,7 +115,7 @@ void ForwardChainerUTest::test_select_rule(void)
 	TS_ASSERT_DIFFERS(h, Handle::UNDEFINED);
 
 	Handle rbs = _eval.eval_h("(ConceptNode \"fc-rule-base\")");
-	ForwardChainer fc(_as, rbs, h);
+	ForwardChainer fc(*_as.get(), rbs, h);
 
 	// Full unification
 	RuleProbabilityPair rule = fc.select_rule(h);
@@ -145,7 +145,7 @@ void ForwardChainerUTest::test_deduction()
 
 	// Get the ConceptNode corresponding to the rule-based system to test
 	Handle rbs = an(CONCEPT_NODE, "fc-deduction-rule-base");
-	ForwardChainer fc(_as, rbs, AB);
+	ForwardChainer fc(*_as.get(), rbs, AB);
 	fc.get_config().set_jobs(4);
 	// Run forward chainer
 	fc.do_chain();
@@ -154,7 +154,7 @@ void ForwardChainerUTest::test_deduction()
 	HandleSet results = fc.get_results_set();
 
 	// Check that AC is in the results
-	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
+	Handle AC = _as->add_link(INHERITANCE_LINK, A, C);
 	TS_ASSERT_DIFFERS(results.find(AC), results.end());
 }
 
@@ -183,7 +183,7 @@ void ForwardChainerUTest::test_deduction_neg_max_iter()
 
 	// Get the ConceptNode corresponding to the rule-based system to test
 	Handle rbs = an(CONCEPT_NODE, "fc-deduction-rule-base");
-	ForwardChainer fc(_as, rbs, AB);
+	ForwardChainer fc(*_as.get(), rbs, AB);
 	fc.get_config().set_jobs(4);
 	fc.get_config().set_maximum_iterations(-1);
 	// Run forward chainer
@@ -193,7 +193,7 @@ void ForwardChainerUTest::test_deduction_neg_max_iter()
 	HandleSet results = fc.get_results_set();
 
 	// Check that AC is in the results
-	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
+	Handle AC = _as->add_link(INHERITANCE_LINK, A, C);
 	TS_ASSERT_DIFFERS(results.find(AC), results.end());
 }
 
@@ -221,11 +221,11 @@ void ForwardChainerUTest::test_deduction_focus_set()
 
 	// Get the ConceptNode corresponding to the rule-based system to test
 	Handle rbs = an(CONCEPT_NODE, "fc-deduction-rule-base");
-	AtomSpace empty_kb_as;
+	AtomSpacePtr empty_kb_as(createAtomSpace());
 	Handle vardecl = Handle::UNDEFINED;
 	AtomSpace* trace_as = nullptr;
 	HandleSeq focus_set{AB, BC};
-	ForwardChainer fc(empty_kb_as, _as, rbs, AB, vardecl, trace_as, focus_set);
+	ForwardChainer fc(*empty_kb_as.get(), *_as.get(), rbs, AB, vardecl, trace_as, focus_set);
 	// Run forward chainer
 	fc.do_chain();
 
@@ -233,7 +233,7 @@ void ForwardChainerUTest::test_deduction_focus_set()
 	HandleSet results = fc.get_results_set();
 
 	// Check that AC is in the results
-	Handle AC = _as.add_link(INHERITANCE_LINK, A, C);
+	Handle AC = _as->add_link(INHERITANCE_LINK, A, C);
 	TS_ASSERT_DIFFERS(results.find(AC), results.end());
 }
 
@@ -247,7 +247,7 @@ void ForwardChainerUTest::test_fritz_green()
 	_eval.eval("(load-from-path \"animals.scm\")");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle Fritz = an(CONCEPT_NODE, "Fritz"),
@@ -256,7 +256,7 @@ void ForwardChainerUTest::test_fritz_green()
 		source = al(EVALUATION_LINK, croaks, Fritz),
 		vardecl = Handle::UNDEFINED;
 
-	ForwardChainer fc(_as, top_rbs, source, vardecl);
+	ForwardChainer fc(*_as.get(), top_rbs, source, vardecl);
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
@@ -280,7 +280,7 @@ void ForwardChainerUTest::test_tweety_not_green()
 	_eval.eval("(load-from-path \"animals.scm\")");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle Tweety = an(CONCEPT_NODE, "Tweety"),
@@ -289,7 +289,7 @@ void ForwardChainerUTest::test_tweety_not_green()
 		source = al(EVALUATION_LINK, eats_flies, Tweety),
 		vardecl = Handle::UNDEFINED;
 
-	ForwardChainer fc(_as, top_rbs, source, vardecl);
+	ForwardChainer fc(*_as.get(), top_rbs, source, vardecl);
 	// Put lots of evaluations to be sure to exhaust all possibilities
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
@@ -315,7 +315,7 @@ void ForwardChainerUTest::test_fritz_green_alt()
 	_eval.eval("(load-from-path \"animals.scm\")");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle Fritz = an(CONCEPT_NODE, "Fritz"),
@@ -324,7 +324,7 @@ void ForwardChainerUTest::test_fritz_green_alt()
 		source = al(EVALUATION_LINK, croaks, Fritz),
 		vardecl = Handle::UNDEFINED;
 
-	ForwardChainer fc(_as, top_rbs, source, vardecl);
+	ForwardChainer fc(*_as.get(), top_rbs, source, vardecl);
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
 
@@ -349,7 +349,7 @@ void ForwardChainerUTest::test_tweety_not_green_alt()
 	_eval.eval("(load-from-path \"animals.scm\")");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle Tweety = an(CONCEPT_NODE, "Tweety"),
@@ -358,7 +358,7 @@ void ForwardChainerUTest::test_tweety_not_green_alt()
 		source = al(EVALUATION_LINK, eats_flies, Tweety),
 		vardecl = Handle::UNDEFINED;
 
-	ForwardChainer fc(_as, top_rbs, source, vardecl);
+	ForwardChainer fc(*_as.get(), top_rbs, source, vardecl);
 	// Put lots of evaluations to be sure to exhaust all possibilities
 	fc.get_config().set_maximum_iterations(50);
 	fc.do_chain();
@@ -386,9 +386,9 @@ void ForwardChainerUTest::test_unsatisfied_premise(void)
 	       furniture = an(CONCEPT_NODE, "furniture"),
 	       source = al(INHERITANCE_LINK, table, furniture),
 	       vardecl = Handle::UNDEFINED,
-	       top_rbs = _as.get_node(CONCEPT_NODE, "rule-base");
+	       top_rbs = _as->get_node(CONCEPT_NODE, "rule-base");
 
-	ForwardChainer fc(_as, top_rbs, source, vardecl);
+	ForwardChainer fc(*_as.get(), top_rbs, source, vardecl);
 	fc.get_config().set_maximum_iterations(20);
 	fc.do_chain();
 
@@ -406,10 +406,10 @@ void ForwardChainerUTest::test_negation_conflict()
 	_eval.eval("(load-from-path \"negation-conflict.scm\")");
 
 	Handle vardecl = Handle::UNDEFINED;
-	Handle rbs = _as.get_node(CONCEPT_NODE, "Einstein-rbs");
+	Handle rbs = _as->get_node(CONCEPT_NODE, "Einstein-rbs");
 	Handle source = _eval.eval_h("source");
 
-	ForwardChainer fc(_as, rbs, source, vardecl);
+	ForwardChainer fc(*_as.get(), rbs, source, vardecl);
 	fc.get_config().set_maximum_iterations(20);
 	fc.do_chain();
 
@@ -439,14 +439,14 @@ void ForwardChainerUTest::test_bindlink_no_vardecl()
 
 	_eval.eval("(load-from-path \"fc-bindlink-no-vardecl-config.scm\")");
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle source = al(MEMBER_LINK, an(CONCEPT_NODE, "terrier"),
 	                   an(CONCEPT_NODE, "dog"));
 	Handle vardecl = Handle::UNDEFINED;
 
-	ForwardChainer fc(_as, top_rbs, source, vardecl);
+	ForwardChainer fc(*_as.get(), top_rbs, source, vardecl);
 	fc.get_config().set_maximum_iterations(10);
 	fc.do_chain();
 

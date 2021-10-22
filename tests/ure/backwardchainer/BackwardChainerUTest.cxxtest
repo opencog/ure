@@ -19,13 +19,13 @@ using namespace opencog;
 
 //#define DEBUG 1
 
-#define al _as.add_link
-#define an _as.add_node
+#define al _as->add_link
+#define an _as->add_node
 
 class BackwardChainerUTest: public CxxTest::TestSuite
 {
 private:
-	AtomSpace _as;
+	AtomSpacePtr _as;
 	SchemeEval _eval;
 	BackwardChainer* _bc;
 
@@ -61,7 +61,7 @@ public:
 	void xtest_focus_set();
 };
 
-BackwardChainerUTest::BackwardChainerUTest() : _eval(&_as)
+BackwardChainerUTest::BackwardChainerUTest() : _as(createAtomSpace()),_eval(_as)
 {
 	logger().set_level(Logger::DEBUG);
 	logger().set_timestamp_flag(false);
@@ -104,7 +104,7 @@ void BackwardChainerUTest::setUp()
 
 void BackwardChainerUTest::tearDown()
 {
-	_as.clear();
+	_as->clear();
 }
 
 string BackwardChainerUTest::load_from_path(const string& filename)
@@ -120,10 +120,10 @@ void BackwardChainerUTest::reset_bc()
 
 	// std::cout << "eval_result = " << eval_result << std::endl;
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
-	_bc = new BackwardChainer(_as, top_rbs, Handle::UNDEFINED);
+	_bc = new BackwardChainer(*_as.get(), top_rbs, Handle::UNDEFINED);
 }
 
 // Test select rule with a target with no variable
@@ -178,7 +178,7 @@ void BackwardChainerUTest::test_select_rule_3()
 		                         "   (Variable \"$C\")"
 		                         "   (Type \"InheritanceLink\"))");
 	BITNode target(target_h);
-	AndBIT andbit(_as, target_h, vardecl_h);
+	AndBIT andbit(*_as.get(), target_h, vardecl_h);
 
 	RuleSelection selected_rule =
 		_bc->_control.select_rule(andbit, target);
@@ -194,13 +194,13 @@ void BackwardChainerUTest::test_deduction()
 	load_from_path("bc-transitive-closure.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 	Handle X = an(VARIABLE_NODE, "$X"),
 		D = an(CONCEPT_NODE, "D"),
 		target = al(INHERITANCE_LINK, X, D);
 
-	BackwardChainer bc(_as, top_rbs, target);
+	BackwardChainer bc(*_as.get(), top_rbs, target);
 	bc.get_config().set_maximum_iterations(10);
 	bc.do_chain();
 
@@ -227,13 +227,13 @@ void BackwardChainerUTest::test_deduction_tv_query()
 	load_from_path("bc-transitive-closure.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 	Handle target = _eval.eval_h("(Inheritance"
 	                             "   (Concept \"A\")"
 	                             "   (Concept \"D\"))");
 
-	BackwardChainer bc(_as, top_rbs, target);
+	BackwardChainer bc(*_as.get(), top_rbs, target);
 	bc.get_config().set_maximum_iterations(10);
 	bc.do_chain();
 
@@ -249,11 +249,11 @@ void BackwardChainerUTest::test_modus_ponens_tv_query()
 	load_from_path("modus-ponens-example.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 	Handle target = an(PREDICATE_NODE, "T");
 
-	BackwardChainer bc(_as, top_rbs, target);
+	BackwardChainer bc(*_as.get(), top_rbs, target);
 	bc.get_config().set_maximum_iterations(40);
 	bc.do_chain();
 
@@ -270,7 +270,7 @@ void BackwardChainerUTest::test_conjunction_fuzzy_evaluation_tv_query()
 	result = load_from_path("simple-conjunction.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle P = an(PREDICATE_NODE, "P"),
@@ -281,7 +281,7 @@ void BackwardChainerUTest::test_conjunction_fuzzy_evaluation_tv_query()
 		Q_B = al(EVALUATION_LINK, Q, B),
 		target = al(AND_LINK, P_A, Q_B);
 
-	BackwardChainer bc(_as, top_rbs, target);
+	BackwardChainer bc(*_as.get(), top_rbs, target);
 	bc.get_config().set_maximum_iterations(2);
 	bc.do_chain();
 
@@ -300,7 +300,7 @@ void BackwardChainerUTest::test_conditional_instantiation_1()
 	result = load_from_path("friends.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle are_friends = an(PREDICATE_NODE, "are-friends"),
@@ -317,7 +317,7 @@ void BackwardChainerUTest::test_conditional_instantiation_1()
 		             al(TYPED_VARIABLE_LINK,
 		                target_var, an(TYPE_NODE, "ConceptNode")));
 
-	BackwardChainer bc(_as, top_rbs, target, vardecl);
+	BackwardChainer bc(*_as.get(), top_rbs, target, vardecl);
 	bc.get_config().set_maximum_iterations(500);
 	bc.do_chain();
 
@@ -342,7 +342,7 @@ void BackwardChainerUTest::test_conditional_instantiation_2()
 	load_from_path("animals.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle green = an(CONCEPT_NODE, "green"),
@@ -352,7 +352,7 @@ void BackwardChainerUTest::test_conditional_instantiation_2()
 		concept = an(TYPE_NODE, "ConceptNode"),
 		vardecl = al(TYPED_VARIABLE_LINK, what, concept);
 
-	BackwardChainer bc(_as, top_rbs, target, vardecl);
+	BackwardChainer bc(*_as.get(), top_rbs, target, vardecl);
 	bc.get_config().set_maximum_iterations(20);
 	bc.do_chain();
 
@@ -373,7 +373,7 @@ void BackwardChainerUTest::test_conditional_instantiation_tv_query()
 	load_from_path("animals.scm");
 	randGen().seed(500);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle target =
@@ -381,7 +381,7 @@ void BackwardChainerUTest::test_conditional_instantiation_tv_query()
 	                 "   (ConceptNode \"Fritz\")"
 	                 "   (ConceptNode \"green\"))");
 
-	BackwardChainer bc(_as, top_rbs, target);
+	BackwardChainer bc(*_as.get(), top_rbs, target);
 	bc.get_config().set_maximum_iterations(20);
 	bc.do_chain();
 
@@ -437,7 +437,7 @@ void BackwardChainerUTest::test_conditional_partial_instantiation()
 	result = load_from_path("friends.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle target = _eval.eval_h("(ImplicationScope"
@@ -470,7 +470,7 @@ void BackwardChainerUTest::test_conditional_partial_instantiation()
 	                             "         (Variable \"$X\")"
 	                             "         (Concept \"Mary\"))))");
 
-	BackwardChainer bc(_as, top_rbs, target);
+	BackwardChainer bc(*_as.get(), top_rbs, target);
 	bc.get_config().set_maximum_iterations(5);
 	bc.do_chain();
 
@@ -486,7 +486,7 @@ void BackwardChainerUTest::test_impossible_criminal()
 	load_from_path("criminal.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle target =
@@ -501,7 +501,7 @@ void BackwardChainerUTest::test_impossible_criminal()
 
 	// Should NOT be possible to find the solution without deduction
 	// rule, as it won't be able to tell that missile@123 is a weapon.
-	BackwardChainer bc(_as, top_rbs, target, vardecl);
+	BackwardChainer bc(*_as.get(), top_rbs, target, vardecl);
 	// See bc-criminal-config.scm to change the number of iterations
 	bc.do_chain();
 
@@ -522,7 +522,7 @@ void BackwardChainerUTest::test_criminal()
 	load_from_path("criminal.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle target_var = _eval.eval_h("(VariableNode \"$who\")");
@@ -539,7 +539,7 @@ void BackwardChainerUTest::test_criminal()
 	// To record the trace of the inference
 	AtomSpace trace_as;
 
-	BackwardChainer bc(_as, top_rbs, target, vardecl, &trace_as);
+	BackwardChainer bc(*_as.get(), top_rbs, target, vardecl, &trace_as);
 	// See bc-criminal-config.scm to change the number of iterations
 	bc.do_chain();
 
@@ -577,7 +577,7 @@ void BackwardChainerUTest::test_criminal()
 	TS_ASSERT_LESS_THAN(0, traces.size());
 
 	// Clear the atomspace and reload the problem
-	_as.clear();
+	_as->clear();
 	load_from_path("bc-criminal-config.scm");
 	load_from_path("criminal.scm");
 	randGen().seed(0);
@@ -595,7 +595,7 @@ void BackwardChainerUTest::test_criminal()
 	for (const Handle& h : *(traces.begin()))
 		trace.insert(h.value());
 	AndBITFitness trace_fitness(AndBITFitness::Trace, trace);
-	BackwardChainer tr_bc(_as, top_rbs, target, vardecl, nullptr, nullptr,
+	BackwardChainer tr_bc(*_as.get(), top_rbs, target, vardecl, nullptr, nullptr,
 	                      Handle::UNDEFINED, BITNodeFitness(), trace_fitness);
 	tr_bc.get_config().set_maximum_iterations(100);
 	tr_bc.do_chain();
@@ -627,7 +627,7 @@ void BackwardChainerUTest::test_no_exec_output()
 	Handle target = _eval.eval_h("target");
 	Handle vardecl = _eval.eval_h("vd");
 
-	BackwardChainer bc(_as, rbs, target, vardecl);
+	BackwardChainer bc(*_as.get(), rbs, target, vardecl);
 	// See no-exec-output.scm to change the number of iterations
 	bc.do_chain();
 
@@ -653,12 +653,12 @@ void BackwardChainerUTest::xtest_green_balls()
 	load_from_path("green-balls-targets.scm");
 	randGen().seed(0);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle target = _eval.eval_h("target-known-evidence");
 
-	BackwardChainer bc(_as, top_rbs, target);
+	BackwardChainer bc(*_as.get(), top_rbs, target);
 	// See green-balls-rb.scm to change the number of iterations and
 	// other parameters
 	bc.do_chain();
@@ -684,12 +684,12 @@ void BackwardChainerUTest::xtest_induction()
 
 	randGen().seed(500);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle target = _eval.eval_h("bc-induction-target");
 
-	BackwardChainer bc(_as, top_rbs, target);
+	BackwardChainer bc(*_as.get(), top_rbs, target);
 	bc.get_config().set_maximum_iterations(100);
 	bc.do_chain();
 
@@ -708,7 +708,7 @@ void BackwardChainerUTest::xtest_focus_set()
 	load_from_path("animals.scm");
 	randGen().seed(500);
 
-	Handle top_rbs = _as.get_node(CONCEPT_NODE,
+	Handle top_rbs = _as->get_node(CONCEPT_NODE,
 	                     std::move(std::string(UREConfig::top_rbs_name)));
 
 	Handle green = an(CONCEPT_NODE, "green"),
@@ -735,7 +735,7 @@ void BackwardChainerUTest::xtest_focus_set()
 		             " )"
 		             ")");
 
-	BackwardChainer bc(_as, top_rbs, target, vardecl, nullptr, nullptr, focus_set);
+	BackwardChainer bc(*_as.get(), top_rbs, target, vardecl, nullptr, nullptr, focus_set);
 
 	Handle soln1 = _eval.eval_h("(InheritanceLink"
 	                            "  (ConceptNode \"tree\")"
