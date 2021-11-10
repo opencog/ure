@@ -80,7 +80,7 @@ public:
 	void xtest_deduction_focus_set();
 	void xtest_fritz_green();
 	void xtest_tweety_not_green();
-	void xtest_fritz_green_alt();
+	void test_fritz_green_alt();
 	void xtest_tweety_not_green_alt();
 	void test_unsatisfied_premise();
 	void test_negation_conflict();
@@ -303,7 +303,7 @@ void ForwardChainerUTest::xtest_tweety_not_green()
 	TS_ASSERT_EQUALS(results.find(Tweety_green), results.end());
 }
 
-void ForwardChainerUTest::xtest_fritz_green_alt()
+void ForwardChainerUTest::test_fritz_green_alt()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
