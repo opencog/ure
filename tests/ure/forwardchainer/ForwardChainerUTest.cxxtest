@@ -72,7 +72,7 @@ public:
 	void tearDown();
 
 	// Test auxiliary functions
-	void xtest_select_rule();
+	void test_select_rule();
 
 	// Test forward chainer
 	void xtest_deduction();
@@ -105,7 +105,7 @@ void ForwardChainerUTest::tearDown()
 {
 }
 
-void ForwardChainerUTest::xtest_select_rule(void)
+void ForwardChainerUTest::test_select_rule(void)
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
