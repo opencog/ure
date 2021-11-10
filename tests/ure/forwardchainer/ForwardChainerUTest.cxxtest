@@ -79,7 +79,7 @@ public:
 	void xtest_deduction_neg_max_iter();
 	void test_deduction_focus_set();
 	void xtest_fritz_green();
-	void xtest_tweety_not_green();
+	void test_tweety_not_green();
 	void test_fritz_green_alt();
 	void xtest_tweety_not_green_alt();
 	void test_unsatisfied_premise();
@@ -269,7 +269,7 @@ void ForwardChainerUTest::xtest_fritz_green()
 	TS_ASSERT_DIFFERS(results.find(Fritz_green), results.end());
 }
 
-void ForwardChainerUTest::xtest_tweety_not_green()
+void ForwardChainerUTest::test_tweety_not_green()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
