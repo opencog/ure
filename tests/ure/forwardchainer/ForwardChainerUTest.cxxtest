@@ -77,7 +77,7 @@ public:
 	// Test forward chainer
 	void test_deduction();
 	void xtest_deduction_neg_max_iter();
-	void xtest_deduction_focus_set();
+	void test_deduction_focus_set();
 	void xtest_fritz_green();
 	void xtest_tweety_not_green();
 	void test_fritz_green_alt();
@@ -198,7 +198,7 @@ void ForwardChainerUTest::xtest_deduction_neg_max_iter()
 }
 
 // Like test_deduction() but operate on the focus set
-void ForwardChainerUTest::xtest_deduction_focus_set()
+void ForwardChainerUTest::test_deduction_focus_set()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
