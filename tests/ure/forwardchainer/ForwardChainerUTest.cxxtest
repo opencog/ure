@@ -417,8 +417,6 @@ void ForwardChainerUTest::test_negation_conflict()
 	HandleSeq resultHandleSeq(resultSet.begin(), resultSet.end());
 	Handle results = al(SET_LINK, std::move(resultHandleSeq));
 
-	// Handle results = _eval.eval_h("(cog-fc Einstein-rbs source)");
-
 	Handle American = an(CONCEPT_NODE, "American"),
 	       German = an(CONCEPT_NODE, "German"),
 	       cat = an(CONCEPT_NODE, "cat"),
@@ -429,10 +427,8 @@ void ForwardChainerUTest::test_negation_conflict()
 
 	Handle expected = al(SET_LINK, Gkeepcat, Akeepdog);
 
-		// logger().set_level(Logger::FINE);
-	logger().info() << "aresults = " << oc_to_string(results);
-	logger().info() << "expected = " << oc_to_string(expected);
-		// logger().set_level(Logger::INFO);
+	logger().debug() << "aresults = " << oc_to_string(results);
+	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(results, expected);
 }
