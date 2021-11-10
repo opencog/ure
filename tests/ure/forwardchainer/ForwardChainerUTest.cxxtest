@@ -403,14 +403,12 @@ void ForwardChainerUTest::test_negation_conflict()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
-   _as = createAtomSpace();
-	SchemeEval eval(_as);
-	eval.eval("(load-from-path \"negation-conflict.scm\")");
+	_eval.eval("(load-from-path \"negation-conflict.scm\")");
 
 /****
 	Handle vardecl = Handle::UNDEFINED;
 	Handle rbs = _as->get_node(CONCEPT_NODE, "Einstein-rbs");
-	Handle source = eval.eval_h("source");
+	Handle source = _eval.eval_h("source");
 
 	ForwardChainer fc(*_as.get(), rbs, source, vardecl);
 	fc.get_config().set_maximum_iterations(20);
@@ -421,7 +419,7 @@ void ForwardChainerUTest::test_negation_conflict()
 	Handle results = al(SET_LINK, std::move(resultHandleSeq));
 ***/
 
-	Handle results = eval.eval_h("(cog-fc Einstein-rbs source)");
+	Handle results = _eval.eval_h("(cog-fc Einstein-rbs source)");
 
 	Handle American = an(CONCEPT_NODE, "American"),
 	       German = an(CONCEPT_NODE, "German"),
