@@ -99,6 +99,8 @@ void ForwardChainerUTest::setUp()
 	// Load the simple deduction + modus ponens rbs to test it
 	result = _eval.eval("(load-from-path \"fc-config.scm\")");
 	CHKERR;
+
+	randGen().seed(0);
 }
 
 void ForwardChainerUTest::tearDown()
