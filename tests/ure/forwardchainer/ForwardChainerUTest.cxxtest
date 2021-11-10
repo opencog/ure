@@ -405,7 +405,6 @@ void ForwardChainerUTest::test_negation_conflict()
 
 	_eval.eval("(load-from-path \"negation-conflict.scm\")");
 
-/****
 	Handle vardecl = Handle::UNDEFINED;
 	Handle rbs = _as->get_node(CONCEPT_NODE, "Einstein-rbs");
 	Handle source = _eval.eval_h("source");
@@ -417,9 +416,8 @@ void ForwardChainerUTest::test_negation_conflict()
 	HandleSet resultSet = fc.get_results_set();
 	HandleSeq resultHandleSeq(resultSet.begin(), resultSet.end());
 	Handle results = al(SET_LINK, std::move(resultHandleSeq));
-***/
 
-	Handle results = _eval.eval_h("(cog-fc Einstein-rbs source)");
+	// Handle results = _eval.eval_h("(cog-fc Einstein-rbs source)");
 
 	Handle American = an(CONCEPT_NODE, "American"),
 	       German = an(CONCEPT_NODE, "German"),
