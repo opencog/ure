@@ -402,6 +402,7 @@ void ForwardChainerUTest::test_unsatisfied_premise(void)
 void ForwardChainerUTest::test_negation_conflict()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
+	randGen().seed(0);
 
 	_eval.eval("(load-from-path \"negation-conflict.scm\")");
 
