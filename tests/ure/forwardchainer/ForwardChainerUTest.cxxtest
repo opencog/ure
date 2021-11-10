@@ -75,7 +75,7 @@ public:
 	void test_select_rule();
 
 	// Test forward chainer
-	void xtest_deduction();
+	void test_deduction();
 	void xtest_deduction_neg_max_iter();
 	void xtest_deduction_focus_set();
 	void xtest_fritz_green();
@@ -122,7 +122,7 @@ void ForwardChainerUTest::test_select_rule(void)
 	TS_ASSERT(rule.first->is_valid());
 }
 
-void ForwardChainerUTest::xtest_deduction()
+void ForwardChainerUTest::test_deduction()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
