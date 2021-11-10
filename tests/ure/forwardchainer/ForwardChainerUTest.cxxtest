@@ -72,19 +72,19 @@ public:
 	void tearDown();
 
 	// Test auxiliary functions
-	void test_select_rule();
+	void xtest_select_rule();
 
 	// Test forward chainer
-	void test_deduction();
-	void test_deduction_neg_max_iter();
-	void test_deduction_focus_set();
-	void test_fritz_green();
-	void test_tweety_not_green();
-	void test_fritz_green_alt();
-	void test_tweety_not_green_alt();
+	void xtest_deduction();
+	void xtest_deduction_neg_max_iter();
+	void xtest_deduction_focus_set();
+	void xtest_fritz_green();
+	void xtest_tweety_not_green();
+	void xtest_fritz_green_alt();
+	void xtest_tweety_not_green_alt();
 	void test_unsatisfied_premise();
 	void test_negation_conflict();
-	void test_bindlink_no_vardecl();
+	void xtest_bindlink_no_vardecl();
 };
 
 void ForwardChainerUTest::setUp()
@@ -105,7 +105,7 @@ void ForwardChainerUTest::tearDown()
 {
 }
 
-void ForwardChainerUTest::test_select_rule(void)
+void ForwardChainerUTest::xtest_select_rule(void)
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -122,7 +122,7 @@ void ForwardChainerUTest::test_select_rule(void)
 	TS_ASSERT(rule.first->is_valid());
 }
 
-void ForwardChainerUTest::test_deduction()
+void ForwardChainerUTest::xtest_deduction()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -160,7 +160,7 @@ void ForwardChainerUTest::test_deduction()
 
 // Like test_deduction but set a negative number of iteration which
 // means infinite number of iterations, or until saturation.
-void ForwardChainerUTest::test_deduction_neg_max_iter()
+void ForwardChainerUTest::xtest_deduction_neg_max_iter()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -198,7 +198,7 @@ void ForwardChainerUTest::test_deduction_neg_max_iter()
 }
 
 // Like test_deduction() but operate on the focus set
-void ForwardChainerUTest::test_deduction_focus_set()
+void ForwardChainerUTest::xtest_deduction_focus_set()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -237,7 +237,7 @@ void ForwardChainerUTest::test_deduction_focus_set()
 	TS_ASSERT_DIFFERS(results.find(AC), results.end());
 }
 
-void ForwardChainerUTest::test_fritz_green()
+void ForwardChainerUTest::xtest_fritz_green()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -269,7 +269,7 @@ void ForwardChainerUTest::test_fritz_green()
 	TS_ASSERT_DIFFERS(results.find(Fritz_green), results.end());
 }
 
-void ForwardChainerUTest::test_tweety_not_green()
+void ForwardChainerUTest::xtest_tweety_not_green()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -303,7 +303,7 @@ void ForwardChainerUTest::test_tweety_not_green()
 	TS_ASSERT_EQUALS(results.find(Tweety_green), results.end());
 }
 
-void ForwardChainerUTest::test_fritz_green_alt()
+void ForwardChainerUTest::xtest_fritz_green_alt()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -337,7 +337,7 @@ void ForwardChainerUTest::test_fritz_green_alt()
 	TS_ASSERT_DIFFERS(results.find(Fritz_green), results.end());
 }
 
-void ForwardChainerUTest::test_tweety_not_green_alt()
+void ForwardChainerUTest::xtest_tweety_not_green_alt()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -403,11 +403,14 @@ void ForwardChainerUTest::test_negation_conflict()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
-	_eval.eval("(load-from-path \"negation-conflict.scm\")");
+   _as = createAtomSpace();
+	SchemeEval eval(_as);
+	eval.eval("(load-from-path \"negation-conflict.scm\")");
 
+/****
 	Handle vardecl = Handle::UNDEFINED;
 	Handle rbs = _as->get_node(CONCEPT_NODE, "Einstein-rbs");
-	Handle source = _eval.eval_h("source");
+	Handle source = eval.eval_h("source");
 
 	ForwardChainer fc(*_as.get(), rbs, source, vardecl);
 	fc.get_config().set_maximum_iterations(20);
@@ -416,6 +419,9 @@ void ForwardChainerUTest::test_negation_conflict()
 	HandleSet resultSet = fc.get_results_set();
 	HandleSeq resultHandleSeq(resultSet.begin(), resultSet.end());
 	Handle results = al(SET_LINK, std::move(resultHandleSeq));
+***/
+
+	Handle results = eval.eval_h("(cog-fc Einstein-rbs source)");
 
 	Handle American = an(CONCEPT_NODE, "American"),
 	       German = an(CONCEPT_NODE, "German"),
@@ -427,13 +433,15 @@ void ForwardChainerUTest::test_negation_conflict()
 
 	Handle expected = al(SET_LINK, Gkeepcat, Akeepdog);
 
-	logger().debug() << "results = " << oc_to_string(results);
-	logger().debug() << "expected = " << oc_to_string(expected);
+		// logger().set_level(Logger::FINE);
+	logger().info() << "aresults = " << oc_to_string(results);
+	logger().info() << "expected = " << oc_to_string(expected);
+		// logger().set_level(Logger::INFO);
 
 	TS_ASSERT_EQUALS(results, expected);
 }
 
-void ForwardChainerUTest::test_bindlink_no_vardecl()
+void ForwardChainerUTest::xtest_bindlink_no_vardecl()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
