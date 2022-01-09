@@ -35,8 +35,8 @@
         (VariableNode "$TyVs")
         (TypeChoice
            (TypeNode "TypedVariableLink")
-           (TypeNode "VariableSet")))
-           (TypeNode "VariableList")))
+           (TypeNode "VariableSet")
+           (TypeNode "VariableList")))  
      (VariableNode "$P")
      (VariableNode "$Q")))
 
