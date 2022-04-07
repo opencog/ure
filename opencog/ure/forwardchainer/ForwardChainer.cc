@@ -649,6 +649,7 @@ HandleSet ForwardChainer::apply_rule(const Rule& rule)
 	{
 		AtomSpace& ref_as(_search_focus_set ? *_focus_set_as.get() : _kb_as);
 		AtomSpacePtr derived_rule_as(createAtomSpace(&ref_as));
+		derived_rule_as->clear_copy_on_write(); // _as should be write-through.
 		Handle rhcpy = derived_rule_as->add_atom(rule.get_rule());
 
 		// Make Sure that all constant clauses appear in the AtomSpace
