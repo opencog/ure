@@ -6,6 +6,17 @@
 ;; Question: who keeps the cat?
 ;; By shujing Ke, Feb 2018
 
+(use-modules (opencog) (opencog exec))
+(use-modules (opencog ure))
+
+
+(use-modules (opencog logger))
+(cog-logger-set-stdout! #t)
+; (cog-logger-set-sync! #t)
+(cog-logger-set-timestamp! #f)
+; (cog-logger-set-level! "FINE")
+
+
 (Inheritance (stv 1.0 1.0)
    (Concept "American")
    (Concept "person"))
