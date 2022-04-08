@@ -800,7 +800,10 @@ BIT::BIT(AtomSpace& as,
          const BITNodeFitness& fitness)
 	: bit_as(&as), // child atomspace of as
 	  _as(&as), _init_target(target), _init_vardecl(vardecl),
-	  _init_fitness(fitness) {}
+	  _init_fitness(fitness)
+{
+	bit_as.clear_copy_on_write();
+}
 
 BIT::~BIT() {}
 
