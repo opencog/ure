@@ -257,7 +257,9 @@ void BackwardChainer::fulfill_bit()
 	// Wrap in a try/catch in case the pattern matcher can't handle
 	// it.
 	try {
+printf("duuuuuuuuuuuuuuuuuuud start\n");
 		fulfill_fcs(andbit->fcs);
+printf("duuuuuuuuuuuuuuuuuuud end\n");
 	} catch (...) {}
 }
 

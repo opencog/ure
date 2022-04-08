@@ -39,20 +39,20 @@ public:
 	void setUp();
 	void tearDown();
 
-	void test_select_rule_1();
-	void test_select_rule_2();
-	void test_select_rule_3();
-	void test_deduction();
-	void test_deduction_tv_query();
-	void test_modus_ponens_tv_query();
-	void test_conjunction_fuzzy_evaluation_tv_query();
-	void test_conditional_instantiation_1();
-	void test_conditional_instantiation_2();
-	void test_conditional_instantiation_tv_query();
-	void test_conditional_partial_instantiation();
-	void test_impossible_criminal();
+	void ztest_select_rule_1();
+	void ztest_select_rule_2();
+	void ztest_select_rule_3();
+	void ztest_deduction();
+	void ztest_deduction_tv_query();
+	void ztest_modus_ponens_tv_query();
+	void ztest_conjunction_fuzzy_evaluation_tv_query();
+	void ztest_conditional_instantiation_1();
+	void ztest_conditional_instantiation_2();
+	void ztest_conditional_instantiation_tv_query();
+	void ztest_conditional_partial_instantiation();
+	void ztest_impossible_criminal();
 	void test_criminal();
-	void test_no_exec_output();
+	void ztest_no_exec_output();
 	// TODO: re-enable when GlobNode is supported
 	void xtest_green_balls();
 	// TODO: re-enable when meta rule is supported
@@ -127,7 +127,7 @@ void BackwardChainerUTest::reset_bc()
 }
 
 // Test select rule with a target with no variable
-void BackwardChainerUTest::test_select_rule_1()
+void BackwardChainerUTest::ztest_select_rule_1()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -147,7 +147,7 @@ void BackwardChainerUTest::test_select_rule_1()
 }
 
 // Test select rule with a target with variables
-void BackwardChainerUTest::test_select_rule_2()
+void BackwardChainerUTest::ztest_select_rule_2()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -167,7 +167,7 @@ void BackwardChainerUTest::test_select_rule_2()
 
 // Test select rule with a target with variables with the same name as
 // the variable in the rule.
-void BackwardChainerUTest::test_select_rule_3()
+void BackwardChainerUTest::ztest_select_rule_3()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -186,7 +186,7 @@ void BackwardChainerUTest::test_select_rule_3()
 	TS_ASSERT_EQUALS(selected_rule.first.first.get_name(), "bc-deduction-rule");
 }
 
-void BackwardChainerUTest::test_deduction()
+void BackwardChainerUTest::ztest_deduction()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -219,7 +219,7 @@ void BackwardChainerUTest::test_deduction()
 	TS_ASSERT_EQUALS(results, expected);
 }
 
-void BackwardChainerUTest::test_deduction_tv_query()
+void BackwardChainerUTest::ztest_deduction_tv_query()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -241,7 +241,7 @@ void BackwardChainerUTest::test_deduction_tv_query()
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
 }
 
-void BackwardChainerUTest::test_modus_ponens_tv_query()
+void BackwardChainerUTest::ztest_modus_ponens_tv_query()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -261,7 +261,7 @@ void BackwardChainerUTest::test_modus_ponens_tv_query()
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
 }
 
-void BackwardChainerUTest::test_conjunction_fuzzy_evaluation_tv_query()
+void BackwardChainerUTest::ztest_conjunction_fuzzy_evaluation_tv_query()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -289,7 +289,7 @@ void BackwardChainerUTest::test_conjunction_fuzzy_evaluation_tv_query()
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 0.2, 1e-6);
 }
 
-void BackwardChainerUTest::test_conditional_instantiation_1()
+void BackwardChainerUTest::ztest_conditional_instantiation_1()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -333,7 +333,7 @@ void BackwardChainerUTest::test_conditional_instantiation_1()
 	TS_ASSERT_EQUALS(results, expected);
 }
 
-void BackwardChainerUTest::test_conditional_instantiation_2()
+void BackwardChainerUTest::ztest_conditional_instantiation_2()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -365,7 +365,7 @@ void BackwardChainerUTest::test_conditional_instantiation_2()
 	TS_ASSERT_EQUALS(results, expected);
 }
 
-void BackwardChainerUTest::test_conditional_instantiation_tv_query()
+void BackwardChainerUTest::ztest_conditional_instantiation_tv_query()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -426,7 +426,7 @@ void BackwardChainerUTest::test_conditional_instantiation_tv_query()
 //             Variable "$XVar"
 //             Variable "$XType"
 //         ...
-void BackwardChainerUTest::test_conditional_partial_instantiation()
+void BackwardChainerUTest::ztest_conditional_partial_instantiation()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -478,7 +478,7 @@ void BackwardChainerUTest::test_conditional_partial_instantiation()
 	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
 }
 
-void BackwardChainerUTest::test_impossible_criminal()
+void BackwardChainerUTest::ztest_impossible_criminal()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
@@ -537,10 +537,13 @@ void BackwardChainerUTest::test_criminal()
 	Handle soln = _eval.eval_h("(ConceptNode \"West\")");
 
 	// To record the trace of the inference
-	AtomSpacePtr trace_as = createAtomSpace(_as);
-	trace_as->clear_copy_on_write(); // Create a write-through atomspace
+	//AtomSpacePtr trace_as = createAtomSpace(_as);
+	//trace_as->clear_copy_on_write(); // Create a write-through atomspace
+	AtomSpace trace_as;
+printf ("duuude trace as=%lu\n", trace_as.get_uuid());
 
-	BackwardChainer bc(*_as.get(), top_rbs, target, vardecl, trace_as.get());
+	// BackwardChainer bc(*_as.get(), top_rbs, target, vardecl, trace_as.get());
+	BackwardChainer bc(*_as.get(), top_rbs, target, vardecl, &trace_as);
 	// See bc-criminal-config.scm to change the number of iterations
 	bc.do_chain();
 
@@ -616,7 +619,7 @@ void BackwardChainerUTest::test_criminal()
 }
 
 // Test showing we no longer need the ExecutionOutputLink
-void BackwardChainerUTest::test_no_exec_output()
+void BackwardChainerUTest::ztest_no_exec_output()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
