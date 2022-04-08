@@ -266,6 +266,7 @@ void BackwardChainer::fulfill_fcs(const Handle& fcs)
 	// Temporary atomspace to not pollute _as with intermediary
 	// results
 	AtomSpacePtr tmp_as(createAtomSpace(&_kb_as));
+	tmp_as->clear_copy_on_write(); // tmp_as should be write-through.
 
 	// Run the FCS and add the results, if any, in _as.
 	//

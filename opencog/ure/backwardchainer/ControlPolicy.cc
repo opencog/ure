@@ -59,6 +59,7 @@ ControlPolicy::ControlPolicy(const UREConfig& ure_config, const BIT& bit,
 	// Fetches expansion control rules from _control_as
 	if (_control_as) {
 		_query_as = createAtomSpace(_control_as);
+		_query_as->clear_copy_on_write(); // _as should be write-through.
 		for (const Handle& rule_alias : rules.aliases()) {
 			HandleSet exp_ctrl_rules = fetch_expansion_control_rules(rule_alias);
 			_expansion_control_rules[rule_alias] = exp_ctrl_rules;
