@@ -537,9 +537,10 @@ void BackwardChainerUTest::test_criminal()
 	Handle soln = _eval.eval_h("(ConceptNode \"West\")");
 
 	// To record the trace of the inference
-	AtomSpace trace_as;
+	AtomSpacePtr trace_as = createAtomSpace(_as);
+	trace_as->clear_copy_on_write(); // Create a write-through atomspace
 
-	BackwardChainer bc(*_as.get(), top_rbs, target, vardecl, &trace_as);
+	BackwardChainer bc(*_as.get(), top_rbs, target, vardecl, trace_as.get());
 	// See bc-criminal-config.scm to change the number of iterations
 	bc.do_chain();
 
