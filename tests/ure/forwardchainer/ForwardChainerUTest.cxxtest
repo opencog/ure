@@ -84,7 +84,6 @@ public:
 	void test_tweety_not_green_alt();
 	void test_unsatisfied_premise();
 	void test_negation_conflict();
-	void xtest_negation_conflict();
 	void test_bindlink_no_vardecl();
 };
 
@@ -399,59 +398,10 @@ void ForwardChainerUTest::test_unsatisfied_premise(void)
 	TS_ASSERT_EQUALS(results.size(), 0);
 }
 
-// XXX FIXME. This unit test is unstable with respect to perturbations
-// in the AtomSpace code base. It sometimes passes, and sometimes fails,
-// depending on how the AtomSpace has been compiled. The test failure
-// can be fixed by changing the seed value here, trying different seeds
-// until one finds one that allows the test to pass.
-//
-// See issue https://github.com/opencog/ure/issues/120
-//
-// However, even so, something is insane. For example, seed(1) passes
-// if and only if the test with seed(0) was run first. Going straight
-// to seed(1) fails. Try uncommenting GAURANTEED_TOTAL_FAIL, you'll
-// see this effect.
-//
-// Update: As of 13 April 2022, there does not appear to be any random
-// seed value that allows this test to pass. I do not understand what
-// the core issue is, and rather than invest any further effort in
-// debugging this, I'm just going to disable the test. -- Linas
-void ForwardChainerUTest::test_negation_conflict()
-{
-// #define GAURANTEED_TOTAL_FAIL
-#ifdef GAURANTEED_TOTAL_FAIL
-	randGen().seed(56);
-	xtest_negation_conflict();
-#endif
-
-// #define FISH_FOR_WORKING_SEED
-#ifdef FISH_FOR_WORKING_SEED
-	int total_fails = 0;
-	int total_tries = 100;
-	for (int i=0; i < total_tries; i++)
-	{
-		// printf("test seed =%d\n", i);
-		fflush(stdout);
-		randGen().seed(i);
-		try {
-			xtest_negation_conflict();
-		}
-		catch (const std::exception& ex)
-		{
-			total_fails ++;
-			printf("Seed %d fails; total failures so far: %d\n", i, total_fails);
-		}
-	}
-	printf("Total failures: %d out of %d tries\n", total_fails, total_tries);
-
-	TS_ASSERT(total_fails < total_tries);
-#endif
-}
-
 /**
  * Do not imply the result that conflicts with existing negation facts.
  */
-void ForwardChainerUTest::xtest_negation_conflict()
+void ForwardChainerUTest::test_negation_conflict()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
