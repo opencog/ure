@@ -125,7 +125,7 @@ Handle URESCM::do_forward_chaining(Handle rbs,
                                    AtomSpace *trace_as,
                                    Handle focus_set_h)
 {
-	AtomSpace *as = SchemeSmob::ss_get_env_as("cog-mandatory-args-fc");
+	AtomSpacePtr asp = SchemeSmob::ss_get_env_as("cog-mandatory-args-fc");
 	HandleSeq focus_set = {};
 
 	// A ListLink means that the variable declaration is undefined
@@ -142,7 +142,7 @@ Handle URESCM::do_forward_chaining(Handle rbs,
 			TRACE_INFO,
 			"URESCM::do_forward_chaining - focus set should be SET_LINK type!");
 
-	ForwardChainer fc(*as, rbs, source, vardecl, trace_as, focus_set);
+	ForwardChainer fc(*asp.get(), rbs, source, vardecl, trace_as, focus_set);
 	fc.do_chain();
 	return fc.get_results();
 }
@@ -166,8 +166,8 @@ Handle URESCM::do_backward_chaining(Handle rbs,
 	if (not control_enabled)
 		control_as = nullptr;
 
-	AtomSpace *as = SchemeSmob::ss_get_env_as("cog-mandatory-args-bc");
-	BackwardChainer bc(*as, rbs, target, vardecl, trace_as, control_as, focus_link);
+	AtomSpacePtr asp = SchemeSmob::ss_get_env_as("cog-mandatory-args-bc");
+	BackwardChainer bc(*asp.get(), rbs, target, vardecl, trace_as, control_as, focus_link);
 
 	bc.do_chain();
 
