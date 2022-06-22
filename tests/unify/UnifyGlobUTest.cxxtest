@@ -32,13 +32,13 @@
 
 using namespace opencog;
 
-#define al _as.add_link
-#define an _as.add_node
+#define al _asp->add_link
+#define an _asp->add_node
 
 class UnifyGlobUTest :  public CxxTest::TestSuite
 {
 private:
-	AtomSpace _as;
+	AtomSpacePtr _asp = createAtomSpace();
 	SchemeEval _eval;
 	// Note: GlobNodes are in uppercase and
 	// variables are in lower case.
@@ -47,7 +47,7 @@ private:
 	Context::VariablesStack X_varstack;
 
 public:
-	UnifyGlobUTest() : _eval(&_as)
+	UnifyGlobUTest() : _eval(_asp)
 	{
 		logger().set_level(Logger::DEBUG);
 		logger().set_print_to_stdout_flag(true);
