@@ -53,7 +53,7 @@
 
 (define implication-full-instantiation-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-full-instantiation")
+     (GroundedSchemaNode "scm-eager: implication-full-instantiation")
      (ListLink
         implication-instantiation-body)))
 
@@ -115,7 +115,7 @@
 
 (define implication-partial-instantiation-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-partial-instantiation")
+     (GroundedSchemaNode "scm-eager: implication-partial-instantiation")
      (ListLink
         implication-instantiation-body)))
 

@@ -29,7 +29,7 @@
     (Present
       (Variable "$I"))
     (ExecutionOutput
-      (GroundedSchema "scm: conditional-direct-evaluation-implication-scope")
+      (GroundedSchema "scm-eager: conditional-direct-evaluation-implication-scope")
       (Variable "$I"))))
 
 (define (conditional-direct-evaluation-implication-scope I)

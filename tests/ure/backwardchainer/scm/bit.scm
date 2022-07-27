@@ -73,7 +73,7 @@
       )
     )
     (EvaluationLink
-      (GroundedPredicateNode "scm: implication-introduction-precondition")
+      (GroundedPredicateNode "scm-eager: implication-introduction-precondition")
       (ListLink
         (LambdaLink
           (TypedVariableLink
@@ -105,7 +105,7 @@
     )
   )
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: deduction")
+    (GroundedSchemaNode "scm-eager: deduction")
     (ListLink
       (ImplicationLink
         (LambdaLink
@@ -145,7 +145,7 @@
         )
       )
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: implication-implicant-distribution")
+        (GroundedSchemaNode "scm-eager: implication-implicant-distribution")
         (ListLink
           (ImplicationLink
             (LambdaLink
@@ -191,7 +191,7 @@
             )
           )
           (ExecutionOutputLink
-            (GroundedSchemaNode "scm: implication-introduction")
+            (GroundedSchemaNode "scm-eager: implication-introduction")
             (ListLink
               (ImplicationLink
                 (LambdaLink
@@ -252,7 +252,7 @@
         )
       )
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: implication-and-lambda-factorization")
+        (GroundedSchemaNode "scm-eager: implication-and-lambda-factorization")
         (ImplicationLink
           (AndLink
             (LambdaLink
@@ -361,7 +361,7 @@
               (VariableNode "$X")
               (ConceptNode "treatment-1"))))))
     (EvaluationLink
-      (GroundedPredicateNode "scm: implication-introduction-precondition")
+      (GroundedPredicateNode "scm-eager: implication-introduction-precondition")
       (ListLink
         (LambdaLink
           (TypedVariableLink
@@ -383,7 +383,7 @@
               (ConceptNode "treatment-1")
               (ConceptNode "compound-A")))))))
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: deduction")
+    (GroundedSchemaNode "scm-eager: deduction")
     (ListLink
       (ImplicationLink
         (LambdaLink
@@ -411,7 +411,7 @@
                 (VariableNode "$X")
                 (ConceptNode "treatment-1"))))))
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: implication-implicant-distribution")
+        (GroundedSchemaNode "scm-eager: implication-implicant-distribution")
         (ListLink
           (ImplicationLink
             (LambdaLink
@@ -443,7 +443,7 @@
                     (VariableNode "$X")
                     (ConceptNode "treatment-1"))))))
           (ExecutionOutputLink
-            (GroundedSchemaNode "scm: implication-introduction")
+            (GroundedSchemaNode "scm-eager: implication-introduction")
             (ListLink
               (ImplicationLink
                 (LambdaLink
@@ -483,7 +483,7 @@
                     (ConceptNode "treatment-1")
                     (ConceptNode "compound-A"))))))))
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: implication-and-lambda-factorization")
+        (GroundedSchemaNode "scm-eager: implication-and-lambda-factorization")
         (ImplicationLink
           (AndLink
             (LambdaLink
@@ -664,7 +664,7 @@
     )
   )
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: deduction")
+    (GroundedSchemaNode "scm-eager: deduction")
     (ListLink
       (ImplicationLink
         (LambdaLink
@@ -695,7 +695,7 @@
         )
       )
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: deduction")
+        (GroundedSchemaNode "scm-eager: deduction")
         (ListLink
           (ImplicationLink
             (LambdaLink
@@ -714,7 +714,7 @@
             (VariableNode "$B-732fec2a")
           )
           (ExecutionOutputLink
-            (GroundedSchemaNode "scm: deduction")
+            (GroundedSchemaNode "scm-eager: deduction")
             (ListLink
               (ImplicationLink
                 (LambdaLink
@@ -856,7 +856,7 @@
       )
     )
     (EvaluationLink
-      (GroundedPredicateNode "scm: gt-zero-confidence")
+      (GroundedPredicateNode "scm-eager: gt-zero-confidence")
       (AndLink
         (EvaluationLink
           (PredicateNode "contraryAttribute")
@@ -883,7 +883,7 @@
     )
   )
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: conditional-full-instantiation-scope")
+    (GroundedSchemaNode "scm-eager: conditional-full-instantiation-scope")
     (ListLink
       (EvaluationLink
         (PredicateNode "property")
@@ -893,7 +893,7 @@
         )
       )
       (ExecutionOutputLink
-        (GroundedSchemaNode "scm: fuzzy-conjunction-introduction")
+        (GroundedSchemaNode "scm-eager: fuzzy-conjunction-introduction")
         (ListLink
           (AndLink
             (EvaluationLink
@@ -934,7 +934,7 @@
               )
             )
             (ExecutionOutputLink
-              (GroundedSchemaNode "scm: conditional-full-instantiation-scope")
+              (GroundedSchemaNode "scm-eager: conditional-full-instantiation-scope")
               (ListLink
                 (EvaluationLink
                   (PredicateNode "property")
@@ -1121,14 +1121,14 @@
       )
     )
     (EvaluationLink
-      (GroundedPredicateNode "scm: has-arity")
+      (GroundedPredicateNode "scm-eager: has-arity")
       (ListLink
         (VariableNode "$g-2101505b")
         (NumberNode "2.000000")
       )
     )
     (EvaluationLink
-      (GroundedPredicateNode "scm: absolutely-true")
+      (GroundedPredicateNode "scm-eager: absolutely-true")
       (EvaluationLink
         (PredicateNode "minsup")
         (ListLink
@@ -1140,7 +1140,7 @@
     )
   )
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: specialization")
+    (GroundedSchemaNode "scm-eager: specialization")
     (ListLink
       (EvaluationLink
         (PredicateNode "minsup")

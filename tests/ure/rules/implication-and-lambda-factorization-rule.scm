@@ -74,7 +74,7 @@
 
 (define implication-and-lambda-factorization-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-and-lambda-factorization")
+     (GroundedSchemaNode "scm-eager: implication-and-lambda-factorization")
      (ImplicationLink
         (AndLink
            (QuoteLink (LambdaLink

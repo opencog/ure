@@ -41,7 +41,7 @@
             )
         )
         (ExecutionOutputLink
-            (GroundedSchemaNode "scm: fc-deduction")
+            (GroundedSchemaNode "scm-eager: fc-deduction")
             (ListLink
                 (InheritanceLink
                     (VariableNode "$A")

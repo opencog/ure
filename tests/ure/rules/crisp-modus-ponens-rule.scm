@@ -18,14 +18,14 @@
          (vardecl (VariableSet
                      (TypedVariable A (TypeChoice LambdaT PredicateT))
                      (TypedVariable B (TypeChoice LambdaT PredicateT))))
-         (precon1 (Evaluation (GroundedPredicate "scm: true-enough") A))
-         (precon2 (Evaluation (GroundedPredicate "scm: true-enough") AB))
+         (precon1 (Evaluation (GroundedPredicate "scm-eager: true-enough") A))
+         (precon2 (Evaluation (GroundedPredicate "scm-eager: true-enough") AB))
          (pattern (And
                      ;; No need to include A as it is already in AB
                      (Present AB)
                      precon1 precon2))
          (rewrite (ExecutionOutput
-                     (GroundedSchema "scm: crisp-modus-ponens")
+                     (GroundedSchema "scm-eager: crisp-modus-ponens")
                      (List B A AB))))
     (BindLink
         vardecl

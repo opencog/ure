@@ -39,7 +39,7 @@
          (vardecl (VariableSet (map gen-typed-variable variables)))
          (pattern (Present variables))
          (rewrite (ExecutionOutput
-                    (GroundedSchema "scm: fuzzy-conjunction-introduction")
+                    (GroundedSchema "scm-eager: fuzzy-conjunction-introduction")
                     ;; We wrap the variables in Set because the order
                     ;; doesn't matter and that way alpha-conversion
                     ;; works better.

@@ -42,7 +42,7 @@
 
 (define implication-introduction-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-introduction")
+     (GroundedSchemaNode "scm-eager: implication-introduction")
      (ListLink
         (VariableNode "$P")
         (VariableNode "$Q"))))

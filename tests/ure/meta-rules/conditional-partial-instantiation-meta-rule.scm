@@ -64,7 +64,7 @@
                           (Unquote Q))))
          ;; Meta rule precondition
          (meta-precondition (Evaluation
-                              (GroundedPredicate "scm: gt-zero-confidence")
+                              (GroundedPredicate "scm-eager: gt-zero-confidence")
                               implication))
          ;; Meta rule pattern
          (meta-pattern (And implication meta-precondition))
@@ -78,7 +78,7 @@
          ;; Produced rule rewrite. Apply formula to calculate the TV
          ;; over the partially substituted ImplicationScope.
          (produced-rewrite (ExecutionOutput
-                            (GroundedSchema "scm: conditional-partial-instantiation")
+                            (GroundedSchema "scm-eager: conditional-partial-instantiation")
                             (Unquote
                               (List
                                 ;; Conclusion

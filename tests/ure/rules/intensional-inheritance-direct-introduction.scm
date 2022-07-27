@@ -94,7 +94,7 @@
         ;; A and B are different
         (Not (Equal A B)))
       (ExecutionOutput
-        (GroundedSchema "scm: intensional-inheritance-direct-introduction")
+        (GroundedSchema "scm-eager: intensional-inheritance-direct-introduction")
         (List
           ;; Conclusion
           (IntensionalInheritance A B)

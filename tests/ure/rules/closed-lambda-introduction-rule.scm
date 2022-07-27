@@ -30,12 +30,12 @@
         (VariableNode "$V")
         (VariableNode "$B"))
      (EvaluationLink
-        (GroundedPredicateNode "scm: closed-lambda-introduction-precondition")
+        (GroundedPredicateNode "scm-eager: closed-lambda-introduction-precondition")
         (VariableNode "$B"))))
 
 (define closed-lambda-introduction-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: closed-lambda-introduction")
+     (GroundedSchemaNode "scm-eager: closed-lambda-introduction")
      (ListLink
         (QuoteLink (LambdaLink
            (UnquoteLink (VariableNode "$V"))

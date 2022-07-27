@@ -83,7 +83,7 @@
 
 (define implication-scope-direct-evaluation-rewrite
   (ExecutionOutput
-     (GroundedSchema "scm: implication-scope-direct-evaluation")
+     (GroundedSchema "scm-eager: implication-scope-direct-evaluation")
      (List
         (Variable "$P")
         (Variable "$Q"))))

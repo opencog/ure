@@ -37,7 +37,7 @@
 
 (define implication-scope-to-implication-rewrite
   (ExecutionOutputLink
-     (GroundedSchemaNode "scm: implication-scope-to-implication")
+     (GroundedSchemaNode "scm-eager: implication-scope-to-implication")
      (ListLink
         (Implication
            (Quote (Lambda
