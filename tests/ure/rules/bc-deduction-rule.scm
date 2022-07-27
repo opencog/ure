@@ -19,12 +19,12 @@
                      (TypedVariable A Concept)
                      (TypedVariable B Concept)
                      (TypedVariable C Concept)))
-         (precon1 (Evaluation (GroundedPredicate "scm: true-enough") AB))
-         (precon2 (Evaluation (GroundedPredicate "scm: true-enough") BC))
+         (precon1 (Evaluation (GroundedPredicate "scm-eager: true-enough") AB))
+         (precon2 (Evaluation (GroundedPredicate "scm-eager: true-enough") BC))
          (precon3 (Not (Identical A C)))
          (pattern (And (Present AB BC) precon1 precon2 precon3))
          (rewrite (ExecutionOutput
-                     (GroundedSchema "scm: bc-deduction")
+                     (GroundedSchema "scm-eager: bc-deduction")
                      (List AC AB BC))))
     (Bind
        vardecl

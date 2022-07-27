@@ -20,7 +20,7 @@
   (AndLink
     (Present (VariableNode "$f"))
     (EvaluationLink
-      (GroundedPredicateNode "scm: has-arity")
+      (GroundedPredicateNode "scm-eager: has-arity")
       (ListLink
         (VariableNode "$g")
         (NumberNode "1.000000")))
@@ -31,7 +31,7 @@
         (VariableNode "$texts")
         (VariableNode "$ms")))
     (EvaluationLink
-      (GroundedPredicateNode "scm: absolutely-true")
+      (GroundedPredicateNode "scm-eager: absolutely-true")
       (EvaluationLink
         (PredicateNode "minsup")
         (ListLink
@@ -39,7 +39,7 @@
           (VariableNode "$texts")
           (VariableNode "$ms")))))
   (ExecutionOutputLink
-    (GroundedSchemaNode "scm: specialization")
+    (GroundedSchemaNode "scm-eager: specialization")
     (ListLink
       (EvaluationLink
         (PredicateNode "minsup")

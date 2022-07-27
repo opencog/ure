@@ -205,13 +205,13 @@ void RuleUTest::test_unify_target_deduction_1()
 		VA = al(INHERITANCE_LINK, V, A),
 		XA = al(INHERITANCE_LINK, X, A),
 		XnotA = al(NOT_LINK, al(IDENTICAL_LINK, X, A)),
-		true_enough = an(GROUNDED_PREDICATE_NODE, "scm: true-enough"),
+		true_enough = an(GROUNDED_PREDICATE_NODE, "scm-eager: true-enough"),
 		true_enough_XV = al(EVALUATION_LINK, true_enough, XV),
 		true_enough_VA = al(EVALUATION_LINK, true_enough, VA),
 		body = al(AND_LINK,
 		          al(PRESENT_LINK, XV, VA),
 		          XnotA, true_enough_XV, true_enough_VA),
-		schema = an(GROUNDED_SCHEMA_NODE, "scm: bc-deduction"),
+		schema = an(GROUNDED_SCHEMA_NODE, "scm-eager: bc-deduction"),
 		rewrite = al(EXECUTION_OUTPUT_LINK,
 		             schema,
 		             al(LIST_LINK, XA, XV, VA)),
@@ -245,13 +245,13 @@ void RuleUTest::test_unify_target_deduction_2()
 		VA = al(INHERITANCE_LINK, V, A),
 		XA = al(INHERITANCE_LINK, X, A),
 		XnotA = al(NOT_LINK, al(IDENTICAL_LINK, X, A)),
-		true_enough = an(GROUNDED_PREDICATE_NODE, "scm: true-enough"),
+		true_enough = an(GROUNDED_PREDICATE_NODE, "scm-eager: true-enough"),
 		true_enough_XV = al(EVALUATION_LINK, true_enough, XV),
 		true_enough_VA = al(EVALUATION_LINK, true_enough, VA),
 		body = al(AND_LINK,
 		          al(PRESENT_LINK, XV, VA),
 		          XnotA, true_enough_XV, true_enough_VA),
-		schema = an(GROUNDED_SCHEMA_NODE, "scm: bc-deduction"),
+		schema = an(GROUNDED_SCHEMA_NODE, "scm-eager: bc-deduction"),
 		rewrite = al(EXECUTION_OUTPUT_LINK,
 		             schema,
 		             al(LIST_LINK, XA, XV, VA)),
@@ -314,7 +314,7 @@ void RuleUTest::test_unify_target_deduction_3()
 		             "    (VariableNode \"$B-6c74a409\"))"
 		             "  (AndLink"
 		             "    (EvaluationLink"
-		             "      (GroundedPredicateNode \"scm: true-enough\")"
+		             "      (GroundedPredicateNode \"scm-eager: true-enough\")"
 		             "      (ImplicationLink"
 		             "        (VariableNode \"$B-6c74a409\")"
 		             "        (QuoteLink"
@@ -341,7 +341,7 @@ void RuleUTest::test_unify_target_deduction_3()
 		             "            (UnquoteLink"
 		             "              (VariableNode \"$P-25868310\"))))))"
 		             "    (EvaluationLink"
-		             "      (GroundedPredicateNode \"scm: true-enough\")"
+		             "      (GroundedPredicateNode \"scm-eager: true-enough\")"
 		             "      (ImplicationLink"
 		             "        (LambdaLink"
 		             "          (TypedVariableLink"
@@ -374,7 +374,7 @@ void RuleUTest::test_unify_target_deduction_3()
 		             "              (ConceptNode \"treatment-1\"))))"
 		             "        (VariableNode \"$B-6c74a409\"))))"
 		             "  (ExecutionOutputLink"
-		             "    (GroundedSchemaNode \"scm: crisp-deduction\")"
+		             "    (GroundedSchemaNode \"scm-eager: crisp-deduction\")"
 		             "    (ListLink"
 		             "      (ImplicationLink"
 		             "        (LambdaLink"
@@ -437,7 +437,7 @@ void RuleUTest::test_unify_target_implication_scope_to_implication_1()
 		// Expected up to an alpha conversion
 		body = al(IMPLICATION_SCOPE_LINK, Typed_X, Eval_P, Eval_Q),
 		schema = an(GROUNDED_SCHEMA_NODE,
-		            "scm: implication-scope-to-implication"),
+		            "scm-eager: implication-scope-to-implication"),
 		rewrite = al(EXECUTION_OUTPUT_LINK,
 		             schema,
 		             al(LIST_LINK, target, body)),
@@ -468,7 +468,7 @@ void RuleUTest::test_unify_target_implication_scope_to_implication_2()
 		// Expected up to an alpha conversion
 		body = al(IMPLICATION_SCOPE_LINK, Typed_X, P_body_var, Eval_Q),
 		schema = an(GROUNDED_SCHEMA_NODE,
-		            "scm: implication-scope-to-implication"),
+		            "scm-eager: implication-scope-to-implication"),
 		rewrite = al(EXECUTION_OUTPUT_LINK,
 		             schema,
 		             al(LIST_LINK, target, body)),
@@ -566,7 +566,7 @@ void RuleUTest::test_unify_target_implication_scope_to_implication_4()
 		             "      (Unquote (VariableNode \"$P-6266d6f2\"))"
 		             "      (Unquote (VariableNode \"$Q-7005b724\")))))"
 		             "  (ExecutionOutputLink"
-		             "    (GroundedSchemaNode \"scm: implication-scope-to-implication\")"
+		             "    (GroundedSchemaNode \"scm-eager: implication-scope-to-implication\")"
 		             "    (ListLink"
 		             "      (ImplicationLink"
 		             "        (Quote (LambdaLink"
@@ -684,7 +684,7 @@ void RuleUTest::test_unify_target_implication_and_lambda_factorization()
 		             "    )"
 		             "  )"
 		             "  (ExecutionOutputLink"
-		             "    (GroundedSchemaNode \"scm: implication-and-lambda-factorization\")"
+		             "    (GroundedSchemaNode \"scm-eager: implication-and-lambda-factorization\")"
 		             "    (ImplicationLink"
 		             "      (AndLink"
 		             "        (LambdaLink"
@@ -773,7 +773,7 @@ void RuleUTest::test_unify_target_closed_lambda_introduction_1()
 		             "  )"
 		             "  (AndLink"
 		             "    (EvaluationLink"
-		             "      (GroundedPredicateNode \"scm: closed-lambda-introduction-precondition\")"
+		             "      (GroundedPredicateNode \"scm-eager: closed-lambda-introduction-precondition\")"
 		             "      (EvaluationLink"
 		             "        (PredicateNode \"contain\")"
 		             "        (ListLink"
@@ -797,7 +797,7 @@ void RuleUTest::test_unify_target_closed_lambda_introduction_1()
 		             "    )"
 		             "  )"
 		             "  (ExecutionOutputLink"
-		             "    (GroundedSchemaNode \"scm: closed-lambda-introduction\")"
+		             "    (GroundedSchemaNode \"scm-eager: closed-lambda-introduction\")"
 		             "    (ListLink"
 		             "      (LambdaLink"
 		             "        (TypedVariableLink"
@@ -855,7 +855,7 @@ void RuleUTest::test_unify_target_closed_lambda_introduction_2()
 		             "  (VariableSet)"
 		             "  (AndLink"
 		             "    (EvaluationLink"
-		             "      (GroundedPredicateNode \"scm: closed-lambda-introduction-precondition\")"
+		             "      (GroundedPredicateNode \"scm-eager: closed-lambda-introduction-precondition\")"
 		             "      (EvaluationLink"
 		             "        (PredicateNode \"take\")"
 		             "        (ListLink"
@@ -879,7 +879,7 @@ void RuleUTest::test_unify_target_closed_lambda_introduction_2()
 		             "    )"
 		             "  )"
 		             "  (ExecutionOutputLink"
-		             "    (GroundedSchemaNode \"scm: closed-lambda-introduction\")"
+		             "    (GroundedSchemaNode \"scm-eager: closed-lambda-introduction\")"
 		             "    (ListLink"
 		             "      (LambdaLink"
 		             "        (TypedVariableLink"
@@ -967,7 +967,7 @@ void RuleUTest::test_unify_target_intensional_inheritance_direct_introduction()
 		             "    )"
 		             "  )"
 		             "  (ExecutionOutputLink"
-		             "    (GroundedSchemaNode \"scm: intensional-inheritance-direct-introduction\")"
+		             "    (GroundedSchemaNode \"scm-eager: intensional-inheritance-direct-introduction\")"
 		             "    (ListLink"
 		             "      (IntensionalInheritanceLink"
 		             "        (VariableNode \"$X\")"

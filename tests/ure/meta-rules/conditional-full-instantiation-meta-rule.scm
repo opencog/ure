@@ -44,7 +44,7 @@
                          (Unquote (Variable "$P"))
                          (Unquote (Variable "$Q")))))
          (precondition (Evaluation
-                         (GroundedPredicate "scm: true-enough")
+                         (GroundedPredicate "scm-eager: true-enough")
                          implication)))
   (And
     implication
@@ -66,9 +66,9 @@
       (Unquote TyVs)
       (And
         (Unquote (LocalQuote (LocalQuote P)))
-        (Evaluation (GroundedPredicate "scm: true-enough") (Unquote P)))
+        (Evaluation (GroundedPredicate "scm-eager: true-enough") (Unquote P)))
       (ExecutionOutput
-        (GroundedSchema "scm: conditional-full-instantiation")
+        (GroundedSchema "scm-eager: conditional-full-instantiation")
         (Unquote
           (ListLink
             Q
