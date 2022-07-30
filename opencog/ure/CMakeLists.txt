@@ -2,24 +2,24 @@
 # Rule engine lib build
 #
 ADD_LIBRARY(ure
-	backwardchainer/BackwardChainer
-	backwardchainer/TraceRecorder
-	backwardchainer/ControlPolicy
-	backwardchainer/BIT
-	backwardchainer/Fitness
-	forwardchainer/FCStat
-	forwardchainer/ForwardChainer
-	forwardchainer/SourceSet
-	forwardchainer/SourceRuleSet
-	URELogger
-	URESCM
-	Rule
-	UREConfig
-	Utils
-	MixtureModel
-	ActionSelection
-	BetaDistribution
-	ThompsonSampling
+	backwardchainer/BackwardChainer.cc
+	backwardchainer/TraceRecorder.cc
+	backwardchainer/ControlPolicy.cc
+	backwardchainer/BIT.cc
+	backwardchainer/Fitness.cc
+	forwardchainer/FCStat.cc
+	forwardchainer/ForwardChainer.cc
+	forwardchainer/SourceSet.cc
+	forwardchainer/SourceRuleSet.cc
+	URELogger.cc
+	URESCM.cc
+	Rule.cc
+	UREConfig.cc
+	Utils.cc
+	MixtureModel.cc
+	ActionSelection.cc
+	BetaDistribution.cc
+	ThompsonSampling.cc
 )
 
 TARGET_LINK_LIBRARIES(ure

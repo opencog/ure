@@ -1,5 +1,5 @@
 ADD_LIBRARY (unify
-	Unify
+	Unify.cc
 )
 
 TARGET_LINK_LIBRARIES(unify
