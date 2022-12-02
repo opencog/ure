@@ -335,10 +335,12 @@ workflows:
   build-test-package:
     jobs:
       - ure
-      - spacetime
       - miner:
           requires:
             - ure
+      - spacetime:
+          requires:
+            - atomspace
       - pln:
           requires:
             - ure
