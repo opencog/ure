@@ -92,6 +92,16 @@ ELSE (ATOMSPACE_FOUND)
 	MESSAGE(FATAL_ERROR "AtomSpace missing: it is needed!")
 ENDIF (ATOMSPACE_FOUND)
 
+# Unify
+FIND_PACKAGE(Unify CONFIG)
+IF (UNIFY_FOUND)
+	MESSAGE(STATUS "CogUtil version ${UNIFY_VERSION} found.")
+	ADD_DEFINITIONS(-DHAVE_UNIFY)
+	SET(HAVE_UNIFY 1)
+ELSE (UNIFY_FOUND)
+	MESSAGE(FATAL_ERROR "Unify missing: it is needed!")
+ENDIF (UNIFY_FOUND)
+
 # add the 'cmake' directory from cogutil to search path
 list(APPEND CMAKE_MODULE_PATH  ${COGUTIL_DATA_DIR}/cmake)
 include(OpenCogGccOptions)
@@ -185,10 +195,9 @@ INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogCython.cmake")
 # ==========================================================
 # Decide what to build, based on the packages found.
 
-IF(HAVE_ATOMSPACE AND HAVE_COGUTIL)
+IF(HAVE_UNIFY AND HAVE_ATOMSPACE AND HAVE_COGUTIL)
 	SET(HAVE_URE 1)
-	SET(HAVE_UNIFY 1)
-ENDIF(HAVE_ATOMSPACE AND HAVE_COGUTIL)
+ENDIF(HAVE_UNIFY AND HAVE_ATOMSPACE AND HAVE_COGUTIL)
 
 ADD_SUBDIRECTORY(opencog)
 ADD_SUBDIRECTORY(lib)
@@ -308,7 +317,6 @@ INCLUDE(CPack)
 # Show a summary of what we found, what we will do.
 
 SUMMARY_ADD("URE" "Unified Rule Engine" HAVE_URE)
-SUMMARY_ADD("Unify" "Syntactic unifer" HAVE_UNIFY)
 SUMMARY_ADD("Python bindings" "Python (cython) bindings" HAVE_CYTHON)
 SUMMARY_ADD("Python tests" "Python bindings nose tests" HAVE_NOSETESTS)
 SUMMARY_ADD("Scheme bindings" "Scheme bindings and shell" HAVE_GUILE)

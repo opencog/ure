@@ -1,21 +1,9 @@
 DECLARE_GUILE_CONFIG_TARGET(SCM_CONFIG "opencog ure-config" "URE_TEST")
 
-# The build order used here is loosely in terms of 
-# dependencies: the later parts depend on, or may
-# someday depend on the earlier parts.
-#
-IF (HAVE_UNIFY)
-	ADD_SUBDIRECTORY (unify)
-ENDIF (HAVE_UNIFY)
-IF (HAVE_URE)
-	ADD_SUBDIRECTORY (ure)
-ENDIF (HAVE_URE)
+ADD_SUBDIRECTORY (ure)
+ADD_SUBDIRECTORY (scm)
 
 # Extension language support
-IF (HAVE_GUILE)
-	ADD_SUBDIRECTORY (scm)
-ENDIF (HAVE_GUILE)
-
 IF (HAVE_CYTHON)
 	ADD_SUBDIRECTORY (cython)
 ENDIF (HAVE_CYTHON)
