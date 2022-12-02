@@ -3,12 +3,7 @@
 include("@CMAKE_INSTALL_PREFIX@/lib/cmake/URE/URETargets.cmake")
 
 set(URE_LIBRARY ure)
-set(UNIFY_LIBRARY unify)
-
-set(URE_LIBRARIES
-	ure
-	unify
-)
+set(URE_LIBRARIES ure)
 
 set(URE_DATA_DIR "@CMAKE_INSTALL_PREFIX@/share/opencog")
 set(URE_INCLUDE_DIR "@CMAKE_INSTALL_PREFIX@/include/")
