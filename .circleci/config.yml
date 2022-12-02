@@ -32,6 +32,13 @@ jobs:
           name: Restore GHC Cache
           keys:
             - ghc-{{checksum "/ws/atomspace/opencog/haskell/stack.yaml"}}-{{ arch }}
+      - run:
+          name: Install Unify
+          command: |
+            git clone --depth 1 https://github.com/$CIRCLE_PROJECT_USERNAME/unify /ws/unify
+            mkdir -p /ws/unify/build
+            cd /ws/unify/build && cmake .. && make -j2 && make -j2 install
+            ldconfig
       - restore_cache:
           name: Restore Haskell Deps Cache
           keys:
@@ -77,6 +84,7 @@ jobs:
           paths:
             - cogutil
             - atomspace
+            - unify
             - ure
             - ccache
 
@@ -104,6 +112,9 @@ jobs:
       - run:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j2 install && ldconfig
+      - run:
+          name: Install Unify
+          command: cd /ws/unify/build && make -j2 install && ldconfig
       - run:
           name: Install URE
           command: cd /ws/ure/build && make -j2 install && ldconfig
@@ -202,6 +213,9 @@ jobs:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j2 install && ldconfig
       - run:
+          name: Install Unify
+          command: cd /ws/unify/build && make -j2 install && ldconfig
+      - run:
           name: Install URE
           command: cd /ws/ure/build && make -j2 install && ldconfig
       - run:
@@ -259,6 +273,9 @@ jobs:
       - run:
           name: Install AtomSpace
           command: cd /ws/atomspace/build && make -j2 install && ldconfig
+      - run:
+          name: Install Unify
+          command: cd /ws/unify/build && make -j2 install && ldconfig
       - run:
           name: Install URE
           command: cd /ws/ure/build && make -j2 install && ldconfig
