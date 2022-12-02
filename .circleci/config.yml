@@ -340,7 +340,10 @@ workflows:
             - ure
       - spacetime:
           requires:
-            - atomspace
+            # spacetime doesn't actually depend on URE,
+				# but I can't just say - atomspace for some reason!?
+            # - atomspace
+            - ure
       - pln:
           requires:
             - ure
