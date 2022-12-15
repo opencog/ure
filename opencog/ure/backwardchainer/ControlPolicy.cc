@@ -26,7 +26,7 @@
 #include <opencog/util/random.h>
 #include <opencog/util/algorithm.h>
 #include <opencog/unify/Unify.h>
-#include <opencog/atoms/core/MapLink.h>
+#include <opencog/atoms/core/FilterLink.h>
 
 #include "../MixtureModel.h"
 #include "../ActionSelection.h"
@@ -322,7 +322,7 @@ bool ControlPolicy::match(const Handle& pattern, const Handle& term,
 		impl = tmp_as.add_link(IMPLICATION_SCOPE_LINK,
 		                       vardecl, pattern, rewrite),
 		tmp_term = tmp_as.add_atom(term),
-		result = HandleCast(MapLink(impl, tmp_term).execute(&tmp_as, false));
+		result = HandleCast(FilterLink(impl, tmp_term).execute(&tmp_as, false));
 
 	return (SET_LINK != result->get_type()) or (result->get_arity() != 0);
 }
