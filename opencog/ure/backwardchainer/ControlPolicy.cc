@@ -26,7 +26,7 @@
 #include <opencog/util/random.h>
 #include <opencog/util/algorithm.h>
 #include <opencog/unify/Unify.h>
-#include <opencog/atoms/core/FilterLink.h>
+#include <opencog/atoms/flow/FilterLink.h>
 
 #include "../MixtureModel.h"
 #include "../ActionSelection.h"
