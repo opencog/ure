@@ -24,7 +24,7 @@ The strengths of the URE are
 
 To build the URE you need to first build and install:
 * The [AtomSpace](https://wiki.opencog.org/w/AtomSpace)
-* The [term unifier](https://wiki.opencog.org/w/Unify)
+* The [term unifier](https://github.com/opencog/unify)
 
 See
 [Building-and-installing-the-AtomSpace](https://github.com/opencog/atomspace#building-and-installing)
