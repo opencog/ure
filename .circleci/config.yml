@@ -71,7 +71,7 @@ jobs:
           command: cd build && make -j2 tests
       - run:
           name: Run tests
-          command: cd build && make -j2 test ARGS=-j2
+          command: cd build && make -j2 check ARGS=-j2
       - run:
           name: Install URE
           command: cd build && make -j2 install && ldconfig
@@ -132,7 +132,7 @@ jobs:
           command: cd build && make -j2 tests
       - run:
           name: Run tests
-          command: cd build && make -j2 test ARGS=-j2
+          command: cd build && make -j2 check ARGS=-j2
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
@@ -173,7 +173,7 @@ jobs:
           command: cd build && make -j2 tests
       - run:
           name: Run tests
-          command: cd build && make -j2 test ARGS=-j2
+          command: cd build && make -j2 check ARGS=-j2
       - run:
           name: Install spacetime
           command: cd build && make -j2 install && ldconfig
@@ -238,7 +238,7 @@ jobs:
           command: cd build && make -j2 install && ldconfig
       - run:
           name: Run tests
-          command: cd build && make -j2 test ARGS=-j2
+          command: cd build && make -j2 check ARGS=-j2
       - run:
           name: Print test log
           command: cat build/tests/Testing/Temporary/LastTest.log
