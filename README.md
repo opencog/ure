@@ -18,6 +18,11 @@ The strengths of the URE are
   logics with some limitations.
 * Comes with a powerful control mechanism to speed up reasoning.
 
+The weaknesses of the URE are:
+# IT IS NO LONGER MAINTAINED
+The lead developer walked away. Some unit tests pass. It's slowly
+bit-rotting.
+
 ## Building and Installing
 
 ### Prerequisites
