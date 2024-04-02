@@ -23,6 +23,7 @@ TARGET_LINK_LIBRARIES(ure-types
 )
 
 INSTALL (TARGETS ure-types
+	EXPORT URETargets
 	LIBRARY DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
 )
 

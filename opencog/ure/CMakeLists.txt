@@ -26,7 +26,10 @@ ADD_LIBRARY(ure
 	ThompsonSampling.cc
 )
 
+ADD_DEPENDENCIES(ure ure-types)
+
 TARGET_LINK_LIBRARIES(ure
+	ure-types
 	${UNIFY_LIBRARIES}
 	${GUILE_LIBRARIES}
 	${ATOMSPACE_LIBRARIES}
