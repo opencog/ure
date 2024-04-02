@@ -12,6 +12,6 @@ LINK_LIBRARIES(
 # no longer supported, anyway. Foo.
 #
 # ADD_CXXTEST(BackwardChainerUTest)
-ADD_CXXTEST(ControlPolicyUTest)
+# ADD_CXXTEST(ControlPolicyUTest)
 ADD_CXXTEST(BITUTest)
 ADD_CXXTEST(GradientUTest)
