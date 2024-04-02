@@ -1,6 +1,8 @@
 #
 # Rule engine lib build
 #
+ADD_SUBDIRECTORY(types)
+
 ADD_LIBRARY(ure
 	backwardchainer/BackwardChainer.cc
 	backwardchainer/TraceRecorder.cc
