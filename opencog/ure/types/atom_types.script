@@ -9,10 +9,8 @@
 // Except that BackwardChainerUTest hangs when it inherits from
 // RuleLink, because RuleLink::execute() does something that URE isn't
 // expecting. XXX FIXME.
-// IMPLICATION_SCOPE_LINK <- RULE_LINK
+IMPLICATION_SCOPE_LINK <- RULE_LINK
 // IMPLICATION_SCOPE_LINK <- SCOPE_LINK
-
-FU_LINK <- ORDERED_LINK
 
 // Mystery link used by URE in it's unit tests. It is not documented
 // anywhere that I know of.

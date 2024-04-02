@@ -3,6 +3,8 @@
 #
 ADD_SUBDIRECTORY(types)
 
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
+
 ADD_LIBRARY(ure
 	backwardchainer/BackwardChainer.cc
 	backwardchainer/TraceRecorder.cc
