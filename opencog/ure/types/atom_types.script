@@ -1,0 +1,20 @@
+//
+// Assorted URE link types.  These are specific to the theory of URE
+// and the rules it defines for knowledge representation and reasoning.
+// See the book on PLN by Goertzel etal. to understand what these are
+// all about.
+
+// ImplicationScopeLink is a synonym for RuleLink, as far as I can tell.
+// It is used by PLN to do more or less the same thing as RuleLink.
+// Except that BackwardChainerUTest hangs when it inherits from
+// RuleLink, because RuleLink::execute() does something that URE isn't
+// expecting. XXX FIXME.
+IMPLICATION_SCOPE_LINK <- RULE_LINK
+// IMPLICATION_SCOPE_LINK <- SCOPE_LINK
+
+// Mystery link used by URE in it's unit tests. It is not documented
+// anywhere that I know of.
+ATTRACTION_LINK <- ORDERED_LINK
+
+// Used in the URE unit tests.
+INTENSIONAL_INHERITANCE_LINK <- INHERITANCE_LINK

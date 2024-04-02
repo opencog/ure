@@ -21,13 +21,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "ControlPolicy.h"
-
 #include <opencog/util/random.h>
 #include <opencog/util/algorithm.h>
 #include <opencog/unify/Unify.h>
 #include <opencog/atoms/flow/FilterLink.h>
+#include <opencog/ure/types/atom_types.h>
 
+#include "ControlPolicy.h"
 #include "../MixtureModel.h"
 #include "../ActionSelection.h"
 #include "../BetaDistribution.h"

@@ -27,6 +27,7 @@
 #include <opencog/guile/SchemeEval.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/ure/Rule.h>
+#include <opencog/ure/types/atom_types.h>
 
 using namespace std;
 using namespace opencog;
