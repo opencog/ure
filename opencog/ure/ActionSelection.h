@@ -24,6 +24,7 @@
 #define _OPENCOG_ACTIONSELECTION_H_
 
 #include <opencog/util/empty_string.h>
+#include <opencog/util/Counter.h>
 #include <opencog/atoms/base/Handle.h>
 #include <opencog/atoms/truthvalue/TruthValue.h>
 
@@ -34,6 +35,12 @@ namespace opencog
 
 //! a map from handles to truth values
 typedef std::map<Handle, TruthValuePtr> HandleTVMap;
+
+//! a map from handle to double
+typedef Counter<Handle, double> HandleCounter;
+
+//! a map from handle to unsigned
+typedef Counter<Handle, unsigned> HandleUCounter;
 
 /**
  * Class containing methods to calculate distribution over actions
@@ -96,6 +103,10 @@ private:
 std::string	oc_to_string(const ActionSelection& asel,
                          const std::string& indent=empty_string);
 std::string	oc_to_string(const HandleTVMap& h2tv,
+                         const std::string& indent=empty_string);
+std::string oc_to_string(const HandleCounter& hc,
+                         const std::string& indent=empty_string);
+std::string oc_to_string(const HandleUCounter& huc,
                          const std::string& indent=empty_string);
 
 } // namespace opencog
