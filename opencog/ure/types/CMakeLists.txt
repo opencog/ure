@@ -12,7 +12,7 @@ ADD_CUSTOM_TARGET(ure_atom_types DEPENDS atom_types.h)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 ADD_LIBRARY (ure-types SHARED
-	atom_types_init
+	atom_types_init.cc
 )
 
 # Without this, parallel make will race and crap up the generated files.

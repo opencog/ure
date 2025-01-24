@@ -24,6 +24,7 @@
 #define _OPENCOG_CONTROLPOLICY_H_
 
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/ure/ActionSelection.h>
 
 #include "BIT.h"
 #include "../UREConfig.h"
