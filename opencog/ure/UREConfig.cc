@@ -307,7 +307,8 @@ bool UREConfig::fetch_bool_param(const string& pred_name,
 	Handle pred = _as.get_node(PREDICATE_NODE,
 	                           std::move(std::string(pred_name)));
 	if (pred) {
-		Handle eval = _as.get_link(EVALUATION_LINK, pred, input);
+		Handle eval = _as.get_link(EVALUATION_LINK,
+			std::move(HandleSeq({pred, input})));
 		if (eval) {
 			bool value = eval->getTruthValue()->get_mean() > 0.5;
 			log_param_value(input, pred_name, value);

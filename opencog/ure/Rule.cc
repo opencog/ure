@@ -218,7 +218,7 @@ void Rule::init(const Handle& rule_alias, const Handle& rule, const Handle& rbs)
 	_name = _rule_alias->get_name();
 	_rbs = rbs;
 	AtomSpace& as = *rule_alias->getAtomSpace();
-	Handle ml = as.get_link(MEMBER_LINK, rule_alias, rbs);
+	Handle ml = as.add_link(MEMBER_LINK, rule_alias, rbs);
 	_tv = ml->getTruthValue();
 
     verify_rule();
