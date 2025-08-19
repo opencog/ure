@@ -53,12 +53,12 @@ void BetaDistributionUTest::test_cdf()
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
 	vector<TruthValuePtr>
-		TVs{SimpleTruthValue::createSTV(0.0, 0.01),
-			SimpleTruthValue::createSTV(0.5, 0.01),
-			SimpleTruthValue::createSTV(1.0, 0.01),
-			SimpleTruthValue::createSTV(0.0, 1),
-			SimpleTruthValue::createSTV(0.5, 1),
-			SimpleTruthValue::createSTV(1.0, 1),};
+		TVs{createSimpleTruthValue(0.0, 0.01),
+			createSimpleTruthValue(0.5, 0.01),
+			createSimpleTruthValue(1.0, 0.01),
+			createSimpleTruthValue(0.0, 1),
+			createSimpleTruthValue(0.5, 1),
+			createSimpleTruthValue(1.0, 1),};
 
 	vector<BetaDistribution> BDs;
 	for (const auto& TV : TVs)

@@ -54,11 +54,11 @@ void ActionSelectionUTest::test_distribution()
 		A4 = an(NODE, "A4"),
 		A5 = an(NODE, "A5");
 	TruthValuePtr
-		TV1 = SimpleTruthValue::createSTV(0.000000, 0.003793),
-		TV2 = SimpleTruthValue::createSTV(1.000000, 0.001585),
-		TV3 = SimpleTruthValue::createSTV(0.000000, 0.007500),
-		TV4 = SimpleTruthValue::createSTV(0.000000, 0.001611),
-		TV5 = SimpleTruthValue::createSTV(0.001785, 0.001256);
+		TV1 = createSimpleTruthValue(0.000000, 0.003793),
+		TV2 = createSimpleTruthValue(1.000000, 0.001585),
+		TV3 = createSimpleTruthValue(0.000000, 0.007500),
+		TV4 = createSimpleTruthValue(0.000000, 0.001611),
+		TV5 = createSimpleTruthValue(0.001785, 0.001256);
 
 	HandleTVMap a2tv{{A1, TV1}, {A2, TV2}, {A3, TV3}, {A4, TV4}, {A5, TV5}};
 

@@ -170,7 +170,7 @@ TruthValuePtr mk_stv(double mean, double variance,
 
 	// The strength is in fact the mode, this should be corrected once
 	// TruthValue is reworked
-	return SimpleTruthValue::createTV(mode, confidence);
+	return createSimpleTruthValue(mode, confidence);
 }
 
 std::string oc_to_string(const BetaDistribution& bd, const std::string& indent)
