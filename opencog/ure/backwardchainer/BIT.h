@@ -26,6 +26,7 @@
 #include <boost/operators.hpp>
 
 #include <opencog/util/empty_string.h>
+#include <opencog/util/RandGen.h>
 #include <opencog/ure/Rule.h>
 #include <opencog/ure/Utils.h>
 #include <opencog/atoms/base/Handle.h>
