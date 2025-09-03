@@ -399,7 +399,7 @@ SourcePtr ForwardChainer::select_source(const std::string& msgprfx)
 	}
 
 	// Calculate the total weight to be sure it's greater than zero
-	double total = boost::accumulate(weights, 0.0);
+	double total = std::accumulate(weights.begin(), weights.end(), 0.0);
 
 	if (total == 0.0) {
 		ure_logger().debug() << msgprfx << "All sources have been exhausted";
