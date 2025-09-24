@@ -310,7 +310,7 @@ bool UREConfig::fetch_bool_param(const string& pred_name,
 		Handle eval = _as.get_link(EVALUATION_LINK,
 			std::move(HandleSeq({pred, input})));
 		if (eval) {
-			bool value = eval->getTruthValue()->get_mean() > 0.5;
+			bool value = TruthValueCast(eval->getValue(truth_key()))->get_mean() > 0.5;
 			log_param_value(input, pred_name, value);
 			return value;
 		}

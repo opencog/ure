@@ -237,8 +237,8 @@ void BackwardChainerUTest::test_deduction_tv_query()
 	bc.get_config().set_maximum_iterations(10);
 	bc.do_chain();
 
-	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 1, 1e-10);
-	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_mean(), 1, 1e-10);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_confidence(), 1, 1e-10);
 }
 
 void BackwardChainerUTest::test_modus_ponens_tv_query()
@@ -257,8 +257,8 @@ void BackwardChainerUTest::test_modus_ponens_tv_query()
 	bc.get_config().set_maximum_iterations(40);
 	bc.do_chain();
 
-	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 1, 1e-10);
-	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_mean(), 1, 1e-10);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_confidence(), 1, 1e-10);
 }
 
 void BackwardChainerUTest::test_conjunction_fuzzy_evaluation_tv_query()
@@ -285,8 +285,8 @@ void BackwardChainerUTest::test_conjunction_fuzzy_evaluation_tv_query()
 	bc.get_config().set_maximum_iterations(2);
 	bc.do_chain();
 
-	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 0.4, 1e-6);
-	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 0.2, 1e-6);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_mean(), 0.4, 1e-6);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_confidence(), 0.2, 1e-6);
 }
 
 void BackwardChainerUTest::test_conditional_instantiation_1()
@@ -385,8 +385,8 @@ void BackwardChainerUTest::test_conditional_instantiation_tv_query()
 	bc.get_config().set_maximum_iterations(20);
 	bc.do_chain();
 
-	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 1, .1);
-	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, .1);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_mean(), 1, .1);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_confidence(), 1, .1);
 }
 
 // This test is for rules that requires the pattern matcher to look
@@ -474,8 +474,8 @@ void BackwardChainerUTest::test_conditional_partial_instantiation()
 	bc.get_config().set_maximum_iterations(5);
 	bc.do_chain();
 
-	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 1, 1e-10);
-	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_mean(), 1, 1e-10);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_confidence(), 1, 1e-10);
 }
 
 void BackwardChainerUTest::test_impossible_criminal()
@@ -553,8 +553,8 @@ void BackwardChainerUTest::test_criminal()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(results, expected);
-	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_mean());
-	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_confidence());
+	TS_ASSERT_LESS_THAN(0.9, expected_TruthValueCast(target->getValue(truth_key()))->get_mean());
+	TS_ASSERT_LESS_THAN(0.9, expected_TruthValueCast(target->getValue(truth_key()))->get_confidence());
 
 	// Extract traces and return the backward chainer with these
 	// traces, which should greatly speed it up.
@@ -610,8 +610,8 @@ void BackwardChainerUTest::test_criminal()
 	logger().debug() << "expected = " << oc_to_string(expected);
 
 	TS_ASSERT_EQUALS(results, expected);
-	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_mean());
-	TS_ASSERT_LESS_THAN(0.9, expected_target->getTruthValue()->get_confidence());
+	TS_ASSERT_LESS_THAN(0.9, expected_TruthValueCast(target->getValue(truth_key()))->get_mean());
+	TS_ASSERT_LESS_THAN(0.9, expected_TruthValueCast(target->getValue(truth_key()))->get_confidence());
 }
 
 // Test showing we no longer need the ExecutionOutputLink
@@ -668,8 +668,8 @@ void BackwardChainerUTest::xtest_green_balls()
 
 	logger().debug() << "results = " << oc_to_string(results);
 
-	TS_ASSERT_LESS_THAN(0.9, top_result->getTruthValue()->get_mean());
-	TS_ASSERT_LESS_THAN(0.9, top_result->getTruthValue()->get_confidence());
+	TS_ASSERT_LESS_THAN(0.9, TruthValueCast(top_result->getValue(truth_key()))->get_mean());
+	TS_ASSERT_LESS_THAN(0.9, TruthValueCast(top_result->getValue(truth_key()))->get_confidence());
 }
 
 void BackwardChainerUTest::xtest_induction()
@@ -694,10 +694,10 @@ void BackwardChainerUTest::xtest_induction()
 	bc.do_chain();
 
 	// TODO: fixme, for that we need to support BIT expansion over meta rule
-	TS_ASSERT_DELTA(target->getTruthValue()->get_mean(), 1, 1e-10);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_mean(), 1, 1e-10);
 	// TODO: determine the expected confidence, which depends on the
 	// number of instances the induction is based on
-	TS_ASSERT_DELTA(target->getTruthValue()->get_confidence(), 1, 1e-10);
+	TS_ASSERT_DELTA(TruthValueCast(target->getValue(truth_key()))->get_confidence(), 1, 1e-10);
 }
 
 void BackwardChainerUTest::xtest_focus_set()

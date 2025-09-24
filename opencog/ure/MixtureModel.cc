@@ -45,7 +45,7 @@ TruthValuePtr MixtureModel::operator()() const
 {
 	// Don't bother mixing if there's only one TV
 	if (models.size() == 1)
-		return (*models.begin())->getTruthValue();
+		return TruthValueCast((*models.begin())->getValue(truth_key()));
 
 	std::vector<TruthValuePtr> tvs;
 	std::vector<double> weights;
@@ -53,7 +53,7 @@ TruthValuePtr MixtureModel::operator()() const
 		double weight = prior_estimate(model) * beta_factor(model);
 		LAZY_URE_LOG_FINE << "MixtureModel::operator model = " << model->id_to_string()
 		                  << ", weight = " << weight;
-		tvs.push_back(model->getTruthValue());
+		tvs.push_back(TruthValueCast(model->getValue(truth_key())));
 		weights.push_back(weight);
 	}
 	return weighted_average(tvs, weights);
@@ -95,7 +95,7 @@ TruthValuePtr MixtureModel::weighted_average(const std::vector<TruthValuePtr>& t
 
 double MixtureModel::beta_factor(const Handle& model) const
 {
-	BetaDistribution beta_dist(model->getTruthValue());
+	BetaDistribution beta_dist(TruthValueCast(model->getValue(truth_key())));
 	double factor = boost::math::beta(beta_dist.alpha(), beta_dist.beta());
 	LAZY_URE_LOG_FINE << "MixtureModel::beta_factor factor = " << factor;
 	return factor;
@@ -107,7 +107,7 @@ double MixtureModel::prior_estimate(const Handle& model) const
 
 	HandleSet all_atoms(get_all_uniq_atoms(model));
 	double partial_length = all_atoms.size(),
-		remain_data_size = data_set_size - model->getTruthValue()->get_count(),
+		remain_data_size = data_set_size - TruthValueCast(model->getValue(truth_key()))->get_count(),
 		kestimate = kolmogorov_estimate(remain_data_size);
 
 	LAZY_URE_LOG_FINE << "MixtureModel::prior_estimate "
@@ -135,6 +135,6 @@ double MixtureModel::infer_data_set_size() const
 {
 	double max_count = 0.0;
 	for (const Handle& model : models)
-		max_count = std::max(max_count, model->getTruthValue()->get_count());
+		max_count = std::max(max_count, TruthValueCast(model->getValue(truth_key()))->get_count());
 	return max_count;
 }

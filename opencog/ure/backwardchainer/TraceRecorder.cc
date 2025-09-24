@@ -99,7 +99,7 @@ void TraceRecorder::proof(const Handle& andbit_fcs, const Handle& target_result)
 {
 	add_evaluation(_proof_predicate,
 	               dont_exec(andbit_fcs), target_result,
-	               target_result->getTruthValue());
+	               TruthValueCast(target_result->getValue(truth_key())));
 }
 
 Handle TraceRecorder::dont_exec(const Handle& h)
@@ -118,7 +118,7 @@ Handle TraceRecorder::add_execution(const Handle& schema,
 		return Handle::UNDEFINED;
 
 	Handle execution = _trace_as->add_link(EXECUTION_LINK, schema, input, output);
-	execution->setTruthValue(tv);
+	execution->setValue(truth_key(), tv);
 	return execution;
 }
 
@@ -144,7 +144,7 @@ Handle TraceRecorder::add_evaluation(const Handle& predicate,
 		return Handle::UNDEFINED;
 	
 	Handle evaluation = _trace_as->add_link(EVALUATION_LINK, predicate, argument);
-	evaluation->setTruthValue(tv);
+	evaluation->setValue(truth_key(), tv);
 	return evaluation;
 }
 

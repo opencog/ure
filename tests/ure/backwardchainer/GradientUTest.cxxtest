@@ -186,11 +186,11 @@ void GradientUTest::set_rbs()
 	// Assign GradientSum and its weight to rbs
 	TruthValuePtr stv = SimpleTruthValue::createTV(0.4, 1.0);
 	Handle GSM = L(MEMBER_LINK, GradientSum, rbs);
-	GSM->setTruthValue(stv);
+	GSM->setValue(truth_key(), stv);
 
 	// Assign GradientAny and its weight to rbs
 	Handle GAM = L(MEMBER_LINK, GradientAny, rbs);
-	GAM->setTruthValue(stv);
+	GAM->setValue(truth_key(), stv);
 }
 
 void GradientUTest::setUp()

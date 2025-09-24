@@ -219,7 +219,7 @@ void Rule::init(const Handle& rule_alias, const Handle& rule, const Handle& rbs)
 	_rbs = rbs;
 	AtomSpace& as = *rule_alias->getAtomSpace();
 	Handle ml = as.add_link(MEMBER_LINK, rule_alias, rbs);
-	_tv = ml->getTruthValue();
+	_tv = TruthValueCast(ml->getValue(truth_key()));
 
     verify_rule();
 }

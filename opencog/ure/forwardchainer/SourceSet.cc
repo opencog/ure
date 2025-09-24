@@ -48,7 +48,7 @@ double calculate_weight(const Handle& bdy, double cpx_fctr)
 	// TODO:
 	// 1. Support more fitness functions
 	// 2. Explicitely turn the fitness into a probability of success
-	TruthValuePtr tv = bdy->getTruthValue();
+	TruthValuePtr tv = TruthValueCast(bdy->getValue(truth_key()));
 	double fitness = tv->get_mean() * tv->get_confidence();
 	return std::max(1e-16, cpx_fctr * fitness);
 }
